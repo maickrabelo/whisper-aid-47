@@ -22,17 +22,12 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const invitationToken = searchParams.get('invitation');
-  const isSmsBrand =
-    location.pathname.startsWith('/sms') ||
-    searchParams.get('brand') === 'sms';
+  // Sr.SMS é a única marca do app
+  const isSmsBrand = true;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (location.pathname.startsWith('/sms') || searchParams.get('brand') === 'sms') {
-      window.localStorage.setItem('auth_brand', 'sms');
-    } else {
-      window.localStorage.removeItem('auth_brand');
-    }
+    window.localStorage.setItem('auth_brand', 'sms');
   }, [location.pathname, searchParams]);
 
   // Após login/signup com convite, aceita automaticamente

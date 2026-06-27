@@ -1,13 +1,16 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useRealAuth } from '@/contexts/RealAuthContext';
+import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
 
-const SR_SMS_LOGO_URL = srSmsLogo.url;
-const SR_SMS_BRAND_NAME = 'Sr. SMS';
+/**
+ * Sr.SMS é a única marca desta aplicação.
+ * Este contexto sempre retorna a logo/cor do Sr.SMS e aplica
+ * a paleta verde como tema global.
+ */
 
-export type BrandColorTheme = 'navy' | 'green' | 'orange' | 'purple';
+const SR_SMS_LOGO_URL = srSmsLogo.url;
+const SR_SMS_BRAND_NAME = 'Sr.SMS';
+
+export type BrandColorTheme = 'green';
 
 interface ColorPalette {
   primary: string;
@@ -20,275 +23,81 @@ interface ColorPalette {
   gradientTo: string;
 }
 
-const COLOR_PALETTES: Record<BrandColorTheme, ColorPalette> = {
-  navy: {
-    primary: '220 56% 24%',
-    primaryDark: '220 56% 18%',
-    primaryMid: '217 91% 60%',
-    primaryLight: '214 100% 97%',
-    primary50: '214 95% 93%',
-    gradientFrom: '#1e3a5f',
-    gradientVia: '#1e40af',
-    gradientTo: '#2563eb',
-  },
-  green: {
-    primary: '158 75% 22%',
-    primaryDark: '158 75% 15%',
-    primaryMid: '158 56% 42%',
-    primaryLight: '138 76% 97%',
-    primary50: '138 76% 93%',
-    gradientFrom: '#14532d',
-    gradientVia: '#166534',
-    gradientTo: '#15803d',
-  },
-  orange: {
-    primary: '20 91% 34%',
-    primaryDark: '20 91% 25%',
-    primaryMid: '21 90% 48%',
-    primaryLight: '33 100% 96%',
-    primary50: '33 100% 92%',
-    gradientFrom: '#7c2d12',
-    gradientVia: '#9a3412',
-    gradientTo: '#ea580c',
-  },
-  purple: {
-    primary: '274 72% 32%',
-    primaryDark: '274 72% 22%',
-    primaryMid: '263 70% 58%',
-    primaryLight: '270 100% 98%',
-    primary50: '270 100% 95%',
-    gradientFrom: '#3b0764',
-    gradientVia: '#581c87',
-    gradientTo: '#7c3aed',
-  },
+const GREEN_PALETTE: ColorPalette = {
+  primary: '158 75% 22%',
+  primaryDark: '158 75% 15%',
+  primaryMid: '158 56% 42%',
+  primaryLight: '138 76% 97%',
+  primary50: '138 76% 93%',
+  gradientFrom: '#14532d',
+  gradientVia: '#166534',
+  gradientTo: '#15803d',
 };
 
 interface WhiteLabelBrand {
-  brandLogo: string | null;
-  brandName: string | null;
+  brandLogo: string;
+  brandName: string;
   sstSlug: string | null;
-  brandColor: BrandColorTheme | null;
+  brandColor: BrandColorTheme;
   isWhiteLabel: boolean;
   isLoading: boolean;
   setBrandColorDB: (color: BrandColorTheme) => Promise<void>;
   getColorPalette: () => ColorPalette;
 }
 
-const WhiteLabelContext = createContext<WhiteLabelBrand>({
-  brandLogo: null,
-  brandName: null,
-  sstSlug: null,
-  brandColor: null,
-  isWhiteLabel: false,
-  isLoading: true,
-  setBrandColorDB: async () => {},
-  getColorPalette: () => COLOR_PALETTES.green,
-});
-
-const applyColorTheme = (color: BrandColorTheme | null) => {
-  const palette = COLOR_PALETTES[color || 'green'];
+const applyGreenTheme = () => {
+  if (typeof document === 'undefined') return;
   const root = document.documentElement;
-  // SST-prefixed tokens
-  root.style.setProperty('--sst-primary', palette.primary);
-  root.style.setProperty('--sst-primary-dark', palette.primaryDark);
-  root.style.setProperty('--sst-primary-mid', palette.primaryMid);
-  root.style.setProperty('--sst-primary-light', palette.primaryLight);
-  root.style.setProperty('--sst-primary-50', palette.primary50);
-  root.style.setProperty('--sst-gradient-from', palette.gradientFrom);
-  root.style.setProperty('--sst-gradient-via', palette.gradientVia);
-  root.style.setProperty('--sst-gradient-to', palette.gradientTo);
-
-  if (color) {
-    // Override global design tokens so all bg-primary/text-primary/audit-primary classes follow the brand
-    root.style.setProperty('--primary', palette.primary);
-    root.style.setProperty('--secondary', palette.primaryMid);
-    root.style.setProperty('--accent', palette.primaryDark);
-    root.style.setProperty('--ring', palette.primaryMid);
-    root.style.setProperty('--audit-primary', palette.primaryDark);
-    root.style.setProperty('--audit-secondary', palette.primaryMid);
-  } else {
-    // Restore defaults defined in index.css
-    root.style.removeProperty('--primary');
-    root.style.removeProperty('--secondary');
-    root.style.removeProperty('--accent');
-    root.style.removeProperty('--ring');
-    root.style.removeProperty('--audit-primary');
-    root.style.removeProperty('--audit-secondary');
-  }
+  root.style.setProperty('--sst-primary', GREEN_PALETTE.primary);
+  root.style.setProperty('--sst-primary-dark', GREEN_PALETTE.primaryDark);
+  root.style.setProperty('--sst-primary-mid', GREEN_PALETTE.primaryMid);
+  root.style.setProperty('--sst-primary-light', GREEN_PALETTE.primaryLight);
+  root.style.setProperty('--sst-primary-50', GREEN_PALETTE.primary50);
+  root.style.setProperty('--sst-gradient-from', GREEN_PALETTE.gradientFrom);
+  root.style.setProperty('--sst-gradient-via', GREEN_PALETTE.gradientVia);
+  root.style.setProperty('--sst-gradient-to', GREEN_PALETTE.gradientTo);
+  root.style.setProperty('--primary', GREEN_PALETTE.primary);
+  root.style.setProperty('--secondary', GREEN_PALETTE.primaryMid);
+  root.style.setProperty('--accent', GREEN_PALETTE.primaryDark);
+  root.style.setProperty('--ring', GREEN_PALETTE.primaryMid);
+  root.style.setProperty('--audit-primary', GREEN_PALETTE.primaryDark);
+  root.style.setProperty('--audit-secondary', GREEN_PALETTE.primaryMid);
 };
 
+const WhiteLabelContext = createContext<WhiteLabelBrand>({
+  brandLogo: SR_SMS_LOGO_URL,
+  brandName: SR_SMS_BRAND_NAME,
+  sstSlug: null,
+  brandColor: 'green',
+  isWhiteLabel: true,
+  isLoading: false,
+  setBrandColorDB: async () => {},
+  getColorPalette: () => GREEN_PALETTE,
+});
+
 export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [brandLogo, setBrandLogo] = useState<string | null>(null);
-  const [brandName, setBrandName] = useState<string | null>(null);
-  const [sstSlug, setSstSlug] = useState<string | null>(null);
-  const [brandColor, setBrandColor] = useState<BrandColorTheme | null>(null);
-  const [sstManagerId, setSstManagerId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const location = useLocation();
-  const { user, role, profile } = useRealAuth();
-
-  const getColorPalette = useCallback(() => {
-    return COLOR_PALETTES[brandColor || 'green'];
-  }, [brandColor]);
-
-  const setBrandColorDB = useCallback(async (color: BrandColorTheme) => {
-    if (!sstManagerId) {
-      console.error('No SST manager ID found, cannot save color');
-      return;
-    }
-    const { error } = await supabase
-      .from('sst_managers')
-      .update({ brand_color: color })
-      .eq('id', sstManagerId);
-    if (error) {
-      console.error('Error saving brand color:', error);
-    } else {
-      setBrandColor(color);
-      applyColorTheme(color);
-    }
-  }, [sstManagerId]);
+  const getColorPalette = useCallback(() => GREEN_PALETTE, []);
+  const setBrandColorDB = useCallback(async (_color: BrandColorTheme) => {
+    // Marca fixa, nada a salvar
+  }, []);
 
   useEffect(() => {
-    const detectBranding = async () => {
-      // Skip branding detection on auth/login pages for faster loading
-      const skipPaths = ['/auth', '/login', '/teste-gratis', '/teste-gratis-sst', '/parceiro/cadastro', '/afiliado/cadastro'];
-      if (skipPaths.some(p => location.pathname === p)) {
-        setBrandLogo(null);
-        setBrandName(null);
-        setSstSlug(null);
-        setBrandColor(null);
-        setSstManagerId(null);
-        applyColorTheme(null);
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-
-      try {
-        // 1. Check URL path: /sst/:slug
-        const sstPathMatch = location.pathname.match(/^\/sst\/([^/]+)/);
-        if (sstPathMatch) {
-          const slug = sstPathMatch[1];
-          const { data: sstManager } = await supabase
-            .from('sst_managers_public' as any)
-            .select('logo_url, name, slug, brand_color, id')
-            .eq('slug', slug)
-            .maybeSingle() as { data: any };
-
-          if (sstManager) {
-            setBrandLogo(sstManager.logo_url);
-            setBrandName(sstManager.name);
-            setSstSlug(sstManager.slug);
-            setSstManagerId(sstManager.id);
-            const color = sstManager.brand_color as BrandColorTheme | null;
-            setBrandColor(color);
-            applyColorTheme(color);
-            setIsLoading(false);
-            return;
-          }
-        }
-
-        // 2. Check if logged-in user is on a Sr. SMS plan (takes precedence over SST manager logo)
-        if (user) {
-          const { data: sub } = await (supabase as any)
-            .from('subscriptions')
-            .select('subscription_plans!inner(slug)')
-            .eq('owner_user_id', user.id)
-            .in('status', ['active', 'trial', 'trialing'])
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          const slug = (sub as any)?.subscription_plans?.slug as string | undefined;
-          if (slug && slug.toLowerCase().includes('sms')) {
-            setBrandLogo(SR_SMS_LOGO_URL);
-            setBrandName(SR_SMS_BRAND_NAME);
-            setSstSlug(null);
-            setSstManagerId(null);
-            setBrandColor('green');
-            applyColorTheme('green');
-            setIsLoading(false);
-            return;
-          }
-        }
-
-        // 3. Check logged-in user
-        if (user && profile) {
-          // SST user -> get their own SST manager
-          if (role === 'sst' && profile.sst_manager_id) {
-            const { data: sstManager } = await supabase
-              .from('sst_managers')
-              .select('logo_url, name, slug, brand_color, id')
-              .eq('id', profile.sst_manager_id)
-              .maybeSingle();
-
-            if (sstManager) {
-              setBrandLogo(sstManager.logo_url || null);
-              setBrandName(sstManager.name);
-              setSstSlug(sstManager.slug);
-              setSstManagerId(sstManager.id);
-              const color = sstManager.brand_color as BrandColorTheme | null;
-              setBrandColor(color);
-              applyColorTheme(color);
-              setIsLoading(false);
-              return;
-            }
-          }
-
-          // Company user -> check if company has an SST assignment
-          if (role === 'company' && profile.company_id) {
-            const { data: assignment } = await supabase
-              .from('company_sst_assignments')
-              .select('sst_manager_id')
-              .eq('company_id', profile.company_id)
-              .maybeSingle();
-
-            if (assignment?.sst_manager_id) {
-              const { data: sstManager } = await supabase
-                .from('sst_managers')
-                .select('logo_url, name, slug, brand_color, id')
-                .eq('id', assignment.sst_manager_id)
-                .maybeSingle();
-
-              if (sstManager) {
-                setBrandLogo(sstManager.logo_url || null);
-                setBrandName(sstManager.name);
-                setSstSlug(sstManager.slug);
-                setSstManagerId(sstManager.id);
-                const color = sstManager.brand_color as BrandColorTheme | null;
-                setBrandColor(color);
-                applyColorTheme(color);
-                setIsLoading(false);
-                return;
-              }
-            }
-          }
-        }
-
-        // No branding detected - reset to defaults
-        setBrandLogo(null);
-        setBrandName(null);
-        setSstSlug(null);
-        setBrandColor(null);
-        setSstManagerId(null);
-        applyColorTheme(null);
-      } catch (error) {
-        console.error('Error detecting white-label branding:', error);
-        setBrandLogo(null);
-        setBrandName(null);
-        setSstSlug(null);
-        setBrandColor(null);
-        setSstManagerId(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    detectBranding();
-  }, [location.pathname, user, role, profile]);
+    applyGreenTheme();
+  }, []);
 
   return (
-    <WhiteLabelContext.Provider value={{ brandLogo, brandName, sstSlug, brandColor, isWhiteLabel: !!brandLogo || !!brandColor, isLoading, setBrandColorDB, getColorPalette }}>
+    <WhiteLabelContext.Provider
+      value={{
+        brandLogo: SR_SMS_LOGO_URL,
+        brandName: SR_SMS_BRAND_NAME,
+        sstSlug: null,
+        brandColor: 'green',
+        isWhiteLabel: true,
+        isLoading: false,
+        setBrandColorDB,
+        getColorPalette,
+      }}
+    >
       {children}
     </WhiteLabelContext.Provider>
   );

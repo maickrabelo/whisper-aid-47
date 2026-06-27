@@ -53,33 +53,32 @@ serve(async (req) => {
       results.admin = { email, password: PASSWORD };
     }
 
+    const subBase = {
+      plan_id: PLAN_ID, status: "active", billing_cycle: "monthly",
+      amount_cents: 9990, provider: "manual",
+      current_period_end: new Date(Date.now() + 365*24*3600*1000).toISOString(),
+    };
+
     // ===== SST (Gestora SST) =====
     {
       const email = "teste.sst@srsms.app";
       const u = await upsertUser(email, "Gestora SST Teste");
       await setRole(u.id, "sst");
-      // sst_manager
-      let { data: sm } = await admin.from("sst_managers").select("id").eq("owner_user_id", u.id).maybeSingle();
-      if (!sm) {
-        const { data: created } = await admin.from("sst_managers").insert({
-          owner_user_id: u.id,
-          name: "SST Teste Sr.SMS",
-          cnpj: "00.000.000/0001-00",
-          email,
-          phone: "(27) 99844-3852",
-          max_companies: 50,
-          pgr_module_enabled: true,
+      const { data: existingProfile } = await admin.from("profiles").select("sst_manager_id").eq("id", u.id).maybeSingle();
+      let smId = existingProfile?.sst_manager_id as string | null;
+      if (!smId) {
+        const { data: created, error: smErr } = await admin.from("sst_managers").insert({
+          name: "SST Teste Sr.SMS", cnpj: "00.000.000/0001-00", email,
+          phone: "(27) 99844-3852", max_companies: 50, pgr_module_enabled: true,
         }).select("id").single();
-        sm = created;
+        if (smErr) throw new Error("sst_managers: " + smErr.message);
+        smId = created!.id;
       }
-      await admin.from("profiles").update({ sst_manager_id: sm!.id, full_name: "Gestora SST Teste" }).eq("id", u.id);
-      // subscription
-      const { data: subExisting } = await admin.from("subscriptions").select("id").eq("owner_user_id", u.id).maybeSingle();
-      if (!subExisting) {
-        await admin.from("subscriptions").insert({
-          owner_user_id: u.id, plan_id: PLAN_ID, status: "active",
-          current_period_end: new Date(Date.now() + 365*24*3600*1000).toISOString(),
-        });
+      await admin.from("profiles").update({ sst_manager_id: smId, full_name: "Gestora SST Teste" }).eq("id", u.id);
+      const { data: subEx } = await admin.from("subscriptions").select("id").eq("owner_user_id", u.id).maybeSingle();
+      if (!subEx) {
+        const { error: sErr } = await admin.from("subscriptions").insert({ ...subBase, owner_user_id: u.id, owner_email: email });
+        if (sErr) throw new Error("sub sst: " + sErr.message);
       }
       results.sst = { email, password: PASSWORD };
     }
@@ -91,26 +90,19 @@ serve(async (req) => {
       await setRole(u.id, "company");
       let { data: c } = await admin.from("companies").select("id").eq("email", email).maybeSingle();
       if (!c) {
-        const { data: created } = await admin.from("companies").insert({
-          name: "Empresa Teste Ltda",
-          cnpj: "11.111.111/0001-11",
-          email,
-          phone: "(27) 99844-3852",
-          industry: "Serviços",
-          employee_count: 25,
-          owner_user_id: u.id,
+        const { data: created, error: cErr } = await admin.from("companies").insert({
+          name: "Empresa Teste Ltda", cnpj: "11.111.111/0001-11", email,
+          phone: "(27) 99844-3852", industry: "Serviços", employee_count: 25,
         }).select("id").single();
+        if (cErr) throw new Error("companies: " + cErr.message);
         c = created;
       }
       await admin.from("profiles").update({ company_id: c!.id, full_name: "Empresa Teste" }).eq("id", u.id);
-      await admin.from("user_companies").upsert({ user_id: u.id, company_id: c!.id, role: "owner" }, { onConflict: "user_id,company_id" });
-      // subscription on company
-      const { data: subExisting } = await admin.from("subscriptions").select("id").eq("owner_user_id", u.id).maybeSingle();
-      if (!subExisting) {
-        const { data: s } = await admin.from("subscriptions").insert({
-          owner_user_id: u.id, plan_id: PLAN_ID, status: "active",
-          current_period_end: new Date(Date.now() + 365*24*3600*1000).toISOString(),
-        }).select("id").single();
+      await admin.from("user_companies").upsert({ user_id: u.id, company_id: c!.id, is_default: true }, { onConflict: "user_id,company_id" });
+      const { data: subEx } = await admin.from("subscriptions").select("id").eq("owner_user_id", u.id).maybeSingle();
+      if (!subEx) {
+        const { data: s, error: sErr } = await admin.from("subscriptions").insert({ ...subBase, owner_user_id: u.id, owner_email: email }).select("id").single();
+        if (sErr) throw new Error("sub company: " + sErr.message);
         await admin.from("companies").update({ parent_subscription_id: s!.id }).eq("id", c!.id);
       }
       results.company = { email, password: PASSWORD };
@@ -131,16 +123,13 @@ serve(async (req) => {
       await setRole(u.id, "partner");
       const { data: p } = await admin.from("licensed_partners").select("id").eq("email", email).maybeSingle();
       if (!p) {
-        await admin.from("licensed_partners").insert({
-          user_id: u.id,
-          razao_social: "Parceiro Teste LTDA",
-          nome_fantasia: "Parceiro Teste",
-          cnpj: "22.222.222/0001-22",
-          endereco_completo: "Rua Teste, 100",
-          email,
-          phone: "(27) 99844-3852",
-          status: "approved",
+        const { error: pErr } = await admin.from("licensed_partners").insert({
+          user_id: u.id, razao_social: "Parceiro Teste LTDA", nome_fantasia: "Parceiro Teste",
+          cnpj: "22.222.222/0001-22", endereco_completo: "Rua Teste, 100",
+          email, phone: "(27) 99844-3852", status: "approved",
+          referral_code: "PTESTE" + Math.floor(Math.random()*9999),
         });
+        if (pErr) throw new Error("partner: " + pErr.message);
       }
       results.partner = { email, password: PASSWORD };
     }
@@ -152,14 +141,14 @@ serve(async (req) => {
       await setRole(u.id, "affiliate");
       const { data: a } = await admin.from("affiliates").select("id").eq("email", email).maybeSingle();
       if (!a) {
-        await admin.from("affiliates").insert({
-          user_id: u.id,
-          full_name: "Afiliado Teste",
-          email,
-          phone: "(27) 99844-3852",
-          referral_code: "TESTE" + Math.floor(Math.random()*9999),
-          status: "approved",
+        const { error: aErr } = await admin.from("affiliates").insert({
+          user_id: u.id, nome_completo: "Afiliado Teste", tipo_pessoa: "PF",
+          cpf: "000.000.000-00", rg: "00.000.000", estado_civil: "Solteiro",
+          profissao: "Consultor", endereco_completo: "Rua Teste, 200",
+          email, phone: "(27) 99844-3852", status: "approved",
+          referral_code: "ATESTE" + Math.floor(Math.random()*9999),
         });
+        if (aErr) throw new Error("affiliate: " + aErr.message);
       }
       results.affiliate = { email, password: PASSWORD };
     }
@@ -171,6 +160,7 @@ serve(async (req) => {
       await setRole(u.id, "sector_viewer");
       results.sector_viewer = { email, password: PASSWORD };
     }
+
 
     return json({ success: true, results });
   } catch (e: any) {

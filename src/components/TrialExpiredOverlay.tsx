@@ -8,7 +8,7 @@ import { useRealAuth } from '@/contexts/RealAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useSmsPlan } from '@/hooks/useSmsPlan';
 
-const SMS_UPGRADE_URL = 'https://prgnovoplano.manus.space';
+const SMS_UPGRADE_URL = 'https://pay.hotmart.com/Y106371701W?off=cxxuc6kw&checkoutMode=6';
 
 type Cycle = 'monthly' | 'quarterly' | 'annual';
 type Category = 'company' | 'manager';

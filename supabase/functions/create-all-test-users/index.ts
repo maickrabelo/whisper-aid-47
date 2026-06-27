@@ -97,9 +97,11 @@ serve(async (req) => {
       await setRole(u.id, "company");
       let { data: c } = await admin.from("companies").select("id").eq("email", email).maybeSingle();
       if (!c) {
+        const rand = Math.floor(Math.random()*1e8).toString().padStart(8,"0");
+        const cnpj = `${rand.slice(0,2)}.${rand.slice(2,5)}.${rand.slice(5,8)}/0001-11`;
         const { data: created, error: cErr } = await admin.from("companies").insert({
-          name: "Empresa Teste Ltda", cnpj: "11.111.111/0001-11", email,
-          phone: "(27) 99844-3852", industry: "Serviços", employee_count: 25,
+          name: "Empresa Teste Ltda", cnpj, email,
+          phone: "(27) 99844-3852", employee_count: 25,
         }).select("id").single();
         if (cErr) throw new Error("companies: " + cErr.message);
         c = created;

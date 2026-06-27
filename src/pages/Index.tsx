@@ -21,7 +21,6 @@ import {
   Users,
   FileSpreadsheet,
   Sparkles,
-  Leaf,
 } from 'lucide-react';
 import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
 import usePageSEO from '@/hooks/usePageSEO';

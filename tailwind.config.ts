@@ -63,20 +63,40 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-        // Cores personalizadas para o app de auditoria — paleta SOIA (azul-marinho + verde)
+        // Paleta refeita — verde-floresta + lima + creme (inspiração Verde.agr)
         audit: {
-          primary: '#0A1F3D',       // azul-marinho profundo (headlines, navbar)
-          secondary: '#10C87A',     // verde vibrante (destaques, CTAs)
-          accent: '#1A4D7A',        // azul intermediário
-          light: '#F5F1E8',         // bege/off-white de fundo
-          dark: '#061229',          // azul quase preto
-          cream: '#F5F1E8',         // alias
-        }
+          primary: '#0b3f29',
+          secondary: '#bef264',
+          accent: '#11533a',
+          light: '#f7f4ea',
+          dark: '#062017',
+          cream: '#f7f4ea',
+        },
+        forest: {
+          DEFAULT: '#0b3f29',
+          deep: '#062017',
+          mid: '#11533a',
+          soft: '#1e6b46',
+        },
+        lime: {
+          DEFAULT: '#bef264',
+          bright: '#d9f99d',
+          deep: '#84cc16',
+        },
+        cream: {
+          DEFAULT: '#f7f4ea',
+          soft: '#fbf9f1',
+          warm: '#efe8d4',
+        },
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				md: 'calc(var(--radius) - 0.5rem)',
+				sm: 'calc(var(--radius) - 0.75rem)'
+			},
+			fontFamily: {
+				display: ['Sora', 'system-ui', 'sans-serif'],
+				sans: ['DM Sans', 'system-ui', 'sans-serif'],
 			},
 			keyframes: {
 				'accordion-down': {

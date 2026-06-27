@@ -67,12 +67,19 @@ serve(async (req) => {
       const { data: existingProfile } = await admin.from("profiles").select("sst_manager_id").eq("id", u.id).maybeSingle();
       let smId = existingProfile?.sst_manager_id as string | null;
       if (!smId) {
-        const { data: created, error: smErr } = await admin.from("sst_managers").insert({
-          name: "SST Teste Sr.SMS", cnpj: "00.000.000/0001-00", email,
-          phone: "(27) 99844-3852", max_companies: 50, pgr_module_enabled: true,
-        }).select("id").single();
-        if (smErr) throw new Error("sst_managers: " + smErr.message);
-        smId = created!.id;
+        const { data: byEmail } = await admin.from("sst_managers").select("id").eq("email", email).maybeSingle();
+        if (byEmail) {
+          smId = byEmail.id;
+        } else {
+          const rand = Math.floor(Math.random()*1e8).toString().padStart(8,"0");
+          const cnpj = `${rand.slice(0,2)}.${rand.slice(2,5)}.${rand.slice(5,8)}/0001-00`;
+          const { data: created, error: smErr } = await admin.from("sst_managers").insert({
+            name: "SST Teste Sr.SMS", cnpj, email,
+            phone: "(27) 99844-3852", max_companies: 50, pgr_module_enabled: true,
+          }).select("id").single();
+          if (smErr) throw new Error("sst_managers: " + smErr.message);
+          smId = created!.id;
+        }
       }
       await admin.from("profiles").update({ sst_manager_id: smId, full_name: "Gestora SST Teste" }).eq("id", u.id);
       const { data: subEx } = await admin.from("subscriptions").select("id").eq("owner_user_id", u.id).maybeSingle();

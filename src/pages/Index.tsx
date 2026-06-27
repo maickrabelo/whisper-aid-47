@@ -309,8 +309,6 @@ const Index = () => {
         {/* CTA final */}
         <section className="relative bg-forest-deep text-cream overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-forest-deep via-forest to-forest-mid" />
-          <Leaf className="pointer-events-none absolute top-10 left-10 h-40 w-40 text-lime/10 -rotate-12" strokeWidth={1} />
-          <Leaf className="pointer-events-none absolute bottom-10 right-10 h-32 w-32 text-lime/10 rotate-45" strokeWidth={1} />
 
           <div className="container mx-auto max-w-4xl px-4 py-24 text-center relative z-10">
             <h2 className="font-display text-4xl md:text-6xl font-bold mb-6 leading-[1.05]">

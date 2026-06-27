@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck } from "lucide-react";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
 import { usePGRModuleAccess } from "@/hooks/usePGRModuleAccess";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
@@ -144,6 +144,8 @@ const SSTDashboard = () => {
   const [sortBy, setSortBy] = useState<SortOption>('alphabetical');
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [totalPsychosocialResponses, setTotalPsychosocialResponses] = useState(0);
+  const [totalPgrs, setTotalPgrs] = useState(0);
   const [smartOuvidoriaIds, setSmartOuvidoriaIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
@@ -223,6 +225,54 @@ const SSTDashboard = () => {
             .select('company_id, status, created_at')
             .in('company_id', fetchedIds)
         : { data: [] as any[] };
+
+      // Fetch PGR Documents Count
+      const { count: pgrCount } = fetchedIds.length > 0
+        ? await supabase
+            .from('pgr_documents')
+            .select('id', { count: 'exact', head: true })
+            .in('company_id', fetchedIds)
+        : { count: 0 };
+      setTotalPgrs(pgrCount || 0);
+
+      // Fetch Psychosocial responses count
+      try {
+        if (fetchedIds.length > 0) {
+          const [hseitA, copsoqA, burnoutA, climateA] = await Promise.all([
+            supabase.from("hseit_assessments" as any).select("id").in("company_id", fetchedIds),
+            supabase.from("copsoq_assessments" as any).select("id").in("company_id", fetchedIds),
+            supabase.from("burnout_assessments" as any).select("id").in("company_id", fetchedIds),
+            supabase.from("climate_surveys" as any).select("id").in("company_id", fetchedIds),
+          ]);
+
+          const hseitIds = (hseitA.data || []).map((a: any) => a.id);
+          const copsoqIds = (copsoqA.data || []).map((a: any) => a.id);
+          const burnoutIds = (burnoutA.data || []).map((a: any) => a.id);
+          const climateIds = (climateA.data || []).map((a: any) => a.id);
+
+          const [hseitR, copsoqR, burnoutR, climateR] = await Promise.all([
+            hseitIds.length > 0
+              ? supabase.from("hseit_responses" as any).select("id", { count: "exact", head: true }).in("assessment_id", hseitIds).not("completed_at", "is", null)
+              : { count: 0 },
+            copsoqIds.length > 0
+              ? supabase.from("copsoq_responses" as any).select("id", { count: "exact", head: true }).in("assessment_id", copsoqIds).not("completed_at", "is", null)
+              : { count: 0 },
+            burnoutIds.length > 0
+              ? supabase.from("burnout_responses" as any).select("id", { count: "exact", head: true }).in("assessment_id", burnoutIds).not("completed_at", "is", null)
+              : { count: 0 },
+            climateIds.length > 0
+              ? supabase.from("survey_responses" as any).select("id", { count: "exact", head: true }).in("survey_id", climateIds)
+              : { count: 0 },
+          ]);
+
+          const totalResps = (hseitR?.count || 0) + (copsoqR?.count || 0) + (burnoutR?.count || 0) + (climateR?.count || 0);
+          setTotalPsychosocialResponses(totalResps);
+        } else {
+          setTotalPsychosocialResponses(0);
+        }
+      } catch (e) {
+        console.error("Failed to fetch psychosocial response counts", e);
+      }
 
       const reportsByCompany = new Map<string, { total: number; pending: number; lastAt: string | null }>();
       (allReports || []).forEach((r: any) => {
@@ -390,11 +440,11 @@ const SSTDashboard = () => {
             </div>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
               {[
                 { value: companies.length.toString(), label: 'Empresas', icon: Building2 },
-                { value: totalReports.toString(), label: 'Total Denúncias', icon: BarChart3 },
-                { value: pendingReports.toString(), label: 'Pendentes', icon: AlertCircle },
+                { value: totalPsychosocialResponses.toString(), label: 'Avaliações Psicossociais', icon: BarChart3 },
+                { value: totalPgrs.toString(), label: 'PGR Emitidos', icon: ClipboardCheck },
               ].map((stat, idx) => (
                 <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                   <div className="flex items-center gap-3">

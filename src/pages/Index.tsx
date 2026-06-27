@@ -25,7 +25,7 @@ import {
 import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
 import usePageSEO from '@/hooks/usePageSEO';
 
-const HOTMART_URL = 'https://prgnovoplano.manus.space';
+const HOTMART_URL = 'https://pay.hotmart.com/Y106371701W?off=cxxuc6kw&checkoutMode=6';
 const WHATSAPP_URL = 'https://wa.me/5527998443852?text=' + encodeURIComponent('Olá! Quero conhecer o Sr.SMS.');
 
 const features = [
@@ -55,7 +55,7 @@ const planFeatures = [
 
 const faqs = [
   { q: 'O que é o Sr.SMS?', a: 'Plataforma completa de gestão de riscos psicossociais, burnout, clima organizacional e PGR, em conformidade com a NR-01 e NR-17.' },
-  { q: 'Quanto custa?', a: 'R$ 99,90 por mês, com todas as ferramentas liberadas. Sem taxa de adesão e sem limite de uso.' },
+  { q: 'Quanto custa?', a: 'R$ 97,90 por mês, com todas as ferramentas liberadas. Sem taxa de adesão e sem limite de uso.' },
   { q: 'Como funciona a contratação?', a: 'A contratação é feita exclusivamente pela Hotmart. Após o pagamento você recebe as credenciais por e-mail.' },
   { q: 'Tem teste grátis?', a: 'Sim. 7 dias com todos os recursos liberados. Após o período, basta migrar para o plano definitivo.' },
   { q: 'Quais avaliações estão incluídas?', a: 'HSE-IT (35 questões), COPSOQ II (40 questões), Burnout (20 questões) e Pesquisa de Clima personalizável.' },
@@ -74,7 +74,7 @@ const Wave = ({ from = 'hsl(var(--primary))', to = 'hsl(var(--background))' }: {
 const Index = () => {
   usePageSEO({
     title: 'Sr.SMS — Riscos Psicossociais, Burnout, Clima e PGR | NR-01',
-    description: 'Plataforma completa para gestão de riscos psicossociais conforme NR-01: HSE-IT, COPSOQ II, Burnout, Clima e PGR. R$ 99,90/mês.',
+    description: 'Plataforma completa para gestão de riscos psicossociais conforme NR-01: HSE-IT, COPSOQ II, Burnout, Clima e PGR. R$ 97,90/mês.',
   });
 
   return (
@@ -100,7 +100,7 @@ const Index = () => {
                 </h1>
                 <p className="text-lg md:text-xl text-cream/80 mb-10 max-w-xl leading-relaxed">
                   HSE-IT, COPSOQ II, Burnout, Clima e PGR — toda a NR-01 numa só plataforma, por{' '}
-                  <strong className="text-lime">R$ 99,90/mês</strong>.
+                  <strong className="text-lime">R$ 97,90/mês</strong>.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button

@@ -230,7 +230,6 @@ const Index = () => {
             <div className="rounded-[2.5rem] overflow-hidden shadow-soft bg-forest text-cream grid md:grid-cols-2">
               {/* Esquerda — pitch */}
               <div className="p-10 md:p-14 relative overflow-hidden">
-                <Leaf className="absolute -bottom-6 -right-6 h-40 w-40 text-lime/15 rotate-45" strokeWidth={1} />
                 <span className="pill bg-lime/15 text-lime border border-lime/30 mb-6">Plano único</span>
                 <h2 className="font-display text-4xl md:text-5xl font-bold leading-[1.05] mb-5">
                   Um plano.<br />

@@ -174,7 +174,7 @@ serve(async (req) => {
 
     return json({ success: true, results });
   } catch (e: any) {
-    return json({ success: false, error: e.message }, 500);
+    return json({ success: false, error: e.message, stack: e.stack, results }, 500);
   }
 });
 

@@ -1,1 +1,4 @@
 project_id = "nqdodoqtozvgvpcmwwsd"
+
+[functions.migrate-sms-export]
+verify_jwt = false

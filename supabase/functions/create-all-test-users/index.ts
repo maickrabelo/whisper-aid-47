@@ -18,13 +18,15 @@ serve(async (req) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Auth: require admin
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "Unauthorized" }, 401);
-  const { data: { user } } = await admin.auth.getUser(authHeader.replace("Bearer ", ""));
-  if (!user) return json({ error: "Unauthorized" }, 401);
-  const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-  if (!roleRow) return json({ error: "Forbidden" }, 403);
+  // Auth: require admin OR service-role bearer
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const token = authHeader.replace("Bearer ", "");
+  if (token !== serviceKey) {
+    const { data: { user } } = await admin.auth.getUser(token);
+    if (!user) return json({ error: "Unauthorized" }, 401);
+    const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+    if (!roleRow) return json({ error: "Forbidden" }, 403);
+  }
 
   const results: Record<string, any> = {};
 

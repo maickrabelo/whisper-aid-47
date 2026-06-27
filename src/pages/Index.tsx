@@ -137,7 +137,7 @@ const Index = () => {
                     </div>
                     <p className="text-sm text-forest-mid/70 mb-2">Todas as ferramentas liberadas</p>
                     <div className="flex items-baseline gap-1 mb-6">
-                      <span className="font-display text-6xl font-bold text-forest">R$ 99,90</span>
+                      <span className="font-display text-6xl font-bold text-forest">R$ 97,90</span>
                       <span className="text-forest-mid/60">/mês</span>
                     </div>
                     <Button
@@ -239,7 +239,7 @@ const Index = () => {
                   Sem upsell, sem cobrança por usuário, sem limite de avaliações. Cobrança mensal via Hotmart.
                 </p>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-display text-6xl md:text-7xl font-bold text-lime">R$ 99,90</span>
+                  <span className="font-display text-6xl md:text-7xl font-bold text-lime">R$ 97,90</span>
                   <span className="text-cream/60 text-lg">/mês</span>
                 </div>
               </div>
@@ -316,7 +316,7 @@ const Index = () => {
               <span className="text-lime italic font-normal">NR-01</span>?
             </h2>
             <p className="text-lg md:text-xl text-cream/75 mb-10 max-w-2xl mx-auto">
-              Comece hoje por R$ 99,90/mês. Todas as ferramentas, sem letras miúdas.
+              Comece hoje por R$ 97,90/mês. Todas as ferramentas, sem letras miúdas.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button

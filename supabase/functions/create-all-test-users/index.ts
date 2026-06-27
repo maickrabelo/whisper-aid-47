@@ -1,0 +1,184 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const PASSWORD = "Teste123!";
+const PLAN_ID = "66ee2fda-d975-4e49-8682-248a786b2cf7"; // Sr.SMS
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const admin = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  // One-shot bootstrap function (will be deleted after use)
+
+
+  const results: Record<string, any> = {};
+
+  async function upsertUser(email: string, fullName: string) {
+    const { data: list } = await admin.auth.admin.listUsers();
+    let u = list?.users.find((x) => x.email === email);
+    if (u) {
+      await admin.auth.admin.updateUserById(u.id, { password: PASSWORD, email_confirm: true });
+    } else {
+      const { data, error } = await admin.auth.admin.createUser({
+        email, password: PASSWORD, email_confirm: true,
+        user_metadata: { full_name: fullName },
+      });
+      if (error) throw error;
+      u = data.user!;
+    }
+    return u!;
+  }
+
+  async function setRole(userId: string, role: string) {
+    await admin.from("user_roles").delete().eq("user_id", userId);
+    await admin.from("user_roles").insert({ user_id: userId, role });
+  }
+
+  try {
+    // ===== ADMIN =====
+    {
+      const email = "teste.admin@srsms.app";
+      const u = await upsertUser(email, "Admin Teste");
+      await setRole(u.id, "admin");
+      results.admin = { email, password: PASSWORD };
+    }
+
+    const subBase = {
+      plan_id: PLAN_ID, status: "active", billing_cycle: "monthly",
+      amount_cents: 9990, provider: "manual",
+      current_period_end: new Date(Date.now() + 365*24*3600*1000).toISOString(),
+    };
+
+    // ===== SST (Gestora SST) =====
+    {
+      const email = "teste.sst@srsms.app";
+      const u = await upsertUser(email, "Gestora SST Teste");
+      await setRole(u.id, "sst");
+      const { data: existingProfile } = await admin.from("profiles").select("sst_manager_id").eq("id", u.id).maybeSingle();
+      let smId = existingProfile?.sst_manager_id as string | null;
+      if (!smId) {
+        const { data: byEmail } = await admin.from("sst_managers").select("id").eq("email", email).maybeSingle();
+        if (byEmail) {
+          smId = byEmail.id;
+        } else {
+          const rand = Math.floor(Math.random()*1e8).toString().padStart(8,"0");
+          const cnpj = `${rand.slice(0,2)}.${rand.slice(2,5)}.${rand.slice(5,8)}/0001-00`;
+          const { data: created, error: smErr } = await admin.from("sst_managers").insert({
+            name: "SST Teste Sr.SMS", cnpj, email,
+            phone: "(27) 99844-3852", max_companies: 50, pgr_module_enabled: true,
+          }).select("id").single();
+          if (smErr) throw new Error("sst_managers: " + smErr.message);
+          smId = created!.id;
+        }
+      }
+      await admin.from("profiles").update({ sst_manager_id: smId, full_name: "Gestora SST Teste" }).eq("id", u.id);
+      const { data: subEx } = await admin.from("subscriptions").select("id").eq("owner_user_id", u.id).maybeSingle();
+      if (!subEx) {
+        const { error: sErr } = await admin.from("subscriptions").insert({ ...subBase, owner_user_id: u.id, owner_email: email });
+        if (sErr) throw new Error("sub sst: " + sErr.message);
+      }
+      results.sst = { email, password: PASSWORD };
+    }
+
+    // ===== COMPANY =====
+    {
+      const email = "teste.empresa@srsms.app";
+      const u = await upsertUser(email, "Empresa Teste");
+      await setRole(u.id, "company");
+      let { data: c } = await admin.from("companies").select("id").eq("email", email).maybeSingle();
+      if (!c) {
+        const rand = Math.floor(Math.random()*1e8).toString().padStart(8,"0");
+        const cnpj = `${rand.slice(0,2)}.${rand.slice(2,5)}.${rand.slice(5,8)}/0001-11`;
+        const { data: created, error: cErr } = await admin.from("companies").insert({
+          name: "Empresa Teste Ltda", cnpj, email,
+          phone: "(27) 99844-3852", employee_count: 25,
+        }).select("id").single();
+        if (cErr) throw new Error("companies: " + cErr.message);
+        c = created;
+      }
+      await admin.from("profiles").update({ company_id: c!.id, full_name: "Empresa Teste" }).eq("id", u.id);
+      await admin.from("user_companies").upsert({ user_id: u.id, company_id: c!.id, is_default: true }, { onConflict: "user_id,company_id" });
+      const { data: subEx } = await admin.from("subscriptions").select("id").eq("owner_user_id", u.id).maybeSingle();
+      if (!subEx) {
+        const { data: s, error: sErr } = await admin.from("subscriptions").insert({ ...subBase, owner_user_id: u.id, owner_email: email }).select("id").single();
+        if (sErr) throw new Error("sub company: " + sErr.message);
+        await admin.from("companies").update({ parent_subscription_id: s!.id }).eq("id", c!.id);
+      }
+      results.company = { email, password: PASSWORD };
+    }
+
+    // ===== SALES =====
+    {
+      const email = "teste.sales@srsms.app";
+      const u = await upsertUser(email, "Comercial Teste");
+      await setRole(u.id, "sales");
+      results.sales = { email, password: PASSWORD };
+    }
+
+    // ===== PARTNER =====
+    {
+      const email = "teste.parceiro@srsms.app";
+      const u = await upsertUser(email, "Parceiro Teste");
+      await setRole(u.id, "partner");
+      const { data: p } = await admin.from("licensed_partners").select("id").eq("email", email).maybeSingle();
+      if (!p) {
+        const { error: pErr } = await admin.from("licensed_partners").insert({
+          user_id: u.id, razao_social: "Parceiro Teste LTDA", nome_fantasia: "Parceiro Teste",
+          cnpj: "22.222.222/0001-22", endereco_completo: "Rua Teste, 100",
+          email, phone: "(27) 99844-3852", status: "approved",
+          referral_code: "PTESTE" + Math.floor(Math.random()*9999),
+        });
+        if (pErr) throw new Error("partner: " + pErr.message);
+      }
+      results.partner = { email, password: PASSWORD };
+    }
+
+    // ===== AFFILIATE =====
+    {
+      const email = "teste.afiliado@srsms.app";
+      const u = await upsertUser(email, "Afiliado Teste");
+      await setRole(u.id, "affiliate");
+      const { data: a } = await admin.from("affiliates").select("id").eq("email", email).maybeSingle();
+      if (!a) {
+        const { error: aErr } = await admin.from("affiliates").insert({
+          user_id: u.id, nome_completo: "Afiliado Teste", tipo_pessoa: "PF",
+          cpf: "000.000.000-00", rg: "00.000.000", estado_civil: "Solteiro",
+          profissao: "Consultor", endereco_completo: "Rua Teste, 200",
+          email, phone: "(27) 99844-3852", status: "approved",
+          referral_code: "ATESTE" + Math.floor(Math.random()*9999),
+        });
+        if (aErr) throw new Error("affiliate: " + aErr.message);
+      }
+      results.affiliate = { email, password: PASSWORD };
+    }
+
+    // ===== SECTOR VIEWER =====
+    {
+      const email = "teste.setor@srsms.app";
+      const u = await upsertUser(email, "Visualizador Setor");
+      await setRole(u.id, "sector_viewer");
+      results.sector_viewer = { email, password: PASSWORD };
+    }
+
+
+    return json({ success: true, results });
+  } catch (e: any) {
+    return json({ success: false, error: e.message, stack: e.stack, results }, 500);
+  }
+});
+
+function json(body: any, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}

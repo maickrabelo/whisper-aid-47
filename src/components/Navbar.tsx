@@ -22,10 +22,7 @@ import {
 } from "@/components/ui/popover";
 
 const COLOR_OPTIONS: { value: BrandColorTheme; label: string; color: string }[] = [
-  { value: 'navy', label: 'Azul Marinho', color: '#1e3a5f' },
   { value: 'green', label: 'Verde', color: '#166534' },
-  { value: 'orange', label: 'Laranja', color: '#ea580c' },
-  { value: 'purple', label: 'Roxo', color: '#7c3aed' },
 ];
 
 const SMS_LOGO_URL = '/__l5e/assets-v1/86052a62-59f9-47bf-af09-bc2d67c91278/sr-sms-logo.png';

@@ -107,9 +107,10 @@ Deno.serve(async (req) => {
     });
     const json = await res.json();
     if (!res.ok) {
-      console.error('[meta-capi] error', res.status, json);
-      return new Response(JSON.stringify({ error: json }), {
-        status: res.status,
+      // Don't surface Meta errors (bad token, etc.) to the client — just log.
+      console.warn('[meta-capi] meta rejected', res.status, json);
+      return new Response(JSON.stringify({ ok: false, skipped: 'meta_rejected', status: res.status }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -118,9 +119,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    console.error('[meta-capi] exception', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'unknown' }), {
-      status: 500,
+    console.warn('[meta-capi] exception', e);
+    return new Response(JSON.stringify({ ok: false, skipped: 'exception' }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

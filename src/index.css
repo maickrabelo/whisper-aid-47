@@ -2,155 +2,170 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Display + body fonts — pareamento distintivo (Sora + DM Sans) */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
 @layer base {
   :root {
-    --background: 158 33% 98%;
-    --foreground: 158 47% 12%;
+    /* === Verde.agr-inspired identity ===
+       Floresta profundo, lima vibrante, creme orgânico.
+       Bases em HSL para integração com tokens shadcn. */
+
+    /* Surfaces */
+    --background: 44 33% 96%;          /* creme orgânico */
+    --foreground: 158 65% 8%;          /* verde-floresta quase preto */
 
     --card: 0 0% 100%;
-    --card-foreground: 158 84% 4.9%;
+    --card-foreground: 158 65% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 158 84% 4.9%;
+    --popover-foreground: 158 65% 10%;
 
-    --primary: 158 75% 22%;
-    --primary-foreground: 158 40% 98%;
+    /* Brand */
+    --primary: 158 70% 14%;            /* verde-floresta profundo */
+    --primary-foreground: 78 90% 70%;  /* lima sobre escuro */
 
-    --secondary: 158 56% 42%;
-    --secondary-foreground: 158 40% 98%;
+    --secondary: 78 88% 62%;           /* lima vibrante — destaques/CTA */
+    --secondary-foreground: 158 70% 10%;
 
-    --muted: 158 40% 96.1%;
-    --muted-foreground: 158 16.3% 46.9%;
+    --accent: 78 88% 62%;              /* alias do lima */
+    --accent-foreground: 158 70% 10%;
 
-    --accent: 158 56% 28%;
-    --accent-foreground: 158 40% 98%;
+    --muted: 44 25% 92%;               /* creme apagado */
+    --muted-foreground: 158 25% 30%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 158 40% 98%;
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 158 31.8% 91.4%;
-    --input: 158 31.8% 91.4%;
-    --ring: 158 75% 42%;
+    --border: 158 20% 86%;
+    --input: 158 20% 88%;
+    --ring: 78 88% 55%;
 
-    /* SOIA paleta — espelhada no tailwind config audit.* */
-    --audit-primary: 217 72% 14%;
-    --audit-secondary: 154 85% 43%;
+    /* Legacy audit (mantido para componentes herdados) */
+    --audit-primary: 158 70% 14%;
+    --audit-secondary: 78 88% 62%;
 
-    --radius: 0.5rem;
+    /* Border radius — pílula generosa */
+    --radius: 1.25rem;
+
+    /* Gradientes & sombras de marca */
+    --gradient-forest: linear-gradient(135deg, hsl(158 70% 8%) 0%, hsl(158 65% 14%) 60%, hsl(158 55% 22%) 100%);
+    --gradient-lime: linear-gradient(135deg, hsl(78 88% 62%) 0%, hsl(88 78% 55%) 100%);
+    --shadow-soft: 0 10px 30px -12px hsl(158 70% 14% / 0.18);
+    --shadow-lime: 0 12px 32px -10px hsl(78 88% 55% / 0.45);
   }
 
   .dark {
-    --background: 158 47% 10%;
-    --foreground: 158 40% 98%;
+    --background: 158 50% 6%;
+    --foreground: 44 30% 94%;
 
-    --card: 158 47% 12%;
-    --card-foreground: 158 40% 98%;
+    --card: 158 50% 10%;
+    --card-foreground: 44 30% 94%;
 
-    --popover: 158 47% 12%;
-    --popover-foreground: 158 40% 98%;
+    --popover: 158 50% 10%;
+    --popover-foreground: 44 30% 94%;
 
-    --primary: 158 75% 30%;
-    --primary-foreground: 158 40% 98%;
+    --primary: 78 88% 62%;
+    --primary-foreground: 158 70% 10%;
 
-    --secondary: 158 56% 32%;
-    --secondary-foreground: 158 40% 98%;
+    --secondary: 158 50% 18%;
+    --secondary-foreground: 78 88% 70%;
 
-    --muted: 158 32.6% 17.5%;
-    --muted-foreground: 158 20.2% 65.1%;
+    --accent: 78 88% 62%;
+    --accent-foreground: 158 70% 10%;
 
-    --accent: 158 56% 22%;
-    --accent-foreground: 158 40% 98%;
+    --muted: 158 30% 14%;
+    --muted-foreground: 44 15% 70%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 158 40% 98%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 158 32.6% 17.5%;
-    --input: 158 32.6% 17.5%;
-    --ring: 158 75% 32%;
+    --border: 158 30% 18%;
+    --input: 158 30% 18%;
+    --ring: 78 88% 55%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
   }
-  
+
+  h1, h2, h3, h4, h5, .font-display {
+    font-family: 'Sora', 'DM Sans', sans-serif;
+    letter-spacing: -0.02em;
+  }
+
   .audit-container {
     @apply container px-4 sm:px-6 lg:px-8 py-6 mx-auto;
   }
 
   .section-title {
-    @apply text-2xl sm:text-3xl font-bold mb-6 text-audit-primary;
+    @apply text-2xl sm:text-3xl font-bold mb-6;
+    font-family: 'Sora', sans-serif;
+    color: hsl(var(--primary));
   }
+}
+
+/* === Utilitários de marca === */
+.bg-forest { background: var(--gradient-forest); }
+.bg-lime-grad { background: var(--gradient-lime); }
+.shadow-soft { box-shadow: var(--shadow-soft); }
+.shadow-lime { box-shadow: var(--shadow-lime); }
+
+.pill {
+  @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium;
+}
+
+/* Divisor ondulado entre seções (referência Verde.agr) */
+.wave-divider {
+  display: block;
+  width: 100%;
+  height: 56px;
 }
 
 .card-hover {
   @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
 }
 
-/* SST Theme Variables - defaults to green */
+/* SST Theme Variables — alinhados ao novo verde-floresta */
 :root {
-  --sst-primary: 158 75% 22%;
-  --sst-primary-dark: 158 75% 15%;
-  --sst-primary-mid: 158 56% 42%;
-  --sst-primary-light: 138 76% 97%;
-  --sst-primary-50: 138 76% 93%;
-  --sst-gradient-from: #14532d;
-  --sst-gradient-via: #166534;
-  --sst-gradient-to: #15803d;
+  --sst-primary: 158 70% 14%;
+  --sst-primary-dark: 158 70% 8%;
+  --sst-primary-mid: 158 55% 22%;
+  --sst-primary-light: 78 88% 92%;
+  --sst-primary-50: 44 33% 96%;
+  --sst-gradient-from: #062e1d;
+  --sst-gradient-via: #0b3f29;
+  --sst-gradient-to: #11533a;
 }
 
-.sst-bg-primary {
-  background-color: hsl(var(--sst-primary));
-}
-.sst-bg-primary-dark {
-  background-color: hsl(var(--sst-primary-dark));
-}
-.sst-bg-primary-mid {
-  background-color: hsl(var(--sst-primary-mid));
-}
-.sst-bg-primary-light {
-  background-color: hsl(var(--sst-primary-light));
-}
-.sst-bg-primary-50 {
-  background-color: hsl(var(--sst-primary-50));
-}
-.sst-text-primary {
-  color: hsl(var(--sst-primary));
-}
-.sst-text-primary-dark {
-  color: hsl(var(--sst-primary-dark));
-}
-.sst-text-primary-mid {
-  color: hsl(var(--sst-primary-mid));
-}
-.sst-border-primary {
-  border-color: hsl(var(--sst-primary));
-}
-.sst-border-primary-mid {
-  border-color: hsl(var(--sst-primary-mid));
-}
-.hover\:sst-bg-primary-light:hover {
-  background-color: hsl(var(--sst-primary-light));
-}
-.hover\:sst-bg-primary-dark:hover {
-  background-color: hsl(var(--sst-primary-dark));
-}
+.sst-bg-primary { background-color: hsl(var(--sst-primary)); }
+.sst-bg-primary-dark { background-color: hsl(var(--sst-primary-dark)); }
+.sst-bg-primary-mid { background-color: hsl(var(--sst-primary-mid)); }
+.sst-bg-primary-light { background-color: hsl(var(--sst-primary-light)); }
+.sst-bg-primary-50 { background-color: hsl(var(--sst-primary-50)); }
+.sst-text-primary { color: hsl(var(--sst-primary)); }
+.sst-text-primary-dark { color: hsl(var(--sst-primary-dark)); }
+.sst-text-primary-mid { color: hsl(var(--sst-primary-mid)); }
+.sst-border-primary { border-color: hsl(var(--sst-primary)); }
+.sst-border-primary-mid { border-color: hsl(var(--sst-primary-mid)); }
+.hover\:sst-bg-primary-light:hover { background-color: hsl(var(--sst-primary-light)); }
+.hover\:sst-bg-primary-dark:hover { background-color: hsl(var(--sst-primary-dark)); }
 
 /* SOnIA AI Effects */
 .ai-glow {
-  box-shadow: 0 0 20px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.1);
+  box-shadow: 0 0 20px hsl(var(--accent) / 0.5), 0 0 60px hsl(var(--accent) / 0.15);
   animation: aiPulse 3s ease-in-out infinite;
 }
 
 @keyframes aiPulse {
-  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.1); }
-  50% { box-shadow: 0 0 30px hsl(var(--primary) / 0.6), 0 0 80px hsl(var(--primary) / 0.2); }
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--accent) / 0.45), 0 0 60px hsl(var(--accent) / 0.12); }
+  50% { box-shadow: 0 0 32px hsl(var(--accent) / 0.7), 0 0 90px hsl(var(--accent) / 0.22); }
 }
 
 .glass-card {
@@ -180,7 +195,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, hsl(var(--primary) / 0.03), transparent);
+  background: linear-gradient(135deg, hsl(var(--accent) / 0.05), transparent);
   pointer-events: none;
 }
 
@@ -198,6 +213,6 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.08), transparent);
+  background: linear-gradient(90deg, transparent, hsl(var(--accent) / 0.12), transparent);
   animation: shimmer 3s infinite;
 }

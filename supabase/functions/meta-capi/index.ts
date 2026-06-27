@@ -33,7 +33,13 @@ Deno.serve(async (req) => {
 
   try {
     const token = Deno.env.get('META_CAPI_ACCESS_TOKEN');
-    if (!token) throw new Error('META_CAPI_ACCESS_TOKEN not configured');
+    if (!token) {
+      // No token configured — silently skip so the client never sees an error.
+      return new Response(JSON.stringify({ ok: false, skipped: 'no_token' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const testCode = Deno.env.get('META_CAPI_TEST_EVENT_CODE') || undefined;
 
     const body = await req.json();
@@ -47,8 +53,8 @@ Deno.serve(async (req) => {
     } = body || {};
 
     if (!event_name) {
-      return new Response(JSON.stringify({ error: 'event_name required' }), {
-        status: 400,
+      return new Response(JSON.stringify({ ok: false, skipped: 'no_event_name' }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -101,9 +107,10 @@ Deno.serve(async (req) => {
     });
     const json = await res.json();
     if (!res.ok) {
-      console.error('[meta-capi] error', res.status, json);
-      return new Response(JSON.stringify({ error: json }), {
-        status: res.status,
+      // Don't surface Meta errors (bad token, etc.) to the client — just log.
+      console.warn('[meta-capi] meta rejected', res.status, json);
+      return new Response(JSON.stringify({ ok: false, skipped: 'meta_rejected', status: res.status }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -112,9 +119,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    console.error('[meta-capi] exception', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'unknown' }), {
-      status: 500,
+    console.warn('[meta-capi] exception', e);
+    return new Response(JSON.stringify({ ok: false, skipped: 'exception' }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

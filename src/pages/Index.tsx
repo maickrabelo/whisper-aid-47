@@ -21,7 +21,6 @@ import {
   Users,
   FileSpreadsheet,
   Sparkles,
-  Leaf,
 } from 'lucide-react';
 import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
 import usePageSEO from '@/hooks/usePageSEO';
@@ -87,8 +86,6 @@ const Index = () => {
           {/* Camadas decorativas */}
           <div className="pointer-events-none absolute -top-32 -right-32 w-[520px] h-[520px] rounded-full bg-lime/20 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 left-0 w-[420px] h-[420px] rounded-full bg-forest-soft/40 blur-3xl" />
-          <Leaf className="pointer-events-none absolute top-10 right-10 h-32 w-32 text-lime/30 rotate-12" strokeWidth={1} />
-          <Leaf className="pointer-events-none absolute bottom-16 right-1/3 h-20 w-20 text-lime/20 -rotate-45" strokeWidth={1} />
 
           <div className="container mx-auto max-w-7xl px-4 relative z-10 pt-20 pb-32 md:pt-28 md:pb-40">
             <div className="grid lg:grid-cols-12 gap-12 items-center">
@@ -233,7 +230,6 @@ const Index = () => {
             <div className="rounded-[2.5rem] overflow-hidden shadow-soft bg-forest text-cream grid md:grid-cols-2">
               {/* Esquerda — pitch */}
               <div className="p-10 md:p-14 relative overflow-hidden">
-                <Leaf className="absolute -bottom-6 -right-6 h-40 w-40 text-lime/15 rotate-45" strokeWidth={1} />
                 <span className="pill bg-lime/15 text-lime border border-lime/30 mb-6">Plano único</span>
                 <h2 className="font-display text-4xl md:text-5xl font-bold leading-[1.05] mb-5">
                   Um plano.<br />
@@ -313,8 +309,6 @@ const Index = () => {
         {/* CTA final */}
         <section className="relative bg-forest-deep text-cream overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-forest-deep via-forest to-forest-mid" />
-          <Leaf className="pointer-events-none absolute top-10 left-10 h-40 w-40 text-lime/10 -rotate-12" strokeWidth={1} />
-          <Leaf className="pointer-events-none absolute bottom-10 right-10 h-32 w-32 text-lime/10 rotate-45" strokeWidth={1} />
 
           <div className="container mx-auto max-w-4xl px-4 py-24 text-center relative z-10">
             <h2 className="font-display text-4xl md:text-6xl font-bold mb-6 leading-[1.05]">

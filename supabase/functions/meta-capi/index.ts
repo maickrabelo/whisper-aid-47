@@ -33,7 +33,13 @@ Deno.serve(async (req) => {
 
   try {
     const token = Deno.env.get('META_CAPI_ACCESS_TOKEN');
-    if (!token) throw new Error('META_CAPI_ACCESS_TOKEN not configured');
+    if (!token) {
+      // No token configured — silently skip so the client never sees an error.
+      return new Response(JSON.stringify({ ok: false, skipped: 'no_token' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const testCode = Deno.env.get('META_CAPI_TEST_EVENT_CODE') || undefined;
 
     const body = await req.json();
@@ -47,8 +53,8 @@ Deno.serve(async (req) => {
     } = body || {};
 
     if (!event_name) {
-      return new Response(JSON.stringify({ error: 'event_name required' }), {
-        status: 400,
+      return new Response(JSON.stringify({ ok: false, skipped: 'no_event_name' }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

@@ -226,6 +226,54 @@ const SSTDashboard = () => {
             .in('company_id', fetchedIds)
         : { data: [] as any[] };
 
+      // Fetch PGR Documents Count
+      const { count: pgrCount } = fetchedIds.length > 0
+        ? await supabase
+            .from('pgr_documents')
+            .select('id', { count: 'exact', head: true })
+            .in('company_id', fetchedIds)
+        : { count: 0 };
+      setTotalPgrs(pgrCount || 0);
+
+      // Fetch Psychosocial responses count
+      try {
+        if (fetchedIds.length > 0) {
+          const [hseitA, copsoqA, burnoutA, climateA] = await Promise.all([
+            supabase.from("hseit_assessments" as any).select("id").in("company_id", fetchedIds),
+            supabase.from("copsoq_assessments" as any).select("id").in("company_id", fetchedIds),
+            supabase.from("burnout_assessments" as any).select("id").in("company_id", fetchedIds),
+            supabase.from("climate_surveys" as any).select("id").in("company_id", fetchedIds),
+          ]);
+
+          const hseitIds = (hseitA.data || []).map((a: any) => a.id);
+          const copsoqIds = (copsoqA.data || []).map((a: any) => a.id);
+          const burnoutIds = (burnoutA.data || []).map((a: any) => a.id);
+          const climateIds = (climateA.data || []).map((a: any) => a.id);
+
+          const [hseitR, copsoqR, burnoutR, climateR] = await Promise.all([
+            hseitIds.length > 0
+              ? supabase.from("hseit_responses" as any).select("id", { count: "exact", head: true }).in("assessment_id", hseitIds).not("completed_at", "is", null)
+              : { count: 0 },
+            copsoqIds.length > 0
+              ? supabase.from("copsoq_responses" as any).select("id", { count: "exact", head: true }).in("assessment_id", copsoqIds).not("completed_at", "is", null)
+              : { count: 0 },
+            burnoutIds.length > 0
+              ? supabase.from("burnout_responses" as any).select("id", { count: "exact", head: true }).in("assessment_id", burnoutIds).not("completed_at", "is", null)
+              : { count: 0 },
+            climateIds.length > 0
+              ? supabase.from("survey_responses" as any).select("id", { count: "exact", head: true }).in("survey_id", climateIds)
+              : { count: 0 },
+          ]);
+
+          const totalResps = (hseitR?.count || 0) + (copsoqR?.count || 0) + (burnoutR?.count || 0) + (climateR?.count || 0);
+          setTotalPsychosocialResponses(totalResps);
+        } else {
+          setTotalPsychosocialResponses(0);
+        }
+      } catch (e) {
+        console.error("Failed to fetch psychosocial response counts", e);
+      }
+
       const reportsByCompany = new Map<string, { total: number; pending: number; lastAt: string | null }>();
       (allReports || []).forEach((r: any) => {
         const entry = reportsByCompany.get(r.company_id) || { total: 0, pending: 0, lastAt: null };

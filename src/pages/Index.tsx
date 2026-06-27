@@ -57,7 +57,6 @@ const faqs = [
   { q: 'O que é o Sr.SMS?', a: 'Plataforma completa de gestão de riscos psicossociais, burnout, clima organizacional e PGR, em conformidade com a NR-01 e NR-17.' },
   { q: 'Quanto custa?', a: 'R$ 97,90 por mês, com todas as ferramentas liberadas. Sem taxa de adesão e sem limite de uso.' },
   { q: 'Como funciona a contratação?', a: 'A contratação é feita exclusivamente pela Hotmart. Após o pagamento você recebe as credenciais por e-mail.' },
-  { q: 'Tem teste grátis?', a: 'Sim. 7 dias com todos os recursos liberados. Após o período, basta migrar para o plano definitivo.' },
   { q: 'Quais avaliações estão incluídas?', a: 'HSE-IT (35 questões), COPSOQ II (40 questões), Burnout (20 questões) e Pesquisa de Clima personalizável.' },
   { q: 'Posso atender mais de uma empresa?', a: 'Sim. Multi-empresa com segmentação por departamentos e GHEs — ideal para gestoras SST e consultorias.' },
   { q: 'O sistema gera o PGR?', a: 'Sim. Inventário, GHEs, matriz de riscos e plano de ação de 12 meses prontos para auditoria.' },

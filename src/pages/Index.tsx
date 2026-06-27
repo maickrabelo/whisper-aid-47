@@ -86,8 +86,6 @@ const Index = () => {
           {/* Camadas decorativas */}
           <div className="pointer-events-none absolute -top-32 -right-32 w-[520px] h-[520px] rounded-full bg-lime/20 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 left-0 w-[420px] h-[420px] rounded-full bg-forest-soft/40 blur-3xl" />
-          <Leaf className="pointer-events-none absolute top-10 right-10 h-32 w-32 text-lime/30 rotate-12" strokeWidth={1} />
-          <Leaf className="pointer-events-none absolute bottom-16 right-1/3 h-20 w-20 text-lime/20 -rotate-45" strokeWidth={1} />
 
           <div className="container mx-auto max-w-7xl px-4 relative z-10 pt-20 pb-32 md:pt-28 md:pb-40">
             <div className="grid lg:grid-cols-12 gap-12 items-center">

@@ -146,7 +146,6 @@ const Index = () => {
                     >
                       Assinar pela Hotmart
                     </Button>
-                    <p className="text-xs text-forest-mid/60 mt-3 text-center">7 dias de teste grátis</p>
                   </div>
                 </div>
               </div>

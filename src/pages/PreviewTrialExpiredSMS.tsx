@@ -3,7 +3,7 @@ import { ShieldOff, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const SMS_UPGRADE_URL = 'https://prgnovoplano.manus.space';
+const SMS_UPGRADE_URL = 'https://pay.hotmart.com/Y106371701W?off=cxxuc6kw&checkoutMode=6';
 
 // Preview-only page to visualize the expired SMS trial popup.
 const PreviewTrialExpiredSMS: React.FC = () => (

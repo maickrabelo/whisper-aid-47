@@ -101,12 +101,6 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
                 />
               )}
             </Link>
-            {isLoggedIn && (
-              <div className="hidden sm:flex items-center gap-1.5 ml-3 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
-                <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
-                <span className="text-xs font-semibold ai-badge">SOnIA AI</span>
-              </div>
-            )}
           </div>
 
           <div className="flex items-center gap-4">

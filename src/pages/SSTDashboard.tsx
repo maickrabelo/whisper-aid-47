@@ -440,11 +440,11 @@ const SSTDashboard = () => {
             </div>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
               {[
                 { value: companies.length.toString(), label: 'Empresas', icon: Building2 },
-                { value: totalReports.toString(), label: 'Total Denúncias', icon: BarChart3 },
-                { value: pendingReports.toString(), label: 'Pendentes', icon: AlertCircle },
+                { value: totalPsychosocialResponses.toString(), label: 'Avaliações Psicossociais', icon: BarChart3 },
+                { value: totalPgrs.toString(), label: 'PGR Emitidos', icon: ClipboardCheck },
               ].map((stat, idx) => (
                 <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                   <div className="flex items-center gap-3">

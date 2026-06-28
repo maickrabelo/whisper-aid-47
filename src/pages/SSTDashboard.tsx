@@ -705,8 +705,24 @@ const SSTDashboard = () => {
                           {(isSmartOnly || smartOuvidoriaIds.has(company.id)) ? (
                             <>
                               <p className="text-xs text-muted-foreground font-medium">Ouvidoria Smart</p>
-                              <Button variant="outline" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); navigate('/ouvidoria-beta/painel'); }}>
-                                Abrir Ouvidoria Smart
+                              <div className="flex items-center gap-2">
+                                <a
+                                  href={`${window.location.origin}/ouvidoria-beta/${company.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
+                                >
+                                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                                  <span className="truncate">{window.location.origin}/ouvidoria-beta/{company.id.substring(0,8)}…</span>
+                                </a>
+                                <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/ouvidoria-beta/${company.id}`, e)} className="h-6 px-2">
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              <QRCodeDownloader url={`${window.location.origin}/ouvidoria-beta/${company.id}`} filename={`qrcode-ouvidoria-${company.slug}.png`} size="sm" className="w-full" />
+                              <Button variant="outline" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); navigate(`/ouvidoria-beta/painel?company=${company.id}`); }}>
+                                Abrir painel da empresa
                               </Button>
                             </>
                           ) : (
@@ -731,6 +747,7 @@ const SSTDashboard = () => {
                             </>
                           )}
                         </div>
+
                       )}
                     </CardContent>
                     <CardFooter className="pt-0">

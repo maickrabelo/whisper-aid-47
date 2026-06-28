@@ -80,32 +80,28 @@ const Index = () => {
     <div className="flex flex-col min-h-screen bg-cream">
       <Navbar />
       <main className="flex-grow">
-        {/* HERO — verde-floresta */}
-        <section className="relative overflow-hidden bg-forest text-cream">
-          {/* Camadas decorativas */}
-          <div className="pointer-events-none absolute -top-32 -right-32 w-[520px] h-[520px] rounded-full bg-lime/20 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 left-0 w-[420px] h-[420px] rounded-full bg-forest-soft/40 blur-3xl" />
-
-          <div className="container mx-auto max-w-7xl px-4 relative z-10 pt-20 pb-32 md:pt-28 md:pb-40">
+        {/* HERO — fundo branco para destacar logos */}
+        <section className="relative overflow-hidden bg-white text-forest">
+          <div className="container mx-auto max-w-7xl px-4 relative z-10 pt-20 pb-20 md:pt-28 md:pb-28">
             <div className="grid lg:grid-cols-12 gap-12 items-center">
               <div className="lg:col-span-7 animate-fade-in">
-                <span className="pill bg-lime/15 text-lime border border-lime/30 mb-7">
+                <span className="pill bg-forest/10 text-forest border border-forest/20 mb-7">
                   <Sparkles className="h-3.5 w-3.5" /> Conformidade NR-01
                 </span>
                 <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.02] mb-7">
                   Saúde mental no trabalho,{' '}
-                  <span className="text-lime italic font-normal">cultivada</span>{' '}
+                  <span className="text-forest italic font-normal">cultivada</span>{' '}
                   com método.
                 </h1>
-                <p className="text-lg md:text-xl text-cream/80 mb-10 max-w-xl leading-relaxed">
+                <p className="text-lg md:text-xl text-forest/70 mb-10 max-w-xl leading-relaxed">
                   HSE-IT, COPSOQ II, Burnout, Clima e PGR — toda a NR-01 numa só plataforma, por{' '}
-                  <strong className="text-lime">R$ 97,90/mês</strong>.
+                  <strong className="text-forest">R$ 97,90/mês</strong>.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     size="lg"
                     onClick={() => window.open(HOTMART_URL, '_blank')}
-                    className="rounded-full bg-lime text-forest-deep hover:bg-lime-bright font-semibold shadow-lime h-14 px-8 text-base group"
+                    className="rounded-full bg-forest text-lime hover:bg-forest-deep font-semibold shadow-lime h-14 px-8 text-base group"
                   >
                     Assinar agora
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -114,13 +110,13 @@ const Index = () => {
                     size="lg"
                     onClick={() => window.open(WHATSAPP_URL, '_blank')}
                     variant="outline"
-                    className="rounded-full border-cream/30 bg-transparent text-cream hover:bg-cream/10 hover:text-cream h-14 px-8 text-base"
+                    className="rounded-full border-forest/30 bg-white text-forest hover:bg-forest/5 hover:text-forest h-14 px-8 text-base"
                   >
                     Falar no WhatsApp
                   </Button>
                 </div>
-                <div className="flex items-center gap-2 mt-8 text-sm text-cream/60">
-                  <ShieldCheck className="h-4 w-4 text-lime" />
+                <div className="flex items-center gap-2 mt-8 text-sm text-forest/60">
+                  <ShieldCheck className="h-4 w-4 text-forest" />
                   <span>NR-01 · LGPD · Pagamento seguro via Hotmart</span>
                 </div>
               </div>
@@ -128,20 +124,20 @@ const Index = () => {
               {/* Card preço — pílula grande */}
               <div className="lg:col-span-5 animate-fade-in" style={{ animationDelay: '0.15s' }}>
                 <div className="relative">
-                  <div className="absolute -inset-1 rounded-[2rem] bg-lime/20 blur-xl" />
-                  <div className="relative bg-cream text-forest-deep rounded-[2rem] shadow-2xl p-8 md:p-10">
+                  <div className="absolute -inset-1 rounded-[2rem] bg-forest/10 blur-xl" />
+                  <div className="relative bg-forest text-cream rounded-[2rem] shadow-2xl p-8 md:p-10">
                     <div className="flex items-center justify-between mb-6">
                       <img src={srSmsLogo.url} alt="Sr.SMS" className="h-16 object-contain" />
-                      <span className="pill bg-forest text-lime text-xs">Plano único</span>
+                      <span className="pill bg-lime text-forest-deep text-xs">Plano único</span>
                     </div>
-                    <p className="text-sm text-forest-mid/70 mb-2">Todas as ferramentas liberadas</p>
+                    <p className="text-sm text-cream/70 mb-2">Todas as ferramentas liberadas</p>
                     <div className="flex items-baseline gap-1 mb-6">
-                      <span className="font-display text-6xl font-bold text-forest">R$ 97,90</span>
-                      <span className="text-forest-mid/60">/mês</span>
+                      <span className="font-display text-6xl font-bold text-lime">R$ 97,90</span>
+                      <span className="text-cream/60">/mês</span>
                     </div>
                     <Button
                       size="lg"
-                      className="w-full rounded-full bg-forest text-lime hover:bg-forest-deep h-12 font-semibold"
+                      className="w-full rounded-full bg-lime text-forest-deep hover:bg-lime-bright h-12 font-semibold"
                       onClick={() => window.open(HOTMART_URL, '_blank')}
                     >
                       Assinar pela Hotmart
@@ -151,11 +147,6 @@ const Index = () => {
               </div>
             </div>
           </div>
-
-          {/* Onda decorativa */}
-          <svg className="absolute bottom-0 left-0 right-0 w-full" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
-            <path d="M0,48 C240,80 480,16 720,32 C960,48 1200,80 1440,24 L1440,80 L0,80 Z" fill="hsl(var(--background))" />
-          </svg>
         </section>
 
         {/* FEATURES */}

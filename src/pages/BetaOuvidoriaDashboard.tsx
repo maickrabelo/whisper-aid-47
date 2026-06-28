@@ -278,7 +278,7 @@ const BetaOuvidoriaDashboard = () => {
               <Button
                 variant="secondary"
                 size="sm"
-                className="bg-[hsl(78,88%,62%)] hover:bg-[hsl(78,88%,55%)] text-[hsl(158,70%,10%)] font-semibold shadow-sm"
+                className="font-semibold shadow-sm"
                 onClick={() => navigate('/sst-dashboard')}
               >
                 ← Voltar ao Dashboard SST

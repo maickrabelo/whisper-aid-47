@@ -51,7 +51,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('sst-reset-company-password', {
-        body: { company_id: company.id },
+        body: { company_id: company.id, send_email: sendEmail },
       });
 
       if (error) throw error;
@@ -60,10 +60,16 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
       setResult({
         email: data.email,
         tempPassword: data.tempPassword,
+        emailSent: data.emailSent,
         relatedCompanies: data.relatedCompanies || [{ name: company.name, cnpj: company.cnpj || null }],
       });
 
-      toast({ title: "Senha resetada!", description: "A senha temporária foi gerada com sucesso." });
+      toast({
+        title: sendEmail && data.emailSent ? "Acesso gerado e e-mail enviado!" : "Senha gerada!",
+        description: sendEmail && !data.emailSent
+          ? "Senha criada, mas o e-mail não pôde ser enviado. Copie e envie manualmente."
+          : "Compartilhe as credenciais com o cliente.",
+      });
     } catch (error: any) {
       console.error('Error resetting password:', error);
       toast({ title: "Erro ao resetar senha", description: error.message || 'Tente novamente.', variant: "destructive" });

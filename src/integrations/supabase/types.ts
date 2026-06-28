@@ -1101,6 +1101,7 @@ export type Database = {
       hotmart_product_plans: {
         Row: {
           created_at: string
+          hotmart_offer_code: string | null
           hotmart_product_id: string
           is_active: boolean
           notes: string | null
@@ -1109,6 +1110,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hotmart_offer_code?: string | null
           hotmart_product_id: string
           is_active?: boolean
           notes?: string | null
@@ -1117,6 +1119,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hotmart_offer_code?: string | null
           hotmart_product_id?: string
           is_active?: boolean
           notes?: string | null

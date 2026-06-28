@@ -625,7 +625,7 @@ const BetaOuvidoriaDashboard = () => {
                           {u.author_type === "investigator" ? "Ouvidoria" : "Denunciante anônimo"} ·{" "}
                           {new Date(u.created_at).toLocaleString("pt-BR")}
                         </div>
-                        <p className="whitespace-pre-wrap text-sm">{u.message}</p>
+                        <p className="whitespace-pre-wrap text-sm break-words">{u.message}</p>
                       </li>
                     ))}
                   </ul>

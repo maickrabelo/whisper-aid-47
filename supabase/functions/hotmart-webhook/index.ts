@@ -529,22 +529,45 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Map plan -> subscription plan. Hotmart envia múltiplos planos dentro do mesmo produto,
-      // então priorizamos o ID do plano (subscription.plan.id) e caímos para o productId só como fallback.
+      // Map plan -> subscription plan. Hotmart pode ter múltiplas ofertas (offer.code) sob o
+      // mesmo product_id com preços/condições diferentes (ex.: R$ 9,90 trial vs R$ 97,90 mensal).
+      // Por isso o mapeamento prioriza (product_id + offer_code), depois product_id sem offer,
+      // e por fim o plan_id da assinatura como fallback legado.
+      const offerCode: string | undefined = purchase?.offer?.code
+        ? String(purchase.offer.code)
+        : (subscriptionInfo?.plan?.code ? String(subscriptionInfo.plan.code) : undefined);
       const lookupIds = [planId, productId].filter(Boolean) as string[];
       let mapping: any = null;
       if (lookupIds.length > 0) {
         const { data: m } = await supabase
           .from('hotmart_product_plans')
-          .select('plan_id, is_active, hotmart_product_id, subscription_plans(*)')
+          .select('plan_id, is_active, hotmart_product_id, hotmart_offer_code, subscription_plans(*)')
           .in('hotmart_product_id', lookupIds)
           .eq('is_active', true);
-        // Prefer match by planId (ordem do lookupIds)
         if (m && m.length > 0) {
-          mapping = m.find((row: any) => row.hotmart_product_id === planId)
-            ?? m.find((row: any) => row.hotmart_product_id === productId)
-            ?? m[0];
+          // 1) exact match (product_id + offer_code)
+          if (offerCode) {
+            mapping = m.find((row: any) =>
+              row.hotmart_product_id === productId && row.hotmart_offer_code === offerCode,
+            ) ?? m.find((row: any) =>
+              row.hotmart_product_id === planId && row.hotmart_offer_code === offerCode,
+            );
+          }
+          // 2) product_id sem offer_code definido (mapeamento default)
+          if (!mapping) {
+            mapping = m.find((row: any) => row.hotmart_product_id === productId && !row.hotmart_offer_code)
+              ?? m.find((row: any) => row.hotmart_product_id === planId && !row.hotmart_offer_code);
+          }
+          // 3) fallback: qualquer linha do product/plan id
+          if (!mapping) {
+            mapping = m.find((row: any) => row.hotmart_product_id === productId)
+              ?? m.find((row: any) => row.hotmart_product_id === planId)
+              ?? m[0];
+          }
         }
+        console.log('hotmart mapping resolved:', {
+          productId, planId, offerCode, resolvedPlanId: mapping?.plan_id,
+        });
       }
 
       if (!mapping || !mapping.is_active) {

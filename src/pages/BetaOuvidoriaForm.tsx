@@ -140,15 +140,26 @@ const BetaOuvidoriaForm = () => {
         </div>
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-primary" />
-              Canal Anônimo de Ouvidoria — {company.name}
-            </CardTitle>
-            <CardDescription>
-              Seu relato é fundamental para mantermos um ambiente seguro, ético e transparente.
-              Este canal é 100% anônimo. Não coletamos seu IP, localização ou qualquer dado de
-              navegação. Sinta-se seguro para relatar.
-            </CardDescription>
+            <div className="flex items-center gap-4">
+              {company.logo_url ? (
+                <img src={company.logo_url} alt={`Logo ${company.name}`} className="h-14 w-14 object-contain rounded-md bg-white border" />
+              ) : (
+                <div className="h-14 w-14 rounded-md bg-primary/10 flex items-center justify-center text-primary font-bold">
+                  {company.name.substring(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div className="flex-1">
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  Canal Anônimo de Ouvidoria
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  <strong>{company.name}</strong> — Seu relato é fundamental para mantermos um ambiente seguro, ético e transparente.
+                  Este canal é 100% anônimo. Não coletamos seu IP, localização ou qualquer dado de
+                  navegação. Sinta-se seguro para relatar.
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
         </Card>
 

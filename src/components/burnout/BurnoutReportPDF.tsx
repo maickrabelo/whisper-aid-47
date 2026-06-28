@@ -3,6 +3,7 @@ import { FileDown, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
+import { renderReportLogos } from '@/lib/pdfLogos';
 import {
   BurnoutCategory,
   BurnoutRiskLevel,

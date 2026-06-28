@@ -640,6 +640,28 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </div>
       )}
 
+      {/* Ouvidoria Smart — sempre visível quando habilitada, independente de ter gestora SST */}
+      {features.ouvidoria_smart && hasSST === true && (
+        <div className="mb-6 animate-fade-in">
+          <h2 className="text-lg font-semibold text-foreground mb-3">Canal de Denúncias</h2>
+          <Card
+            id="company-tool-ouvidoria-smart"
+            className="cursor-pointer hover:shadow-lg hover:border-amber-500/60 transition-all border-amber-500/30 max-w-md"
+            onClick={() => navigate('/ouvidoria-beta/painel')}
+          >
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                <ClipboardList className="h-6 w-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground">Ouvidoria Smart</h3>
+                <p className="text-sm text-muted-foreground">Canal anônimo da sua empresa</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Treinamentos card */}
       {features.treinamentos && (
         <Card

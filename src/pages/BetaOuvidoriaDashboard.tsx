@@ -273,8 +273,16 @@ const BetaOuvidoriaDashboard = () => {
       <Navbar />
       <main className="flex-grow bg-gray-50 py-8">
         <div className="audit-container max-w-7xl mx-auto px-4">
+          {isSst && (
+            <div className="mb-4">
+              <Button variant="outline" size="sm" onClick={() => navigate('/sst-dashboard')}>
+                ← Voltar ao Dashboard SST
+              </Button>
+            </div>
+          )}
           {/* Header */}
           <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="text-3xl font-bold text-audit-primary">Ouvidoria Smart</h1>

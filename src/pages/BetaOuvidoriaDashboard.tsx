@@ -283,15 +283,35 @@ const BetaOuvidoriaDashboard = () => {
                 Canal 100% anônimo, sem consumo de créditos.
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => { navigator.clipboard.writeText(publicLink); toast({ title: "Link copiado" }); }}>
+            <div className="flex gap-2 flex-wrap items-center">
+              {isSst && managerCompanies.length > 0 && (
+                <Select value={selectedCompanyId ?? ''} onValueChange={(v) => setSelectedCompanyId(v)}>
+                  <SelectTrigger className="w-64">
+                    <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Selecionar empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {managerCompanies.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Button variant="outline" disabled={!publicLink} onClick={() => { navigator.clipboard.writeText(publicLink); toast({ title: "Link copiado" }); }}>
                 <Copy className="h-4 w-4 mr-2" /> Copiar link público
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild disabled={!publicLink}>
                 <a href={publicLink} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-2" /> Abrir formulário</a>
               </Button>
             </div>
           </div>
+
+          {isSst && managerCompanies.length === 0 && (
+            <Card className="mb-6"><CardContent className="p-4 text-sm text-muted-foreground">
+              Nenhuma empresa com Ouvidoria Smart habilitada. Habilite o recurso pelo card "Ferramentas" da empresa.
+            </CardContent></Card>
+          )}
+
 
           {/* Stats cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

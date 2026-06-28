@@ -379,6 +379,14 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   doc.setFillColor(...COLORS.accent);
   doc.rect(0, 86, PAGE_W, 4, 'F');
 
+  await renderReportLogos(doc, PAGE_W, {
+    sstLogoUrl: input.sstLogoUrl,
+    companyLogoUrl: input.company.logo_url,
+    topY: 8,
+    maxHeight: 24,
+    maxWidth: 45,
+  });
+
   setText(36, true, [255, 255, 255]);
   doc.text('PGR', PAGE_W / 2, 50, { align: 'center' });
   setText(13, false, [220, 230, 255]);

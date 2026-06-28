@@ -8,6 +8,7 @@ const corsHeaders = {
 
 interface ResetRequest {
   company_id: string;
+  send_email?: boolean;
 }
 
 function generateTempPassword(companyName: string): string {

@@ -229,6 +229,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         executiveSummary,
         sstLogoUrl,
         sstName,
+        companyLogoUrl,
         sstCpf: sstCpf || undefined,
         sstRegistration: sstRegistration || undefined,
         methodology: 'hseit',

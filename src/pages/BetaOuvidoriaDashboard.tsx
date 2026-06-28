@@ -568,7 +568,7 @@ const BetaOuvidoriaDashboard = () => {
             <div className="space-y-6 my-4 overflow-y-auto flex-1 pr-2">
               <div>
                 <h3 className="font-medium mb-2">Descrição do relato</h3>
-                <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border whitespace-pre-wrap">
+                <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border whitespace-pre-wrap break-words">
                   {selected.description}
                 </p>
               </div>

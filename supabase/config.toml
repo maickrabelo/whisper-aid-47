@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.reset-max-nascimento]
 verify_jwt = false
+
+[functions.hotmart-webhook]
+verify_jwt = false
+
+[functions.provision-sms-trial-felipe]
+verify_jwt = false
+
+[functions.test-hotmart-webhook]
+verify_jwt = false

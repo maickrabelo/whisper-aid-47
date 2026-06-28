@@ -108,17 +108,17 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
               <>
               {hasDualRole && (role === 'sst' || role === 'company') && (
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   onClick={() => switchRole(role === 'sst' ? 'company' : 'sst')}
-                  className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                  className="gap-2 font-semibold shadow-sm"
                   title={role === 'sst' ? 'Mudar para visão de Empresa' : 'Mudar para visão de Gestora SST'}
                 >
                   {role === 'sst' ? <Building2 className="h-4 w-4" /> : <Briefcase className="h-4 w-4" />}
-                  <span className="hidden sm:inline">
+                  <span>
                     {role === 'sst' ? 'Ver como Empresa' : 'Ver como Gestora SST'}
                   </span>
-                  <Repeat className="h-3.5 w-3.5 opacity-60" />
+                  <Repeat className="h-3.5 w-3.5 opacity-70" />
                 </Button>
               )}
               {role === 'sst' && (

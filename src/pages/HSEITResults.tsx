@@ -136,7 +136,7 @@ export default function HSEITResults() {
       // Fetch assessment
       const { data: assessmentData, error: assessmentError } = await supabase
         .from('hseit_assessments')
-        .select('id, title, description, created_at, multi_sector_enabled, companies(id, name)')
+        .select('id, title, description, created_at, multi_sector_enabled, companies(id, name, logo_url)')
         .eq('id', id)
         .single();
 
@@ -148,7 +148,7 @@ export default function HSEITResults() {
         description: assessmentData.description,
         createdAt: assessmentData.created_at,
         multiSectorEnabled: !!(assessmentData as any).multi_sector_enabled,
-        companies: assessmentData.companies as unknown as { id: string; name: string }
+        companies: assessmentData.companies as unknown as { id: string; name: string; logo_url?: string | null }
       };
       setAssessment(mappedAssessment);
 

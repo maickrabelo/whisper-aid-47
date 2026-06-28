@@ -48,7 +48,7 @@ serve(async (req) => {
       );
     }
 
-    const { company_id }: ResetRequest = await req.json();
+    const { company_id, send_email }: ResetRequest = await req.json();
     if (!company_id) {
       return new Response(
         JSON.stringify({ success: false, error: 'company_id é obrigatório' }),

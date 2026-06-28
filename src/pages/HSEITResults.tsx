@@ -82,6 +82,7 @@ interface Assessment {
   companies: {
     id: string;
     name: string;
+    logo_url?: string | null;
   };
 }
 

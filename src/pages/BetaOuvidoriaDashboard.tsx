@@ -27,6 +27,7 @@ import {
   isBetaOuvidoriaCompany, labelOf,
   REPORT_TYPE_OPTIONS, CATEGORY_OPTIONS, STATUS_OPTIONS, BETA_OUVIDORIA_COMPANY_IDS,
 } from "@/lib/betaOuvidoria";
+import { QRCodeDialog } from "@/components/QRCodeDialog";
 
 const COLORS = ["#0F3460", "#1A97B9", "#1E6F5C", "#D32626", "#E97E00", "#777777", "#8e44ad", "#16a085"];
 

@@ -47,7 +47,7 @@ async function sendCredentialsEmail(
   }
 
   const isSmsPlan = !!planSlug && planSlug.toLowerCase().includes('sms');
-  const loginUrl = isSmsPlan ? 'https://soia.app.br/sms/auth' : 'https://soia.app.br/auth';
+  const loginUrl = isSmsPlan ? 'https://srsms.com.br/sst-dashboard' : 'https://srsms.com.br/sst-dashboard';
   const brandLabel = isSmsPlan ? 'Sr. SMS' : 'SOIA';
   const fromHeader = isSmsPlan
     ? 'Sr. SMS <noreply@soia.app.br>'
@@ -111,7 +111,7 @@ async function sendBlockedPurchaseEmail(
   }
 
   const isSmsPlan = !!planSlug && planSlug.toLowerCase().includes('sms');
-  const loginUrl = isSmsPlan ? 'https://soia.app.br/sms/auth' : 'https://soia.app.br/auth';
+  const loginUrl = isSmsPlan ? 'https://srsms.com.br/sst-dashboard' : 'https://srsms.com.br/sst-dashboard';
   const brandLabel = isSmsPlan ? 'Sr. SMS' : 'SOIA';
   const fromHeader = isSmsPlan
     ? 'Sr. SMS <noreply@soia.app.br>'

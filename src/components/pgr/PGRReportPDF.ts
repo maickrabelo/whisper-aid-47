@@ -724,8 +724,8 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   return doc;
 }
 
-export function downloadPGRReport(input: PGRReportInput) {
-  const doc = generatePGRReportPDF(input);
+export async function downloadPGRReport(input: PGRReportInput) {
+  const doc = await generatePGRReportPDF(input);
   const fname = `PGR_${slugify(input.company.name)}_v${input.pgr.version}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fname);
 }

@@ -33,7 +33,7 @@ const schema = z.object({
 const BetaOuvidoriaForm = () => {
   const { companyId } = useParams();
   const { toast } = useToast();
-  const [company, setCompany] = useState<{ id: string; name: string } | null>(null);
+  const [company, setCompany] = useState<{ id: string; name: string; logo_url?: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -58,7 +58,7 @@ const BetaOuvidoriaForm = () => {
         allowed = !!rpc;
       }
       if (!allowed) { setLoading(false); return; }
-      const { data } = await supabase.from("companies").select("id, name").eq("id", companyId).maybeSingle();
+      const { data } = await supabase.from("companies").select("id, name, logo_url").eq("id", companyId).maybeSingle();
       setCompany(data as any);
       setLoading(false);
     };

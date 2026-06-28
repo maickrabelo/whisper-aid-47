@@ -112,7 +112,7 @@ const slugify = (s: string) =>
 // Gerador
 // ─────────────────────────────────────────────────────────────
 
-export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
+export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   const state = { y: TOP_Y, page: 1, skipChrome: true };
 

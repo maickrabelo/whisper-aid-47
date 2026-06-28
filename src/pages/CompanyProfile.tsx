@@ -311,7 +311,7 @@ const CompanyProfile = () => {
           {company && (
             <div className="mt-6">
               <TeamManagementCard
-                accountType="company"
+                accountType={isSstMode ? "sst" : "company"}
                 accountId={company.id}
                 accountName={company.name}
               />

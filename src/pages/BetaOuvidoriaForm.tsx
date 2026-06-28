@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -134,10 +133,6 @@ const BetaOuvidoriaForm = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="flex-1 max-w-3xl mx-auto w-full p-4 md:p-8 space-y-6">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="border-amber-500 text-amber-600">Beta</Badge>
-          <Badge variant="secondary">Sem IA</Badge>
-        </div>
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">

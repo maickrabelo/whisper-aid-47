@@ -255,8 +255,8 @@ const BetaOuvidoriaDashboard = () => {
         <main className="flex-1 flex items-center justify-center p-6">
           <Card className="max-w-md">
             <CardHeader>
-              <CardTitle>Canal Beta indisponível</CardTitle>
-              <CardDescription>Este canal está disponível apenas para empresas selecionadas durante o beta.</CardDescription>
+              <CardTitle>Canal indisponível</CardTitle>
+              <CardDescription>Este canal está disponível apenas para empresas habilitadas.</CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={() => navigate("/dashboard")}>Voltar</Button>

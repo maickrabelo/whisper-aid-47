@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { renderReportLogos } from '@/lib/pdfLogos';
 import {
   HSEITCategory,
   HSEIT_CATEGORY_LABELS,

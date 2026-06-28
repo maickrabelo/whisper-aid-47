@@ -86,14 +86,28 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
   const generatePDF = async () => {
     setGenerating('pdf');
     try {
-      const [{ data: ghes }, { data: risks }, { data: actions }] = await Promise.all([
+      const [{ data: ghes }, { data: risks }, { data: actions }, { data: companyRow }, { data: assignment }] = await Promise.all([
         supabase.from('pgr_ghe').select('*').eq('pgr_document_id', pgr.id),
         supabase.from('pgr_risks').select('*').eq('pgr_document_id', pgr.id),
         supabase.from('pgr_action_items').select('*').eq('pgr_document_id', pgr.id),
+        supabase.from('companies').select('logo_url').eq('id', pgr.company_id).maybeSingle(),
+        supabase.from('company_sst_assignments').select('sst_manager_id').eq('company_id', pgr.company_id).maybeSingle(),
       ]);
-      downloadPGRReport({
+
+      let sstLogoUrl: string | null = null;
+      if (assignment?.sst_manager_id) {
+        const { data: mgr } = await supabase
+          .from('sst_managers')
+          .select('logo_url')
+          .eq('id', assignment.sst_manager_id)
+          .maybeSingle();
+        sstLogoUrl = (mgr as any)?.logo_url || null;
+      }
+
+      await downloadPGRReport({
         pgr,
-        company: { name: companyName, cnpj: companyCnpj },
+        company: { name: companyName, cnpj: companyCnpj, logo_url: (companyRow as any)?.logo_url || null },
+        sstLogoUrl,
         ghes: (ghes as any) || [],
         risks: (risks as any) || [],
         actions: (actions as any) || [],

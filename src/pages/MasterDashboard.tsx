@@ -1231,6 +1231,21 @@ const MasterDashboard = () => {
                   )}
                 </CardContent>
               </Card>
+
+              <Card className="border-2 border-purple-500/20 hover:border-purple-500/40 transition-colors">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <Upload className="h-5 w-5 text-purple-600" />
+                    <CardTitle className="text-lg">Importar Dados</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Importe JSON com profile, sst_manager, empresas, avaliações e PGR
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ImportUserDataDialog />
+                </CardContent>
+              </Card>
             </div>
           </div>
           

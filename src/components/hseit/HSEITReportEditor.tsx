@@ -105,7 +105,8 @@ export function HSEITReportEditor({
   departments,
   questionAverages,
   sstLogoUrl,
-  sstName
+  sstName,
+  companyLogoUrl
 }: HSEITReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("preview");

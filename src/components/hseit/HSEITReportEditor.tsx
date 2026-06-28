@@ -54,6 +54,7 @@ interface HSEITReportEditorProps {
   questionAverages: { questionNumber: number; text: string; category: string; average: number }[];
   sstLogoUrl?: string | null;
   sstName?: string | null;
+  companyLogoUrl?: string | null;
 }
 
 // Default recommendations based on health impact

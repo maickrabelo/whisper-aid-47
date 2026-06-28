@@ -389,25 +389,26 @@ Deno.serve(async (req) => {
         user_metadata: { full_name: buyerName },
       });
       if (createErr) {
-        // Race condition: alguém criou a conta entre o check e o insert -> bloquear também
+        // Race condition: alguém criou a conta entre o check e o insert.
+        // Rebusca o auth user e aplica o fluxo de upgrade in-place.
         if ((createErr as any)?.code === 'email_exists' || (createErr as any)?.status === 422) {
-          console.warn('Race: account created between check and insert, blocking', buyerEmail);
-          const emailResult = await sendBlockedPurchaseEmail(
-            supabase,
-            buyerEmail,
-            plan.name,
-            plan.slug,
-            transactionId,
-          );
-          return await logAndRespond(200, {
-            ok: true,
-            blocked: 'account_exists_race',
-            email_sent: emailResult.ok,
-            transaction_id: transactionId,
-          }, 'blocked:account_exists_race');
+          console.warn('Race: account created between check and insert, upgrading in-place', buyerEmail);
+          const raceUser = await findAuthUserByEmail(supabase, buyerEmail);
+          const raceResult = await upgradeExistingAccount(supabase, {
+            existingAuthUser: raceUser,
+            existingCompany: null,
+            existingManager: null,
+            buyerEmail, buyerName, plan, productId, product,
+            transactionId, subscriberCode, subscriptionInfo, purchase, eventType,
+          });
+          if (raceResult) {
+            return await logAndRespond(200, raceResult, 'upgraded_existing_account:race');
+          }
+          throw createErr;
         }
         throw createErr;
       }
+
       userId = created.user!.id;
       isNewUser = true;
 

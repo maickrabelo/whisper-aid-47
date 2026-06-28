@@ -24,7 +24,9 @@ export interface PGRReportInput {
   company: {
     name: string;
     cnpj: string;
+    logo_url?: string | null;
   };
+  sstLogoUrl?: string | null;
   ghes: Array<{
     id: string;
     name: string;

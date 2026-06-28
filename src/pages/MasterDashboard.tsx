@@ -21,6 +21,7 @@ import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { WebhooksTab } from '@/components/admin/WebhooksTab';
 import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
+import { ImportUserDataDialog } from '@/components/admin/ImportUserDataDialog';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -1228,6 +1229,21 @@ const MasterDashboard = () => {
                       <p className="text-muted-foreground">Senha: Teste123!</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-purple-500/20 hover:border-purple-500/40 transition-colors">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <Upload className="h-5 w-5 text-purple-600" />
+                    <CardTitle className="text-lg">Importar Dados</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Importe JSON com profile, sst_manager, empresas, avaliações e PGR
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ImportUserDataDialog />
                 </CardContent>
               </Card>
             </div>

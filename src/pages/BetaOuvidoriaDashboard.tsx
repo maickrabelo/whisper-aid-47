@@ -568,7 +568,7 @@ const BetaOuvidoriaDashboard = () => {
             <div className="space-y-6 my-4 overflow-y-auto flex-1 pr-2">
               <div>
                 <h3 className="font-medium mb-2">Descrição do relato</h3>
-                <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border whitespace-pre-wrap">
+                <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border whitespace-pre-wrap break-words">
                   {selected.description}
                 </p>
               </div>
@@ -625,7 +625,7 @@ const BetaOuvidoriaDashboard = () => {
                           {u.author_type === "investigator" ? "Ouvidoria" : "Denunciante anônimo"} ·{" "}
                           {new Date(u.created_at).toLocaleString("pt-BR")}
                         </div>
-                        <p className="whitespace-pre-wrap text-sm">{u.message}</p>
+                        <p className="whitespace-pre-wrap text-sm break-words">{u.message}</p>
                       </li>
                     ))}
                   </ul>

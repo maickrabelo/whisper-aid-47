@@ -39,10 +39,25 @@ const CompanyProfile = () => {
   const [form, setForm] = useState({ name: '', phone: '', address: '' });
 
   const companyId = activeCompanyId || profile?.company_id || null;
+  const sstManagerId = profile?.sst_manager_id || null;
+  const isSstMode = !companyId && !!sstManagerId;
 
   const loadCompany = async () => {
-    if (!companyId) { setLoading(false); return; }
+    if (!companyId && !sstManagerId) { setLoading(false); return; }
     setLoading(true);
+    if (isSstMode) {
+      const { data } = await supabase
+        .from('sst_managers')
+        .select('id, name, cnpj, email, phone, address, logo_url, slug')
+        .eq('id', sstManagerId)
+        .maybeSingle();
+      if (data) {
+        setCompany({ ...(data as any), trial_plan_slug: null } as CompanyData);
+        setForm({ name: data.name || '', phone: data.phone || '', address: data.address || '' });
+      }
+      setLoading(false);
+      return;
+    }
     const { data, error } = await supabase
       .from('companies')
       .select('id, name, cnpj, email, phone, address, logo_url, slug, trial_plan_slug')
@@ -55,15 +70,16 @@ const CompanyProfile = () => {
     setLoading(false);
   };
 
-  useEffect(() => { loadCompany(); }, [companyId]);
+  useEffect(() => { loadCompany(); }, [companyId, sstManagerId]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!company) return;
     setSaving(true);
     try {
+      const table = isSstMode ? 'sst_managers' : 'companies';
       const { error } = await supabase
-        .from('companies')
+        .from(table as any)
         .update({ name: form.name, phone: form.phone, address: form.address })
         .eq('id', company.id);
       if (error) throw error;
@@ -79,10 +95,10 @@ const CompanyProfile = () => {
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     const file = input.files?.[0];
-    console.log('[Logo upload] file selected:', file?.name, 'company:', company?.id);
+    console.log('[Logo upload] file selected:', file?.name, 'company:', company?.id, 'sstMode:', isSstMode);
     if (!file) return;
     if (!company) {
-      toast({ title: 'Empresa não carregada', description: 'Recarregue a página e tente novamente.', variant: 'destructive' });
+      toast({ title: 'Cadastro não carregado', description: 'Recarregue a página e tente novamente.', variant: 'destructive' });
       input.value = '';
       return;
     }
@@ -94,15 +110,17 @@ const CompanyProfile = () => {
     setUploadingLogo(true);
     try {
       const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
-      const path = `${company.id}/logo-${Date.now()}.${ext}`;
+      const prefix = isSstMode ? `sst-${company.id}` : company.id;
+      const path = `${prefix}/logo-${Date.now()}.${ext}`;
       console.log('[Logo upload] uploading to', path);
       const { error: upErr } = await supabase.storage
         .from('company-logos').upload(path, file, { upsert: true, contentType: file.type || 'image/png', cacheControl: '3600' });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from('company-logos').getPublicUrl(path);
       const finalUrl = `${pub.publicUrl}?v=${Date.now()}`;
+      const table = isSstMode ? 'sst_managers' : 'companies';
       const { error: updErr } = await supabase
-        .from('companies').update({ logo_url: finalUrl }).eq('id', company.id);
+        .from(table as any).update({ logo_url: finalUrl }).eq('id', company.id);
       if (updErr) throw updErr;
       toast({ title: 'Logo atualizada' });
       await loadCompany();

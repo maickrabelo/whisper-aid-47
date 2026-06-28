@@ -1,75 +1,45 @@
-# Revisão da Ouvidoria Smart por empresa
+## Objetivo
+Quando chegar `PURCHASE_APPROVED` do Hotmart e o e-mail do comprador já existir no sistema (qualquer conta: teste SMS, conta antiga, gestora, empresa), **NÃO criar duplicata**. Reaproveitar o usuário existente, resetar a senha e ativar o plano comprado, preservando todos os dados.
 
-Hoje a Ouvidoria Smart é "global" — qualquer gestora habilitada vê um único painel ligado a `profile.company_id`. Vamos transformá-la em uma ouvidoria por empresa, com seletor para a gestora, acesso próprio para cada empresa-cliente, branding por empresa e botão para gerar credenciais.
+## Onde mexer
+Apenas em `supabase/functions/hotmart-webhook/index.ts`.
 
-## 1. Painel da Gestora SST com seletor de empresa
+Hoje o webhook só faz "upgrade in-place" quando há uma assinatura SMS trial ativa (linhas ~373–520). Em todos os outros casos com e-mail existente ele cai no bloco "Bloqueio: e-mail já cadastrado" (linhas 522–541) e manda o e-mail de aviso, sem ativar nada. É isso que gera a percepção de duplicata quando o admin tenta resolver manualmente.
 
-Mudanças em `src/pages/BetaOuvidoriaDashboard.tsx`:
+## Mudança principal
+Substituir o bloco de bloqueio (e a checagem de race em `createUser`) por um **fluxo único de upgrade in-place** que roda sempre que existir `existingAuthUser` OU `existingCompany` OU `existingManager` com user vinculado.
 
-- Carregar todas as empresas da gestora (já temos `company_sst_assignments` + `companies`).
-- Filtrar apenas as que têm Ouvidoria Smart habilitada via `company_has_smart_ouvidoria`.
-- Adicionar `<Select>` no topo com as empresas habilitadas, persistindo a escolha em `localStorage`.
-- Recalcular stats/gráficos/lista de relatos a partir da empresa selecionada (`.eq('company_id', selectedCompanyId)`).
-- O botão "Copiar link público" e "Abrir formulário" passam a usar a empresa selecionada (`/ouvidoria-beta/:selectedCompanyId`).
-- Se a empresa logada for do tipo "company" (não gestora), pular o seletor e travar na própria empresa.
+Passos do novo fluxo (executado quando o e-mail já existe):
 
-## 2. Acesso da empresa-cliente
+1. **Localizar o `user_id`**: usa `existingAuthUser` se houver; senão pega via `profiles` a partir do `existingCompany.id` / `existingManager.id`. Se ainda não houver um auth user mas a entidade existir, cria o auth user vinculado àquela entidade (caso de borda raro).
+2. **Resetar senha**: gera nova senha provisória, `auth.admin.updateUserById({ password, email_confirm: true })` e marca `profiles.must_change_password = true`.
+3. **Cancelar assinaturas Hotmart anteriores do mesmo usuário** (`status='canceled'` em todas as `subscriptions` com `owner_user_id = userId` que estejam `trial/trialing/active` — independentemente de serem SMS ou não, para evitar múltiplas ativas).
+4. **Inserir a nova `subscriptions`** vinculada ao `userId` existente, com o `plan_id` do produto Hotmart comprado, `status='active'` (ou `trial` se o plano tiver `trial_days`), `provider='hotmart'`, `hotmart_transaction_id`, `hotmart_subscriber_code`, ciclo conforme `recurrency_period`, `metadata.upgraded_from_existing_account=true` e `previous_subscription_ids`.
+5. **Garantir o `user_roles`** correto para a categoria do plano (`sst` para `manager/sst`, `company` para `company`), via upsert (sem deletar roles existentes — já corrigido em incidente anterior).
+6. **Reaproveitar entidade existente**:
+   - Se plano é `manager/sst`:
+     - Se `profile.sst_manager_id` existir → `update` em `sst_managers` (`subscription_status='active'`, `trial_ends_at=null`, `max_companies`, `pgr_module_enabled` conforme plano). Mantém empresas, dados, tudo.
+     - Senão → criar `sst_managers` e linkar no `profile`.
+   - Se plano é `company`:
+     - Se `profile.company_id` existir → `update` em `companies` (`subscription_status='active'`, `trial_ends_at=null`, `parent_subscription_id=novaSub.id`, `max_employees=plan.max_employees`) e upsert em `company_feature_access`. Mantém colaboradores, avaliações etc.
+     - Senão → criar `companies` + `user_companies` + `profiles.company_id`.
+7. **Enviar e-mail via Resend** com a nova senha provisória (reusa `sendCredentialsEmail` com `isExistingUser=false`, pois agora estamos de fato enviando senha provisória válida).
+8. Retornar `{ ok:true, upgraded_existing:true, user_id, subscription_id, email_sent }` e logar no `webhook_logs` com tag `upgraded_existing_account`.
 
-Card "Ouvidoria Smart" no dashboard da empresa (`src/pages/Dashboard.tsx`):
-- Aparece quando `company_has_smart_ouvidoria(profile.company_id)` for true.
-- Botões: "Abrir painel" (`/ouvidoria-beta/painel`) e "Copiar link público" (`/ouvidoria-beta/{company_id}`).
+## Limpar/ajustar código antigo
+- Remover o bloco "Bloqueio: e-mail já cadastrado fora do fluxo de upgrade SMS" (linhas 522–541) — substituído pelo fluxo acima.
+- Remover/ajustar o tratamento de race condition em `createUser` (linhas 554–572) para também cair no fluxo de upgrade em vez de bloquear.
+- Manter a função `sendBlockedPurchaseEmail` no arquivo (caso volte a ser útil), mas não chamada.
+- Manter intacto o caminho "novo usuário" (a partir da linha 544) — só roda quando o e-mail realmente não existe em lugar nenhum.
+- O fluxo SMS-trial atual (linhas 373–520) vira um caso particular do novo fluxo genérico — pode ser deletado para evitar duplicação de código.
 
-A página `/ouvidoria-beta/painel` já vai aceitar o usuário company porque vamos forçar `companyId = profile.company_id` quando ele não for gestora — vendo apenas os relatos da própria empresa.
+## Idempotência
+Antes de fazer qualquer coisa, verificar se já existe `subscriptions` com o mesmo `hotmart_transaction_id`. Se sim, retornar 200 sem reprocessar (evita re-resetar senha quando a Hotmart reenvia o webhook).
 
-## 3. Botão "Gerar acesso da empresa" na lista de empresas da gestora
+## Sem efeitos colaterais
+- Não toca em `auth.users` além de `updateUserById` (senha + email_confirm).
+- Não apaga nenhum dado de empresa, avaliação, PGR, ouvidoria ou role.
+- Todas as operações usam `upsert`/`update` com chaves existentes.
 
-Local: gestão de empresas da gestora SST (já existente — usado pelo CompanySelector / gerenciamento).
-
-- Botão "Gerar acesso" por empresa.
-- Confirma o e-mail (pré-preenchido com `companies.email`).
-- Chama uma nova Edge Function `create-company-access` que:
-  1. Verifica se a gestora autenticada é dona daquela empresa.
-  2. Cria (ou reutiliza) usuário no Auth com `email_confirm=true` e senha temporária aleatória.
-  3. Atribui `role = 'company'` em `user_roles` (sem remover roles existentes).
-  4. Cria registro em `profiles` apontando `company_id`.
-  5. Marca `must_change_password = true`.
-  6. Envia e-mail via Resend com login + senha temporária + link `https://<dominio>/auth`.
-  7. Retorna o e-mail e senha para a UI mostrar uma única vez (com botão "Copiar").
-
-## 4. Página pública com branding da empresa
-
-`/ouvidoria-beta/:companyId` (`src/pages/BetaOuvidoriaForm.tsx`):
-- Já recebe `companyId` pela URL.
-- Buscar `companies` para exibir logo + nome no topo do formulário.
-- Usar `companies.brand_color` (ou fallback para verde do tema) na cor primária do form.
-- Página de acompanhamento (`/ouvidoria-beta/acompanhar`) também mostra o branding da empresa do relato consultado.
-
-## 5. Backend / segurança
-
-- **RLS**: as policies em `beta_ouvidoria_reports` já filtram por `user_manages_company(auth.uid(), company_id)` e `user_in_company(...)` — confirmar e ajustar se necessário para garantir que:
-  - Gestora vê relatos só das suas empresas.
-  - Usuário company vê só os da própria empresa.
-  - Inserção pública (form anônimo) continua liberada via Edge Function `create-beta-ouvidoria-report` (já existe).
-- **`create-company-access`**: nova função registrada no `config.toml` com `verify_jwt = true`; usa `SUPABASE_SERVICE_ROLE_KEY` e `RESEND_API_KEY` (já configurados).
-- Template de e-mail simples com a logo do Sr.SMS (mesma identidade do welcome).
-
-## Detalhes técnicos
-
-- Arquivos a criar:
-  - `supabase/functions/create-company-access/index.ts`
-  - Registrar a função em `supabase/config.toml`.
-- Arquivos a modificar:
-  - `src/pages/BetaOuvidoriaDashboard.tsx` (seletor + scoping correto)
-  - `src/pages/BetaOuvidoriaForm.tsx` (branding por empresa)
-  - `src/pages/BetaOuvidoriaTrack.tsx` (branding)
-  - `src/pages/Dashboard.tsx` (card "Ouvidoria Smart" para company)
-  - Componente da listagem de empresas da gestora (provavelmente `src/components/CompanySelector.tsx` ou similar) → adicionar botão "Gerar acesso".
-- Remover dependência de `BETA_OUVIDORIA_COMPANY_IDS` (whitelist hardcoded) — usar apenas `company_has_smart_ouvidoria`.
-- A função SQL `company_has_smart_ouvidoria` já cobre os planos sr-sms / teste-sms / sst-smart, não precisa de migration.
-
-## Fora do escopo
-
-- Notificação por e-mail à empresa quando um novo relato chegar (pode ser próximo passo).
-- Permitir que a empresa-cliente responda relatos (hoje só a gestora responde) — manter como está.
-
-Posso seguir com a implementação?
+## Teste após implementação
+Buscar no banco um caso real (ex.: um trial SMS recente) e simular um `PURCHASE_APPROVED` via `test-hotmart-webhook` confirmando: assinatura nova ativa, trial cancelada, senha resetada, e-mail enviado, dados preservados, nenhum usuário duplicado em `auth.users`.

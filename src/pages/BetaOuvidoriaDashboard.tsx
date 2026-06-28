@@ -275,7 +275,12 @@ const BetaOuvidoriaDashboard = () => {
         <div className="audit-container max-w-7xl mx-auto px-4">
           {isSst && (
             <div className="mb-4">
-              <Button variant="outline" size="sm" onClick={() => navigate('/sst-dashboard')}>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="font-semibold shadow-sm"
+                onClick={() => navigate('/sst-dashboard')}
+              >
                 ← Voltar ao Dashboard SST
               </Button>
             </div>

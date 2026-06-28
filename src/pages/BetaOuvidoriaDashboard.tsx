@@ -317,6 +317,13 @@ const BetaOuvidoriaDashboard = () => {
               <Button variant="outline" asChild disabled={!publicLink}>
                 <a href={publicLink} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-2" /> Abrir formulário</a>
               </Button>
+              <QRCodeDialog
+                url={publicLink}
+                disabled={!publicLink}
+                title="Canal de Denúncias - Ouvidoria Smart"
+                subtitle={managerCompanies.find(c => c.id === selectedCompanyId)?.name}
+                filenameBase={`qrcode-ouvidoria-${(managerCompanies.find(c => c.id === selectedCompanyId)?.name || 'empresa').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+              />
             </div>
           </div>
 

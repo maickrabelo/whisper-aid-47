@@ -60,10 +60,21 @@ const MaterialForm: React.FC<MaterialFormProps> = ({ open, onOpenChange, moduleI
           setSaving(false);
           return;
         }
-        const path = `${sstManagerId}/${moduleId}/${Date.now()}-${pdfFile.name}`;
+        if (pdfFile.size > 25 * 1024 * 1024) {
+          toast({ title: 'Arquivo grande demais', description: 'O PDF deve ter no máximo 25MB.', variant: 'destructive' });
+          setSaving(false);
+          return;
+        }
+        // Sanitize filename — Supabase storage rejects accents/spaces/special chars
+        const safeName = pdfFile.name
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-zA-Z0-9._-]/g, '_')
+          .replace(/_+/g, '_');
+        const path = `${sstManagerId}/${moduleId}/${Date.now()}-${safeName}`;
         const { error: upErr } = await supabase.storage
           .from('sst-trainings')
-          .upload(path, pdfFile, { contentType: pdfFile.type });
+          .upload(path, pdfFile, { contentType: pdfFile.type || 'application/pdf', upsert: false });
         if (upErr) throw upErr;
         finalContentUrl = path;
       }

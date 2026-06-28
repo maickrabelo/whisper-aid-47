@@ -482,6 +482,7 @@ export default function HSEITResults() {
           }))}
           sstLogoUrl={sstLogoUrl}
           sstName={sstName}
+          companyLogoUrl={assessment.companies?.logo_url || null}
         />
 
         {assessment.multiSectorEnabled && (

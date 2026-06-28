@@ -92,7 +92,7 @@ const BetaOuvidoriaTrack = () => {
             <CardContent className="space-y-4">
               <div>
                 <Label className="text-xs text-muted-foreground">Descrição</Label>
-                <p className="whitespace-pre-wrap text-sm">{data.report.description}</p>
+                <p className="whitespace-pre-wrap break-words text-sm">{data.report.description}</p>
               </div>
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Histórico</Label>

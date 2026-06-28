@@ -627,7 +627,7 @@ const SSTDashboard = () => {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
-                            title="Resetar senha"
+                            title="Gerar acesso da empresa"
                             onClick={(e) => {
                               e.stopPropagation();
                               setResetPasswordCompany(company);

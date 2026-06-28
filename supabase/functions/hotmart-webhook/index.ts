@@ -183,6 +183,223 @@ async function findAuthUserByEmail(supabase: any, email: string) {
   return null;
 }
 
+/**
+ * Reaproveita uma conta existente (auth user, company ou sst_manager) e ativa o plano
+ * recém-comprado via Hotmart. Não duplica usuários, preserva todos os dados.
+ * Retorna null se NÃO houver conta existente (sinaliza para o caller criar nova).
+ */
+async function upgradeExistingAccount(supabase: any, ctx: {
+  existingAuthUser: any | null;
+  existingCompany: { id: string } | null;
+  existingManager: { id: string } | null;
+  buyerEmail: string;
+  buyerName: string;
+  plan: any;
+  productId?: string;
+  product: any;
+  transactionId?: string;
+  subscriberCode?: string;
+  subscriptionInfo: any;
+  purchase: any;
+  eventType: string;
+}): Promise<Record<string, unknown> | null> {
+  const {
+    existingAuthUser, existingCompany, existingManager,
+    buyerEmail, buyerName, plan, productId, product,
+    transactionId, subscriberCode, subscriptionInfo, purchase, eventType,
+  } = ctx;
+
+  // Localiza user_id
+  let userId: string | null = existingAuthUser?.id ?? null;
+  if (!userId && (existingCompany || existingManager)) {
+    const q = supabase.from('profiles').select('id').limit(1);
+    if (existingManager) q.eq('sst_manager_id', existingManager.id);
+    else if (existingCompany) q.eq('company_id', existingCompany.id);
+    const { data: prof } = await q.maybeSingle();
+    userId = prof?.id ?? null;
+  }
+  if (!userId && !existingAuthUser && !existingCompany && !existingManager) {
+    return null; // nada existe -> caller faz criação normal
+  }
+
+  // Se ainda não houver auth user (entidade órfã), cria um vinculado
+  if (!userId) {
+    const tempPwd = crypto.randomUUID().slice(0, 12);
+    const { data: created, error } = await supabase.auth.admin.createUser({
+      email: buyerEmail, password: tempPwd, email_confirm: true,
+      user_metadata: { full_name: buyerName },
+    });
+    if (error) throw error;
+    userId = created.user!.id;
+  }
+
+  // 1) Reseta senha
+  const newPassword = crypto.randomUUID().slice(0, 12);
+  await supabase.auth.admin.updateUserById(userId!, {
+    password: newPassword, email_confirm: true,
+  });
+  await supabase.from('profiles').upsert({
+    id: userId!, full_name: buyerName, must_change_password: true,
+  });
+
+  // 2) Cancela assinaturas anteriores ativas/trial deste usuário
+  const { data: prevSubs } = await supabase
+    .from('subscriptions')
+    .select('id')
+    .eq('owner_user_id', userId)
+    .in('status', ['trial', 'trialing', 'active']);
+  const previousIds = (prevSubs ?? []).map((s: any) => s.id);
+  if (previousIds.length > 0) {
+    await supabase.from('subscriptions')
+      .update({ status: 'canceled' })
+      .in('id', previousIds);
+  }
+
+  // 3) Cria nova assinatura
+  const billingCycle = (subscriptionInfo?.plan?.recurrency_period === 12 || purchase?.recurrence_number === 12)
+    ? 'annual' : 'monthly';
+  const amountCents = Math.round(
+    ((purchase?.price?.value ?? purchase?.full_price?.value ?? 0) as number) * 100,
+  ) || (plan.price_monthly_cents ?? plan.base_price_cents ?? 0);
+  const trialDays = (plan as any).trial_days as number | null | undefined;
+  const isTrialPlan = typeof trialDays === 'number' && trialDays > 0;
+  const trialEndsAt = isTrialPlan
+    ? new Date(Date.now() + trialDays! * 24 * 60 * 60 * 1000).toISOString()
+    : null;
+
+  const { data: newSub, error: subErr } = await supabase
+    .from('subscriptions')
+    .insert({
+      owner_user_id: userId,
+      owner_email: buyerEmail,
+      plan_id: plan.id,
+      billing_cycle: billingCycle,
+      status: isTrialPlan ? 'trial' : 'active',
+      amount_cents: amountCents,
+      provider: 'hotmart',
+      hotmart_transaction_id: transactionId,
+      hotmart_subscriber_code: subscriberCode ?? null,
+      current_period_start: new Date().toISOString(),
+      current_period_end: trialEndsAt,
+      metadata: {
+        upgraded_from_existing_account: true,
+        previous_subscription_ids: previousIds,
+        buyer: { name: buyerName, email: buyerEmail },
+        product: { id: productId, name: product?.name },
+        raw_event: eventType,
+        trial_days: isTrialPlan ? trialDays : undefined,
+      },
+    })
+    .select('id')
+    .single();
+  if (subErr) throw subErr;
+  const subId = newSub!.id;
+  const entityStatus = isTrialPlan ? 'trial' : 'active';
+
+  // 4) Garante role (sem deletar roles existentes)
+  const role = plan.category === 'manager' ? 'sst'
+    : plan.category === 'company' ? 'company' : 'sst';
+  await supabase.from('user_roles').upsert(
+    { user_id: userId, role }, { onConflict: 'user_id,role' },
+  );
+
+  // 5) Atualiza/cria entidade preservando dados
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('sst_manager_id, company_id')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (plan.category === 'manager' || plan.category === 'sst') {
+    if (profile?.sst_manager_id) {
+      await supabase.from('sst_managers').update({
+        subscription_status: entityStatus,
+        trial_ends_at: trialEndsAt,
+        max_companies: plan.max_companies || 9999,
+        pgr_module_enabled: plan.pgr_enabled === true,
+      }).eq('id', profile.sst_manager_id);
+    } else {
+      const { data: mgr } = await supabase.from('sst_managers').insert({
+        name: buyerName, email: buyerEmail,
+        max_companies: plan.max_companies || 9999,
+        subscription_status: entityStatus,
+        trial_ends_at: trialEndsAt,
+        pgr_module_enabled: plan.pgr_enabled === true,
+      }).select('id').single();
+      if (mgr) {
+        await supabase.from('profiles').update({ sst_manager_id: mgr.id }).eq('id', userId);
+      }
+    }
+  } else if (plan.category === 'company') {
+    let companyId = profile?.company_id ?? existingCompany?.id ?? null;
+    if (companyId) {
+      await supabase.from('companies').update({
+        subscription_status: entityStatus,
+        trial_ends_at: trialEndsAt,
+        parent_subscription_id: subId,
+        max_employees: plan.max_employees,
+      }).eq('id', companyId);
+    } else {
+      const slugBase = buyerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50);
+      const { data: company } = await supabase.from('companies').insert({
+        name: buyerName, email: buyerEmail,
+        slug: `${slugBase}-${Date.now().toString(36)}`,
+        subscription_status: entityStatus,
+        trial_ends_at: trialEndsAt,
+        employee_count: 0,
+        parent_subscription_id: subId,
+        max_employees: plan.max_employees,
+      }).select('id').single();
+      companyId = company?.id ?? null;
+      if (companyId) {
+        await supabase.from('user_companies').upsert(
+          { user_id: userId, company_id: companyId },
+          { onConflict: 'user_id,company_id' },
+        );
+        await supabase.from('profiles').update({ company_id: companyId }).eq('id', userId);
+      }
+    }
+    if (companyId) {
+      await supabase.from('company_feature_access').upsert({
+        company_id: companyId,
+        ouvidoria_enabled: plan.ouvidoria_enabled ?? true,
+        psicossocial_enabled: true,
+        burnout_enabled: true,
+        clima_enabled: true,
+        treinamentos_enabled: true,
+      });
+    }
+  }
+
+  // 6) Envia e-mail com nova senha provisória
+  const emailResult = await sendCredentialsEmail(
+    supabase, buyerEmail, newPassword, plan.name,
+    false, // estamos enviando senha provisória de verdade
+    subId, plan.slug,
+  );
+  if (!emailResult.ok) {
+    await supabase.from('subscriptions').update({
+      metadata: {
+        upgraded_from_existing_account: true,
+        previous_subscription_ids: previousIds,
+        provisional_password: newPassword,
+        email_send_error: emailResult.error ?? 'unknown',
+        buyer: { name: buyerName, email: buyerEmail },
+      },
+    }).eq('id', subId);
+  }
+
+  return {
+    ok: true,
+    upgraded_existing: true,
+    user_id: userId,
+    subscription_id: subId,
+    canceled_previous_subscriptions: previousIds,
+    email_sent: emailResult.ok,
+  };
+}
+
+
 const APPROVED_EVENTS = new Set(['PURCHASE_APPROVED', 'PURCHASE_COMPLETE']);
 const CANCEL_EVENTS = new Set([
   'PURCHASE_REFUNDED',
@@ -352,193 +569,30 @@ Deno.serve(async (req) => {
         .ilike('email', buyerEmail)
         .maybeSingle();
 
-      const incomingIsSms = !!plan.slug && String(plan.slug).toLowerCase().includes('sms');
-
-      // ===== UPGRADE: usuário existente com trial SMS comprou plano SMS pago =====
-      // Em vez de bloquear, convertemos a conta de trial para o plano definitivo,
-      // geramos nova senha provisória e enviamos credenciais por e-mail.
-      if (existingAuthUser && incomingIsSms) {
-        // Procurar assinatura de trial SMS ativa para este usuário
-        const { data: trialSubs } = await supabase
-          .from('subscriptions')
-          .select('id, status, plan_id, subscription_plans!inner(slug)')
-          .eq('owner_user_id', existingAuthUser.id)
-          .in('status', ['trial', 'trialing', 'active']);
-
-        const smsTrialSub = (trialSubs ?? []).find((s: any) => {
-          const slug = String(s.subscription_plans?.slug || '').toLowerCase();
-          return slug.includes('sms');
-        });
-
-        if (smsTrialSub) {
-          console.log('Upgrading SMS trial -> paid plan for', buyerEmail);
-
-          // Nova senha provisória
-          const newPassword = crypto.randomUUID().slice(0, 12);
-          await supabase.auth.admin.updateUserById(existingAuthUser.id, {
-            password: newPassword,
-            email_confirm: true,
-          });
-
-          await supabase.from('profiles').upsert({
-            id: existingAuthUser.id,
-            must_change_password: true,
-          });
-
-          // Cancelar/marcar antiga trial e criar nova assinatura definitiva
-          await supabase
-            .from('subscriptions')
-            .update({ status: 'canceled' })
-            .eq('id', smsTrialSub.id);
-
-          const billingCycle = (subscriptionInfo?.plan?.recurrency_period === 12 || purchase?.recurrence_number === 12)
-            ? 'annual'
-            : 'monthly';
-          const amountCents = Math.round(
-            ((purchase?.price?.value ?? purchase?.full_price?.value ?? 0) as number) * 100,
-          ) || (plan.price_monthly_cents ?? plan.base_price_cents ?? 0);
-
-          const { data: upgradedSub, error: upErr } = await supabase
-            .from('subscriptions')
-            .insert({
-              owner_user_id: existingAuthUser.id,
-              owner_email: buyerEmail,
-              plan_id: plan.id,
-              billing_cycle: billingCycle,
-              status: 'active',
-              amount_cents: amountCents,
-              provider: 'hotmart',
-              hotmart_transaction_id: transactionId,
-              hotmart_subscriber_code: subscriberCode ?? null,
-              current_period_start: new Date().toISOString(),
-              current_period_end: null,
-              metadata: {
-                upgraded_from_trial_subscription_id: smsTrialSub.id,
-                buyer: { name: buyerName, email: buyerEmail },
-                product: { id: productId, name: product?.name },
-                raw_event: eventType,
-              },
-            })
-            .select('id')
-            .single();
-          if (upErr) throw upErr;
-
-          // Garantir role sst para planos manager/sst e atualizar sst_managers
-          const role = plan.category === 'manager' ? 'sst' : (plan.category === 'company' ? 'company' : 'sst');
-          await supabase.from('user_roles').upsert(
-            { user_id: existingAuthUser.id, role },
-            { onConflict: 'user_id,role' },
-          );
-
-          // sst_managers: criar ou atualizar
-          const { data: prof } = await supabase
-            .from('profiles')
-            .select('sst_manager_id, company_id')
-            .eq('id', existingAuthUser.id)
-            .maybeSingle();
-
-          if (plan.category === 'manager' || plan.category === 'sst') {
-            if (prof?.sst_manager_id) {
-              await supabase
-                .from('sst_managers')
-                .update({
-                  subscription_status: 'active',
-                  trial_ends_at: null,
-                  max_companies: plan.max_companies || 9999,
-                  pgr_module_enabled: plan.pgr_enabled === true,
-                })
-                .eq('id', prof.sst_manager_id);
-            } else {
-              const { data: mgr } = await supabase
-                .from('sst_managers')
-                .insert({
-                  name: buyerName,
-                  email: buyerEmail,
-                  max_companies: plan.max_companies || 9999,
-                  subscription_status: 'active',
-                  trial_ends_at: null,
-                  pgr_module_enabled: plan.pgr_enabled === true,
-                })
-                .select('id')
-                .single();
-              if (mgr) {
-                await supabase.from('profiles').update({ sst_manager_id: mgr.id }).eq('id', existingAuthUser.id);
-              }
-            }
-          } else if (plan.category === 'company' && prof?.company_id) {
-            await supabase
-              .from('companies')
-              .update({
-                subscription_status: 'active',
-                trial_ends_at: null,
-                parent_subscription_id: upgradedSub!.id,
-              })
-              .eq('id', prof.company_id);
-            await supabase.from('company_feature_access').upsert({
-              company_id: prof.company_id,
-              ouvidoria_enabled: plan.ouvidoria_enabled ?? false,
-              psicossocial_enabled: true,
-              burnout_enabled: true,
-              clima_enabled: true,
-              treinamentos_enabled: true,
-            });
-          }
-
-          const emailResult = await sendCredentialsEmail(
-            supabase,
-            buyerEmail,
-            newPassword,
-            plan.name,
-            false, // tratamos como novo: estamos enviando senha provisória
-            upgradedSub!.id,
-            plan.slug,
-          );
-
-          if (!emailResult.ok) {
-            await supabase
-              .from('subscriptions')
-              .update({
-                metadata: {
-                  provisional_password: newPassword,
-                  email_send_error: emailResult.error ?? 'unknown',
-                  buyer: { name: buyerName, email: buyerEmail },
-                  upgraded_from_trial_subscription_id: smsTrialSub.id,
-                },
-              })
-              .eq('id', upgradedSub!.id);
-          }
-
-          return await logAndRespond(200, {
-            ok: true,
-            upgraded: true,
-            from_trial_subscription: smsTrialSub.id,
-            subscription_id: upgradedSub!.id,
-            user_id: existingAuthUser.id,
-            email_sent: emailResult.ok,
-          });
-        }
+      // ===== UPGRADE IN-PLACE: e-mail já existe em qualquer forma =====
+      // Reaproveita usuário existente: reseta senha, cancela assinaturas anteriores,
+      // ativa a nova assinatura e atualiza/cria a entidade (sst_manager/company)
+      // SEM duplicar usuários ou perder dados.
+      const upgradeResult = await upgradeExistingAccount(supabase, {
+        existingAuthUser,
+        existingCompany,
+        existingManager,
+        buyerEmail,
+        buyerName,
+        plan,
+        productId,
+        product,
+        transactionId,
+        subscriberCode,
+        subscriptionInfo,
+        purchase,
+        eventType,
+      });
+      if (upgradeResult) {
+        return await logAndRespond(200, upgradeResult, 'upgraded_existing_account');
       }
 
-      // ===== Bloqueio: e-mail já cadastrado fora do fluxo de upgrade SMS =====
-      if (existingAuthUser || existingCompany || existingManager) {
-        console.warn('Hotmart purchase blocked: account already exists for', buyerEmail);
-        const emailResult = await sendBlockedPurchaseEmail(
-          supabase,
-          buyerEmail,
-          plan.name,
-          plan.slug,
-          transactionId,
-        );
-        return await logAndRespond(200, {
-          ok: true,
-          blocked: 'account_exists',
-          reason: 'Email already registered. Manual review required to avoid duplicates.',
-          email_sent: emailResult.ok,
-          transaction_id: transactionId,
-          buyer_email: buyerEmail,
-          plan_slug: plan.slug,
-        }, 'blocked:account_exists');
-      }
+
 
 
       // Create user (no existing account at this point)
@@ -552,25 +606,26 @@ Deno.serve(async (req) => {
         user_metadata: { full_name: buyerName },
       });
       if (createErr) {
-        // Race condition: alguém criou a conta entre o check e o insert -> bloquear também
+        // Race condition: alguém criou a conta entre o check e o insert.
+        // Rebusca o auth user e aplica o fluxo de upgrade in-place.
         if ((createErr as any)?.code === 'email_exists' || (createErr as any)?.status === 422) {
-          console.warn('Race: account created between check and insert, blocking', buyerEmail);
-          const emailResult = await sendBlockedPurchaseEmail(
-            supabase,
-            buyerEmail,
-            plan.name,
-            plan.slug,
-            transactionId,
-          );
-          return await logAndRespond(200, {
-            ok: true,
-            blocked: 'account_exists_race',
-            email_sent: emailResult.ok,
-            transaction_id: transactionId,
-          }, 'blocked:account_exists_race');
+          console.warn('Race: account created between check and insert, upgrading in-place', buyerEmail);
+          const raceUser = await findAuthUserByEmail(supabase, buyerEmail);
+          const raceResult = await upgradeExistingAccount(supabase, {
+            existingAuthUser: raceUser,
+            existingCompany: null,
+            existingManager: null,
+            buyerEmail, buyerName, plan, productId, product,
+            transactionId, subscriberCode, subscriptionInfo, purchase, eventType,
+          });
+          if (raceResult) {
+            return await logAndRespond(200, raceResult, 'upgraded_existing_account:race');
+          }
+          throw createErr;
         }
         throw createErr;
       }
+
       userId = created.user!.id;
       isNewUser = true;
 

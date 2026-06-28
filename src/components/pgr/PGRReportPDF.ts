@@ -373,11 +373,11 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
 
 
   // ─── CAPA ─────────────────────────────────────────────────
+  // Fundo branco para destacar as logos da gestora SST e da empresa final
+  const FOREST: [number, number, number] = [11, 63, 41];
+  const LIME: [number, number, number] = [190, 242, 100];
+
   state.skipChrome = true;
-  doc.setFillColor(...COLORS.primary);
-  doc.rect(0, 0, PAGE_W, 90, 'F');
-  doc.setFillColor(...COLORS.accent);
-  doc.rect(0, 86, PAGE_W, 4, 'F');
 
   await renderReportLogos(doc, PAGE_W, {
     sstLogoUrl: input.sstLogoUrl,
@@ -387,14 +387,17 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     maxWidth: 45,
   });
 
-  setText(36, true, [255, 255, 255]);
-  doc.text('PGR', PAGE_W / 2, 50, { align: 'center' });
-  setText(13, false, [220, 230, 255]);
-  doc.text('Programa de Gerenciamento de Riscos', PAGE_W / 2, 60, { align: 'center' });
-  setText(9, false, [200, 215, 255]);
-  doc.text('NR-01 — Portaria 6.730/2020', PAGE_W / 2, 67, { align: 'center' });
+  setText(36, true, FOREST);
+  doc.text('PGR', PAGE_W / 2, 55, { align: 'center' });
+  setText(13, false, FOREST);
+  doc.text('Programa de Gerenciamento de Riscos', PAGE_W / 2, 65, { align: 'center' });
+  setText(9, false, [80, 80, 80]);
+  doc.text('NR-01 — Portaria 6.730/2020', PAGE_W / 2, 72, { align: 'center' });
 
-  setText(18, true, COLORS.primary);
+  doc.setFillColor(...LIME);
+  doc.rect(MARGIN, 80, CONTENT_W, 1.2, 'F');
+
+  setText(18, true, FOREST);
   const compLines = doc.splitTextToSize(input.company.name || 'EMPRESA', CONTENT_W);
   doc.text(compLines, PAGE_W / 2, 120, { align: 'center' });
 
@@ -413,11 +416,11 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     PAGE_W / 2, 178, { align: 'center' });
 
   // Rodapé capa
-  doc.setDrawColor(...COLORS.accent);
+  doc.setDrawColor(...LIME);
   doc.setLineWidth(0.5);
   doc.line(MARGIN, PAGE_H - 30, PAGE_W - MARGIN, PAGE_H - 30);
   setText(8, false, COLORS.muted);
-  doc.text('Documento gerado pela plataforma SOIA – Saúde Ocupacional Integrada com IA',
+  doc.text('Documento gerado pela plataforma Sr.SMS — Gestão de Riscos Psicossociais',
     PAGE_W / 2, PAGE_H - 24, { align: 'center' });
   doc.text('Conforme NR-01 (item 1.5) e diretrizes do Gerenciamento de Riscos Ocupacionais (GRO)',
     PAGE_W / 2, PAGE_H - 19, { align: 'center' });

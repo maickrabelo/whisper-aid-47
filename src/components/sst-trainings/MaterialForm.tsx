@@ -66,11 +66,18 @@ const MaterialForm: React.FC<MaterialFormProps> = ({ open, onOpenChange, moduleI
           return;
         }
         // Sanitize filename — Supabase storage rejects accents/spaces/special chars
-        const safeName = pdfFile.name
+        const lastDot = pdfFile.name.lastIndexOf('.');
+        const baseName = lastDot > 0 ? pdfFile.name.slice(0, lastDot) : pdfFile.name;
+        const ext = lastDot > 0 ? pdfFile.name.slice(lastDot + 1) : 'pdf';
+        const safeBase = (baseName || 'arquivo')
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-zA-Z0-9._-]/g, '_')
-          .replace(/_+/g, '_');
+          .replace(/[^a-zA-Z0-9_-]/g, '_')
+          .replace(/_+/g, '_')
+          .replace(/^_+|_+$/g, '')
+          .slice(0, 80) || 'arquivo';
+        const safeExt = ext.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'pdf';
+        const safeName = `${safeBase}.${safeExt}`;
         const path = `${sstManagerId}/${moduleId}/${Date.now()}-${safeName}`;
         const { error: upErr } = await supabase.storage
           .from('sst-trainings')

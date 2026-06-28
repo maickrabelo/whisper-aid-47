@@ -112,7 +112,11 @@ const SSTTrainings: React.FC = () => {
     try {
       let coverUrl: string | null = null;
       if (coverFile) {
-        const safeName = coverFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const safeName = (coverFile.name || 'cover')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-zA-Z0-9._-]/g, '_')
+          .replace(/_+/g, '_');
         const path = `${sstManagerId}/covers/${Date.now()}-${safeName}`;
         const { error: upErr } = await supabase.storage.from('sst-trainings').upload(path, coverFile);
         if (upErr) { console.error('[SSTTrainings] upload error:', upErr); throw upErr; }

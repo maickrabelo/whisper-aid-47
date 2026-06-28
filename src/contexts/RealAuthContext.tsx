@@ -78,8 +78,11 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       // Honor override if available
       const override = (typeof window !== 'undefined' ? window.localStorage.getItem(ROLE_OVERRIDE_KEY) : null) as UserRole | null;
-      let active: UserRole = all[0] ?? null;
-      if (override && all.includes(override)) active = override;
+      if (override && all.includes(override)) return { role: override, all };
+
+      // Prefer sst over company when both exist so managers land on their main dashboard
+      const priority: UserRole[] = ['admin', 'sst', 'company', 'sales', 'partner', 'affiliate'];
+      const active = priority.find(r => all.includes(r)) ?? all[0] ?? null;
       return { role: active, all };
     } catch (error) {
       console.error('Error fetching user role:', error);

@@ -46,6 +46,7 @@ interface PGRReportData {
   scheduleItems: ScheduleItem[];
   executiveSummary: string;
   sstLogoUrl?: string | null;
+  companyLogoUrl?: string | null;
   sstName?: string | null;
   sstCpf?: string;
   sstRegistration?: string;

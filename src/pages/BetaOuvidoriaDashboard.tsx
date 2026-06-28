@@ -280,7 +280,7 @@ const BetaOuvidoriaDashboard = () => {
                 <h1 className="text-3xl font-bold text-audit-primary">Ouvidoria Smart</h1>
               </div>
               <p className="text-sm text-muted-foreground">
-                Canal 100% anônimo, sem consumo de créditos.
+                Canal 100% anônimo
               </p>
             </div>
             <div className="flex gap-2 flex-wrap items-center">

@@ -94,12 +94,12 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-primary" />
-            Resetar Senha
+            Gerar acesso da empresa
           </DialogTitle>
           <DialogDescription>
             {result
-              ? 'Senha temporária gerada. Compartilhe as credenciais abaixo com o cliente.'
-              : `Resetar a senha de acesso da empresa ${company?.name}?`}
+              ? 'Credenciais geradas. Compartilhe com o cliente para que ele acompanhe a ouvidoria.'
+              : `Gerar/Resetar acesso de ${company?.name}?`}
           </DialogDescription>
         </DialogHeader>
 
@@ -108,6 +108,17 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
             <div className="p-4 bg-muted rounded-lg text-sm text-muted-foreground">
               <p>Uma nova senha temporária será gerada. O usuário deverá alterá-la no primeiro acesso.</p>
             </div>
+            <label className="flex items-start gap-2 p-3 border rounded-lg cursor-pointer hover:bg-accent">
+              <Checkbox checked={sendEmail} onCheckedChange={(v) => setSendEmail(!!v)} className="mt-0.5" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Mail className="h-4 w-4 text-primary" /> Enviar credenciais por e-mail
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Enviaremos um e-mail para a empresa com o login e a senha temporária.
+                </p>
+              </div>
+            </label>
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
                 Cancelar
@@ -116,10 +127,10 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Resetando...
+                    Gerando...
                   </>
                 ) : (
-                  'Confirmar Reset'
+                  sendEmail ? 'Gerar & Enviar' : 'Gerar acesso'
                 )}
               </Button>
             </DialogFooter>

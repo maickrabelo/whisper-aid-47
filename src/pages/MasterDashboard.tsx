@@ -21,6 +21,7 @@ import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { WebhooksTab } from '@/components/admin/WebhooksTab';
 import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
+import { ImportUserDataDialog } from '@/components/admin/ImportUserDataDialog';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";

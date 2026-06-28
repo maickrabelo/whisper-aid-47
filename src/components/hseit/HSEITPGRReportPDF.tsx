@@ -333,18 +333,13 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   // ═══════════════════════════════
   // PAGE 1: CAPA
   // ═══════════════════════════════
-  if (data.sstLogoUrl) {
-    try {
-      const response = await fetch(data.sstLogoUrl);
-      const blob = await response.blob();
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-      pdf.addImage(base64, 'PNG', m, y, 40, 20);
-    } catch (e) { console.error('Failed to load logo:', e); }
-  }
+  await renderReportLogos(pdf, pw, {
+    sstLogoUrl: data.sstLogoUrl,
+    companyLogoUrl: data.companyLogoUrl,
+    topY: m,
+    maxHeight: 28,
+    maxWidth: 50,
+  });
 
   y = 70;
   pdf.setFillColor(0, 51, 102);

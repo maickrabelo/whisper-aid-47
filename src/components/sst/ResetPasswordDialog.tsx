@@ -20,6 +20,7 @@ interface ResetPasswordDialogProps {
 interface ResetResult {
   email: string;
   tempPassword: string;
+  emailSent?: boolean;
   relatedCompanies: { name: string; cnpj: string | null }[];
 }
 

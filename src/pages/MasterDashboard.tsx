@@ -946,6 +946,10 @@ const MasterDashboard = () => {
                     <Label className="text-sm font-medium text-gray-500">Endereço</Label>
                     <p className="text-base">{selectedSST.address || '-'}</p>
                   </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Data de cadastro</Label>
+                    <p className="text-base">{new Date(selectedSST.created_at).toLocaleDateString('pt-BR')}</p>
+                  </div>
                   <div className="col-span-2">
                     <Label className="text-sm font-medium text-gray-500">Slug (URL White-Label)</Label>
                     <div className="flex items-center gap-2 mt-1">
@@ -1857,6 +1861,7 @@ const MasterDashboard = () => {
                           <th className="px-4 py-3 text-left font-medium">CNPJ</th>
                           <th className="px-4 py-3 text-left font-medium">Slug</th>
                           <th className="px-4 py-3 text-left font-medium">Empresas geridas</th>
+                          <th className="px-4 py-3 text-left font-medium">Data de cadastro</th>
                           <th className="px-4 py-3 text-left font-medium">Ações</th>
                         </tr>
                       </thead>
@@ -1881,6 +1886,9 @@ const MasterDashboard = () => {
                                 </code>
                               </td>
                               <td className="px-4 py-4">{assignedCompanies.length}</td>
+                              <td className="px-4 py-4 text-gray-500">
+                                {new Date(manager.created_at).toLocaleDateString('pt-BR')}
+                              </td>
                               <td className="px-4 py-4">
                                 <div className="flex gap-2">
                                   <Button 

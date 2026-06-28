@@ -617,29 +617,25 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 </div>
               </CardContent>
             </Card>
-            {(() => {
-              const BETA_IDS = ['382745b1-d65a-4928-bb1b-95ae513c4e14'];
-              if (!companyId || !BETA_IDS.includes(companyId)) return null;
-              return (
-                  <Card
-                    id="company-tool-ouvidoria-smart"
-                    className="cursor-pointer hover:shadow-lg hover:border-amber-500/60 transition-all border-amber-500/30"
-                    onClick={() => navigate('/ouvidoria-beta/painel')}
-                  >
-                    <CardContent className="p-5 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                        <ClipboardList className="h-6 w-6 text-amber-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-foreground">Ouvidoria Smart</h3>
-                        </div>
-                        <p className="text-sm text-muted-foreground">Canal anônimo</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-              );
-            })()}
+            {features.ouvidoria_smart && (
+              <Card
+                id="company-tool-ouvidoria-smart"
+                className="cursor-pointer hover:shadow-lg hover:border-amber-500/60 transition-all border-amber-500/30"
+                onClick={() => navigate('/ouvidoria-beta/painel')}
+              >
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <ClipboardList className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-foreground">Ouvidoria Smart</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Canal anônimo da sua empresa</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       )}

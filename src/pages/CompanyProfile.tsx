@@ -85,14 +85,15 @@ const CompanyProfile = () => {
     }
     setUploadingLogo(true);
     try {
-      const ext = file.name.split('.').pop() || 'png';
-      const path = `${company.id}/logo-${Date.now()}.${ext}`;
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const path = `${company.id}/logo-${Date.now()}.${ext || 'png'}`;
       const { error: upErr } = await supabase.storage
-        .from('company-logos').upload(path, file, { upsert: true, contentType: file.type });
+        .from('company-logos').upload(path, file, { upsert: true, contentType: file.type || 'image/png', cacheControl: '3600' });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from('company-logos').getPublicUrl(path);
+      const finalUrl = `${pub.publicUrl}?v=${Date.now()}`;
       const { error: updErr } = await supabase
-        .from('companies').update({ logo_url: pub.publicUrl }).eq('id', company.id);
+        .from('companies').update({ logo_url: finalUrl }).eq('id', company.id);
       if (updErr) throw updErr;
       toast({ title: 'Logo atualizada' });
       await loadCompany();

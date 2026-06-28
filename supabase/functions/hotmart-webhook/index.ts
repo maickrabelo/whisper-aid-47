@@ -183,6 +183,223 @@ async function findAuthUserByEmail(supabase: any, email: string) {
   return null;
 }
 
+/**
+ * Reaproveita uma conta existente (auth user, company ou sst_manager) e ativa o plano
+ * recém-comprado via Hotmart. Não duplica usuários, preserva todos os dados.
+ * Retorna null se NÃO houver conta existente (sinaliza para o caller criar nova).
+ */
+async function upgradeExistingAccount(supabase: any, ctx: {
+  existingAuthUser: any | null;
+  existingCompany: { id: string } | null;
+  existingManager: { id: string } | null;
+  buyerEmail: string;
+  buyerName: string;
+  plan: any;
+  productId?: string;
+  product: any;
+  transactionId?: string;
+  subscriberCode?: string;
+  subscriptionInfo: any;
+  purchase: any;
+  eventType: string;
+}): Promise<Record<string, unknown> | null> {
+  const {
+    existingAuthUser, existingCompany, existingManager,
+    buyerEmail, buyerName, plan, productId, product,
+    transactionId, subscriberCode, subscriptionInfo, purchase, eventType,
+  } = ctx;
+
+  // Localiza user_id
+  let userId: string | null = existingAuthUser?.id ?? null;
+  if (!userId && (existingCompany || existingManager)) {
+    const q = supabase.from('profiles').select('id').limit(1);
+    if (existingManager) q.eq('sst_manager_id', existingManager.id);
+    else if (existingCompany) q.eq('company_id', existingCompany.id);
+    const { data: prof } = await q.maybeSingle();
+    userId = prof?.id ?? null;
+  }
+  if (!userId && !existingAuthUser && !existingCompany && !existingManager) {
+    return null; // nada existe -> caller faz criação normal
+  }
+
+  // Se ainda não houver auth user (entidade órfã), cria um vinculado
+  if (!userId) {
+    const tempPwd = crypto.randomUUID().slice(0, 12);
+    const { data: created, error } = await supabase.auth.admin.createUser({
+      email: buyerEmail, password: tempPwd, email_confirm: true,
+      user_metadata: { full_name: buyerName },
+    });
+    if (error) throw error;
+    userId = created.user!.id;
+  }
+
+  // 1) Reseta senha
+  const newPassword = crypto.randomUUID().slice(0, 12);
+  await supabase.auth.admin.updateUserById(userId!, {
+    password: newPassword, email_confirm: true,
+  });
+  await supabase.from('profiles').upsert({
+    id: userId!, full_name: buyerName, must_change_password: true,
+  });
+
+  // 2) Cancela assinaturas anteriores ativas/trial deste usuário
+  const { data: prevSubs } = await supabase
+    .from('subscriptions')
+    .select('id')
+    .eq('owner_user_id', userId)
+    .in('status', ['trial', 'trialing', 'active']);
+  const previousIds = (prevSubs ?? []).map((s: any) => s.id);
+  if (previousIds.length > 0) {
+    await supabase.from('subscriptions')
+      .update({ status: 'canceled' })
+      .in('id', previousIds);
+  }
+
+  // 3) Cria nova assinatura
+  const billingCycle = (subscriptionInfo?.plan?.recurrency_period === 12 || purchase?.recurrence_number === 12)
+    ? 'annual' : 'monthly';
+  const amountCents = Math.round(
+    ((purchase?.price?.value ?? purchase?.full_price?.value ?? 0) as number) * 100,
+  ) || (plan.price_monthly_cents ?? plan.base_price_cents ?? 0);
+  const trialDays = (plan as any).trial_days as number | null | undefined;
+  const isTrialPlan = typeof trialDays === 'number' && trialDays > 0;
+  const trialEndsAt = isTrialPlan
+    ? new Date(Date.now() + trialDays! * 24 * 60 * 60 * 1000).toISOString()
+    : null;
+
+  const { data: newSub, error: subErr } = await supabase
+    .from('subscriptions')
+    .insert({
+      owner_user_id: userId,
+      owner_email: buyerEmail,
+      plan_id: plan.id,
+      billing_cycle: billingCycle,
+      status: isTrialPlan ? 'trial' : 'active',
+      amount_cents: amountCents,
+      provider: 'hotmart',
+      hotmart_transaction_id: transactionId,
+      hotmart_subscriber_code: subscriberCode ?? null,
+      current_period_start: new Date().toISOString(),
+      current_period_end: trialEndsAt,
+      metadata: {
+        upgraded_from_existing_account: true,
+        previous_subscription_ids: previousIds,
+        buyer: { name: buyerName, email: buyerEmail },
+        product: { id: productId, name: product?.name },
+        raw_event: eventType,
+        trial_days: isTrialPlan ? trialDays : undefined,
+      },
+    })
+    .select('id')
+    .single();
+  if (subErr) throw subErr;
+  const subId = newSub!.id;
+  const entityStatus = isTrialPlan ? 'trial' : 'active';
+
+  // 4) Garante role (sem deletar roles existentes)
+  const role = plan.category === 'manager' ? 'sst'
+    : plan.category === 'company' ? 'company' : 'sst';
+  await supabase.from('user_roles').upsert(
+    { user_id: userId, role }, { onConflict: 'user_id,role' },
+  );
+
+  // 5) Atualiza/cria entidade preservando dados
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('sst_manager_id, company_id')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (plan.category === 'manager' || plan.category === 'sst') {
+    if (profile?.sst_manager_id) {
+      await supabase.from('sst_managers').update({
+        subscription_status: entityStatus,
+        trial_ends_at: trialEndsAt,
+        max_companies: plan.max_companies || 9999,
+        pgr_module_enabled: plan.pgr_enabled === true,
+      }).eq('id', profile.sst_manager_id);
+    } else {
+      const { data: mgr } = await supabase.from('sst_managers').insert({
+        name: buyerName, email: buyerEmail,
+        max_companies: plan.max_companies || 9999,
+        subscription_status: entityStatus,
+        trial_ends_at: trialEndsAt,
+        pgr_module_enabled: plan.pgr_enabled === true,
+      }).select('id').single();
+      if (mgr) {
+        await supabase.from('profiles').update({ sst_manager_id: mgr.id }).eq('id', userId);
+      }
+    }
+  } else if (plan.category === 'company') {
+    let companyId = profile?.company_id ?? existingCompany?.id ?? null;
+    if (companyId) {
+      await supabase.from('companies').update({
+        subscription_status: entityStatus,
+        trial_ends_at: trialEndsAt,
+        parent_subscription_id: subId,
+        max_employees: plan.max_employees,
+      }).eq('id', companyId);
+    } else {
+      const slugBase = buyerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50);
+      const { data: company } = await supabase.from('companies').insert({
+        name: buyerName, email: buyerEmail,
+        slug: `${slugBase}-${Date.now().toString(36)}`,
+        subscription_status: entityStatus,
+        trial_ends_at: trialEndsAt,
+        employee_count: 0,
+        parent_subscription_id: subId,
+        max_employees: plan.max_employees,
+      }).select('id').single();
+      companyId = company?.id ?? null;
+      if (companyId) {
+        await supabase.from('user_companies').upsert(
+          { user_id: userId, company_id: companyId },
+          { onConflict: 'user_id,company_id' },
+        );
+        await supabase.from('profiles').update({ company_id: companyId }).eq('id', userId);
+      }
+    }
+    if (companyId) {
+      await supabase.from('company_feature_access').upsert({
+        company_id: companyId,
+        ouvidoria_enabled: plan.ouvidoria_enabled ?? true,
+        psicossocial_enabled: true,
+        burnout_enabled: true,
+        clima_enabled: true,
+        treinamentos_enabled: true,
+      });
+    }
+  }
+
+  // 6) Envia e-mail com nova senha provisória
+  const emailResult = await sendCredentialsEmail(
+    supabase, buyerEmail, newPassword, plan.name,
+    false, // estamos enviando senha provisória de verdade
+    subId, plan.slug,
+  );
+  if (!emailResult.ok) {
+    await supabase.from('subscriptions').update({
+      metadata: {
+        upgraded_from_existing_account: true,
+        previous_subscription_ids: previousIds,
+        provisional_password: newPassword,
+        email_send_error: emailResult.error ?? 'unknown',
+        buyer: { name: buyerName, email: buyerEmail },
+      },
+    }).eq('id', subId);
+  }
+
+  return {
+    ok: true,
+    upgraded_existing: true,
+    user_id: userId,
+    subscription_id: subId,
+    canceled_previous_subscriptions: previousIds,
+    email_sent: emailResult.ok,
+  };
+}
+
+
 const APPROVED_EVENTS = new Set(['PURCHASE_APPROVED', 'PURCHASE_COMPLETE']);
 const CANCEL_EVENTS = new Set([
   'PURCHASE_REFUNDED',

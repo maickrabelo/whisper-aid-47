@@ -33,13 +33,16 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ResetResult | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [sendEmail, setSendEmail] = useState(true);
 
   useEffect(() => {
     if (!open) {
       setResult(null);
       setCopiedField(null);
+      setSendEmail(true);
     }
   }, [open]);
+
 
   
   const handleReset = async () => {

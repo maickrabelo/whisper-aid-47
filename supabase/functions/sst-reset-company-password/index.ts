@@ -211,11 +211,49 @@ serve(async (req) => {
       .select('name, cnpj')
       .in('id', Array.from(companyIds));
 
+    // Optionally send credentials by email via Resend
+    let emailSent = false;
+    if (send_email && email) {
+      try {
+        const resendKey = Deno.env.get('RESEND_API_KEY');
+        if (resendKey) {
+          const loginUrl = `${supabaseUrl.replace('.supabase.co', '')}`; // not used; we link to app
+          const appUrl = Deno.env.get('APP_PUBLIC_URL') || 'https://srsmsapp.com.br';
+          const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 560px; margin:0 auto; padding:24px; color:#111;">
+              <h2 style="color:#16a34a;">Acesso ao seu painel — Ouvidoria Smart</h2>
+              <p>Olá, <strong>${company.name}</strong>!</p>
+              <p>Seu acesso foi gerado/atualizado. Use as credenciais abaixo para entrar:</p>
+              <p><strong>E-mail:</strong> ${email}<br/>
+                 <strong>Senha temporária:</strong> <code style="background:#f3f4f6;padding:4px 8px;border-radius:4px;">${tempPassword}</code></p>
+              <p>Você será solicitado a definir uma nova senha no primeiro acesso.</p>
+              <p><a href="${appUrl}/auth" style="display:inline-block;background:#16a34a;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;">Entrar agora</a></p>
+              <p style="font-size:12px;color:#666;margin-top:24px;">Se você não esperava este e-mail, ignore.</p>
+            </div>`;
+          const r = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: 'Sr.SMS <no-reply@srsmsapp.com.br>',
+              to: [email],
+              subject: 'Seus dados de acesso — Ouvidoria Smart',
+              html,
+            }),
+          });
+          emailSent = r.ok;
+          if (!r.ok) console.error('Resend error:', await r.text());
+        }
+      } catch (e) {
+        console.error('Email send failed:', e);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         email,
         tempPassword,
+        emailSent,
         relatedCompanies: relatedCompanies || [{ name: company.name, cnpj: company.cnpj }],
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }

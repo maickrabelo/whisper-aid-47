@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import Navbar from "@/components/Navbar";
@@ -21,7 +21,7 @@ import {
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import {
-  Copy, ExternalLink, ClipboardList, AlertCircle, Activity, CheckCircle2, Calendar, Download, FileImage, FileVideo, FileAudio, File,
+  Copy, ExternalLink, ClipboardList, AlertCircle, Activity, CheckCircle2, Calendar, Download, FileImage, FileVideo, FileAudio, File, Building2,
 } from "lucide-react";
 import {
   isBetaOuvidoriaCompany, labelOf,
@@ -31,8 +31,9 @@ import {
 const COLORS = ["#0F3460", "#1A97B9", "#1E6F5C", "#D32626", "#E97E00", "#777777", "#8e44ad", "#16a085"];
 
 const BetaOuvidoriaDashboard = () => {
-  const { profile } = useRealAuth();
+  const { profile, role } = useRealAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState<any[]>([]);
@@ -43,18 +44,63 @@ const BetaOuvidoriaDashboard = () => {
   const [reply, setReply] = useState("");
   const [newStatus, setNewStatus] = useState<string>("aberto");
 
-  const companyId = profile?.company_id ?? BETA_OUVIDORIA_COMPANY_IDS[0];
-  const [allowed, setAllowed] = useState<boolean>(isBetaOuvidoriaCompany(companyId));
+  const isSst = role === 'sst';
+  const [managerCompanies, setManagerCompanies] = useState<Array<{ id: string; name: string; logo_url?: string | null }>>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+
+  // Determine company scope
+  useEffect(() => {
+    (async () => {
+      if (isSst) {
+        // Find this user's sst_manager_id, then list assigned companies that have smart ouvidoria
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('sst_manager_id')
+          .eq('id', profile?.id as string)
+          .maybeSingle();
+        const managerId = (prof as any)?.sst_manager_id;
+        if (!managerId) { setManagerCompanies([]); return; }
+        const { data: assignments } = await supabase
+          .from('company_sst_assignments')
+          .select('company_id, companies:company_id (id, name, logo_url)')
+          .eq('sst_manager_id', managerId);
+        const list = (assignments || [])
+          .map((a: any) => a.companies)
+          .filter(Boolean);
+        // Filter only smart-enabled
+        const filtered: any[] = [];
+        for (const c of list) {
+          const enabled =
+            isBetaOuvidoriaCompany(c.id) ||
+            !!(await (supabase as any).rpc('company_has_smart_ouvidoria', { _company_id: c.id })).data;
+          if (enabled) filtered.push(c);
+        }
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        setManagerCompanies(filtered);
+        const fromUrl = searchParams.get('company');
+        const initial = fromUrl && filtered.some(c => c.id === fromUrl) ? fromUrl : (filtered[0]?.id ?? null);
+        setSelectedCompanyId(initial);
+      } else {
+        setSelectedCompanyId(profile?.company_id ?? null);
+      }
+    })();
+  }, [isSst, profile?.id, profile?.company_id]);
+
+  const companyId = selectedCompanyId;
+  const [allowed, setAllowed] = useState<boolean>(false);
 
   const publicLink = useMemo(
-    () => `${window.location.origin}/ouvidoria-beta/${companyId}`,
+    () => companyId ? `${window.location.origin}/ouvidoria-beta/${companyId}` : '',
     [companyId]
   );
 
   useEffect(() => {
+    if (!companyId) { setAllowed(false); setLoading(false); return; }
+    if (isSst) { setSearchParams((sp) => { const n = new URLSearchParams(sp); n.set('company', companyId); return n; }, { replace: true }); }
     (async () => {
+      setLoading(true);
       let isAllowed = isBetaOuvidoriaCompany(companyId);
-      if (!isAllowed && companyId) {
+      if (!isAllowed) {
         const { data: rpc } = await (supabase as any).rpc('company_has_smart_ouvidoria', { _company_id: companyId });
         isAllowed = !!rpc;
       }
@@ -68,7 +114,7 @@ const BetaOuvidoriaDashboard = () => {
       setReports((data as any[]) ?? []);
       setLoading(false);
     })();
-  }, [companyId]);
+  }, [companyId, isSst]);
 
   const stats = useMemo(() => {
     const total = reports.length;
@@ -237,15 +283,35 @@ const BetaOuvidoriaDashboard = () => {
                 Canal 100% anônimo, sem consumo de créditos.
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => { navigator.clipboard.writeText(publicLink); toast({ title: "Link copiado" }); }}>
+            <div className="flex gap-2 flex-wrap items-center">
+              {isSst && managerCompanies.length > 0 && (
+                <Select value={selectedCompanyId ?? ''} onValueChange={(v) => setSelectedCompanyId(v)}>
+                  <SelectTrigger className="w-64">
+                    <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Selecionar empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {managerCompanies.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Button variant="outline" disabled={!publicLink} onClick={() => { navigator.clipboard.writeText(publicLink); toast({ title: "Link copiado" }); }}>
                 <Copy className="h-4 w-4 mr-2" /> Copiar link público
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild disabled={!publicLink}>
                 <a href={publicLink} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-2" /> Abrir formulário</a>
               </Button>
             </div>
           </div>
+
+          {isSst && managerCompanies.length === 0 && (
+            <Card className="mb-6"><CardContent className="p-4 text-sm text-muted-foreground">
+              Nenhuma empresa com Ouvidoria Smart habilitada. Habilite o recurso pelo card "Ferramentas" da empresa.
+            </CardContent></Card>
+          )}
+
 
           {/* Stats cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

@@ -1,45 +1,75 @@
+# Revisão da Ouvidoria Smart por empresa
 
-## Objetivo
-Permitir que cada risco no Inventário de Riscos do PGR utilize uma matriz de severidade × probabilidade independente (3×3, 4×4 ou 5×5), com classificação de nível de risco apropriada à matriz escolhida e exportação no PDF respeitando cada matriz utilizada (conforme NR-1 / ABNT NBR ISO 31000, que admitem matrizes de diferentes ordens desde que documentadas).
+Hoje a Ouvidoria Smart é "global" — qualquer gestora habilitada vê um único painel ligado a `profile.company_id`. Vamos transformá-la em uma ouvidoria por empresa, com seletor para a gestora, acesso próprio para cada empresa-cliente, branding por empresa e botão para gerar credenciais.
 
-## Mudanças no banco (`pgr_risks`)
+## 1. Painel da Gestora SST com seletor de empresa
 
-1. Adicionar coluna `matrix_size SMALLINT NOT NULL DEFAULT 5` com `CHECK (matrix_size IN (3,4,5))`.
-2. Substituir a coluna gerada `risk_level` por uma calculada via trigger `BEFORE INSERT/UPDATE`, pois a classificação passa a depender da matriz:
+Mudanças em `src/pages/BetaOuvidoriaDashboard.tsx`:
 
-| Matriz | Trivial | Tolerável | Moderado | Substancial | Intolerável |
-|--------|---------|-----------|----------|-------------|-------------|
-| 3×3 (máx 9) | 1 | 2 | 3–4 | 6 | 9 |
-| 4×4 (máx 16) | 1–2 | 3–4 | 5–8 | 9–12 | 15–16 |
-| 5×5 (máx 25) | 1–3 | 4–7 | 8–14 | 15–19 | 20–25 |
+- Carregar todas as empresas da gestora (já temos `company_sst_assignments` + `companies`).
+- Filtrar apenas as que têm Ouvidoria Smart habilitada via `company_has_smart_ouvidoria`.
+- Adicionar `<Select>` no topo com as empresas habilitadas, persistindo a escolha em `localStorage`.
+- Recalcular stats/gráficos/lista de relatos a partir da empresa selecionada (`.eq('company_id', selectedCompanyId)`).
+- O botão "Copiar link público" e "Abrir formulário" passam a usar a empresa selecionada (`/ouvidoria-beta/:selectedCompanyId`).
+- Se a empresa logada for do tipo "company" (não gestora), pular o seletor e travar na própria empresa.
 
-Os 5 níveis (`trivial`, `tolerable`, `moderate`, `substantial`, `intolerable`) e suas cores ficam preservados.
+## 2. Acesso da empresa-cliente
 
-## Frontend — `src/components/pgr/RiskInventory.tsx`
+Card "Ouvidoria Smart" no dashboard da empresa (`src/pages/Dashboard.tsx`):
+- Aparece quando `company_has_smart_ouvidoria(profile.company_id)` for true.
+- Botões: "Abrir painel" (`/ouvidoria-beta/painel`) e "Copiar link público" (`/ouvidoria-beta/{company_id}`).
 
-- Adicionar campo "Matriz de risco" no formulário (select 3×3 / 4×4 / 5×5), default 5×5.
-- Os selects de Severidade e Probabilidade passam a ter o range dinâmico (1..N) conforme a matriz escolhida; ao trocar a matriz, valores acima de N são truncados.
-- A grade visual única "Matriz 5×5" passa a renderizar **uma matriz por tamanho efetivamente usado** (3×3, 4×4, 5×5), com contagem de riscos por célula daquela matriz. Matrizes sem riscos ficam ocultas (mantendo a 5×5 visível por padrão se não houver nenhum risco).
-- Tabela do inventário ganha coluna "Matriz" (badge "3×3"/"4×4"/"5×5") logo antes de S/P.
+A página `/ouvidoria-beta/painel` já vai aceitar o usuário company porque vamos forçar `companyId = profile.company_id` quando ele não for gestora — vendo apenas os relatos da própria empresa.
 
-## Frontend — `src/components/pgr/PGRReportPDF.ts`
+## 3. Botão "Gerar acesso da empresa" na lista de empresas da gestora
 
-- Tabela do inventário por GHE: alterar a coluna "Risco" para exibir `S{n}×P{n} (matriz N×N) — NÍVEL`.
-- Na seção "Matriz de Risco", renderizar uma matriz visual para cada tamanho utilizado no documento, cada uma com sua legenda de faixas, justificando o uso conforme NR-1.
+Local: gestão de empresas da gestora SST (já existente — usado pelo CompanySelector / gerenciamento).
 
-## Hooks / tipos
+- Botão "Gerar acesso" por empresa.
+- Confirma o e-mail (pré-preenchido com `companies.email`).
+- Chama uma nova Edge Function `create-company-access` que:
+  1. Verifica se a gestora autenticada é dona daquela empresa.
+  2. Cria (ou reutiliza) usuário no Auth com `email_confirm=true` e senha temporária aleatória.
+  3. Atribui `role = 'company'` em `user_roles` (sem remover roles existentes).
+  4. Cria registro em `profiles` apontando `company_id`.
+  5. Marca `must_change_password = true`.
+  6. Envia e-mail via Resend com login + senha temporária + link `https://<dominio>/auth`.
+  7. Retorna o e-mail e senha para a UI mostrar uma única vez (com botão "Copiar").
 
-- `src/integrations/supabase/types.ts` será regenerado após a migration (não editar manualmente).
-- `src/hooks/usePGRDashboardData.ts` continua usando `risk_level` (sem alteração funcional, apenas inclui `matrix_size` no select para futuras métricas).
+## 4. Página pública com branding da empresa
 
-## Compatibilidade
+`/ouvidoria-beta/:companyId` (`src/pages/BetaOuvidoriaForm.tsx`):
+- Já recebe `companyId` pela URL.
+- Buscar `companies` para exibir logo + nome no topo do formulário.
+- Usar `companies.brand_color` (ou fallback para verde do tema) na cor primária do form.
+- Página de acompanhamento (`/ouvidoria-beta/acompanhar`) também mostra o branding da empresa do relato consultado.
 
-- Riscos existentes recebem `matrix_size = 5` (default), mantendo classificação idêntica à atual.
-- Nenhum impacto em planos/permissões; ajuste 100% dentro do módulo PGR.
+## 5. Backend / segurança
 
-## Arquivos afetados
+- **RLS**: as policies em `beta_ouvidoria_reports` já filtram por `user_manages_company(auth.uid(), company_id)` e `user_in_company(...)` — confirmar e ajustar se necessário para garantir que:
+  - Gestora vê relatos só das suas empresas.
+  - Usuário company vê só os da própria empresa.
+  - Inserção pública (form anônimo) continua liberada via Edge Function `create-beta-ouvidoria-report` (já existe).
+- **`create-company-access`**: nova função registrada no `config.toml` com `verify_jwt = true`; usa `SUPABASE_SERVICE_ROLE_KEY` e `RESEND_API_KEY` (já configurados).
+- Template de e-mail simples com a logo do Sr.SMS (mesma identidade do welcome).
 
-- Migration nova (add coluna + trigger + drop da coluna gerada)
-- `src/components/pgr/RiskInventory.tsx`
-- `src/components/pgr/PGRReportPDF.ts`
-- `src/hooks/usePGRDashboardData.ts` (apenas select)
+## Detalhes técnicos
+
+- Arquivos a criar:
+  - `supabase/functions/create-company-access/index.ts`
+  - Registrar a função em `supabase/config.toml`.
+- Arquivos a modificar:
+  - `src/pages/BetaOuvidoriaDashboard.tsx` (seletor + scoping correto)
+  - `src/pages/BetaOuvidoriaForm.tsx` (branding por empresa)
+  - `src/pages/BetaOuvidoriaTrack.tsx` (branding)
+  - `src/pages/Dashboard.tsx` (card "Ouvidoria Smart" para company)
+  - Componente da listagem de empresas da gestora (provavelmente `src/components/CompanySelector.tsx` ou similar) → adicionar botão "Gerar acesso".
+- Remover dependência de `BETA_OUVIDORIA_COMPANY_IDS` (whitelist hardcoded) — usar apenas `company_has_smart_ouvidoria`.
+- A função SQL `company_has_smart_ouvidoria` já cobre os planos sr-sms / teste-sms / sst-smart, não precisa de migration.
+
+## Fora do escopo
+
+- Notificação por e-mail à empresa quando um novo relato chegar (pode ser próximo passo).
+- Permitir que a empresa-cliente responda relatos (hoje só a gestora responde) — manter como está.
+
+Posso seguir com a implementação?

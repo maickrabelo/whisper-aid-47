@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Copy, KeyRound, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Copy, KeyRound, Check, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +20,7 @@ interface ResetPasswordDialogProps {
 interface ResetResult {
   email: string;
   tempPassword: string;
+  emailSent?: boolean;
   relatedCompanies: { name: string; cnpj: string | null }[];
 }
 
@@ -31,13 +33,16 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ResetResult | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [sendEmail, setSendEmail] = useState(true);
 
   useEffect(() => {
     if (!open) {
       setResult(null);
       setCopiedField(null);
+      setSendEmail(true);
     }
   }, [open]);
+
 
   
   const handleReset = async () => {
@@ -46,7 +51,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('sst-reset-company-password', {
-        body: { company_id: company.id },
+        body: { company_id: company.id, send_email: sendEmail },
       });
 
       if (error) throw error;
@@ -55,10 +60,16 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
       setResult({
         email: data.email,
         tempPassword: data.tempPassword,
+        emailSent: data.emailSent,
         relatedCompanies: data.relatedCompanies || [{ name: company.name, cnpj: company.cnpj || null }],
       });
 
-      toast({ title: "Senha resetada!", description: "A senha temporária foi gerada com sucesso." });
+      toast({
+        title: sendEmail && data.emailSent ? "Acesso gerado e e-mail enviado!" : "Senha gerada!",
+        description: sendEmail && !data.emailSent
+          ? "Senha criada, mas o e-mail não pôde ser enviado. Copie e envie manualmente."
+          : "Compartilhe as credenciais com o cliente.",
+      });
     } catch (error: any) {
       console.error('Error resetting password:', error);
       toast({ title: "Erro ao resetar senha", description: error.message || 'Tente novamente.', variant: "destructive" });
@@ -83,12 +94,12 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-primary" />
-            Resetar Senha
+            Gerar acesso da empresa
           </DialogTitle>
           <DialogDescription>
             {result
-              ? 'Senha temporária gerada. Compartilhe as credenciais abaixo com o cliente.'
-              : `Resetar a senha de acesso da empresa ${company?.name}?`}
+              ? 'Credenciais geradas. Compartilhe com o cliente para que ele acompanhe a ouvidoria.'
+              : `Gerar/Resetar acesso de ${company?.name}?`}
           </DialogDescription>
         </DialogHeader>
 
@@ -97,6 +108,17 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
             <div className="p-4 bg-muted rounded-lg text-sm text-muted-foreground">
               <p>Uma nova senha temporária será gerada. O usuário deverá alterá-la no primeiro acesso.</p>
             </div>
+            <label className="flex items-start gap-2 p-3 border rounded-lg cursor-pointer hover:bg-accent">
+              <Checkbox checked={sendEmail} onCheckedChange={(v) => setSendEmail(!!v)} className="mt-0.5" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Mail className="h-4 w-4 text-primary" /> Enviar credenciais por e-mail
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Enviaremos um e-mail para a empresa com o login e a senha temporária.
+                </p>
+              </div>
+            </label>
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
                 Cancelar
@@ -105,10 +127,10 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Resetando...
+                    Gerando...
                   </>
                 ) : (
-                  'Confirmar Reset'
+                  sendEmail ? 'Gerar & Enviar' : 'Gerar acesso'
                 )}
               </Button>
             </DialogFooter>

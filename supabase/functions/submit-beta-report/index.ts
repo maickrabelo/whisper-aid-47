@@ -50,7 +50,14 @@ serve(async (req) => {
     const body = await req.json();
 
     const company_id = String(body.company_id ?? "");
-    if (company_id !== DEMO_COMPANY_ID) {
+    if (!company_id) {
+      return new Response(JSON.stringify({ error: "Empresa não informada." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: allowed, error: rpcErr } = await supabase.rpc("company_has_smart_ouvidoria", { _company_id: company_id });
+    if (rpcErr || !allowed) {
+      console.error("company_has_smart_ouvidoria check failed:", rpcErr, "allowed=", allowed);
       return new Response(JSON.stringify({ error: "Canal indisponível para esta empresa." }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

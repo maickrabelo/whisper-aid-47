@@ -342,13 +342,14 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   });
 
   y = 70;
-  pdf.setFillColor(0, 51, 102);
+  // Fundo branco na capa para destacar as logos; linha de acento em verde Sr.SMS
+  pdf.setFillColor(11, 63, 41);
   pdf.rect(m, y, pw - 2 * m, 2, 'F');
   y += 12;
 
   pdf.setFontSize(22);
   pdf.setFont('helvetica', 'bold');
-  setColor(0, 51, 102);
+  setColor(11, 63, 41);
   pdf.text('PROGRAMA DE GERENCIAMENTO', pw / 2, y, { align: 'center' });
   y += 10;
   pdf.text('DE RISCOS PSICOSSOCIAIS', pw / 2, y, { align: 'center' });

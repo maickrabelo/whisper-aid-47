@@ -3,6 +3,7 @@ import { FileDown, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
+import { renderReportLogos } from '@/lib/pdfLogos';
 import {
   BurnoutCategory,
   BurnoutRiskLevel,
@@ -148,21 +149,14 @@ export function BurnoutReportPDF({
       pdf.setFillColor(127, 29, 29); // Dark red
       pdf.rect(0, 0, pageWidth, 60, 'F');
       
-      // SST Logo (if available)
-      if (sstLogoUrl) {
-        try {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-            img.src = sstLogoUrl;
-          });
-          pdf.addImage(img, 'PNG', margin, 8, 30, 30);
-        } catch (e) {
-          console.log('Could not load SST logo');
-        }
-      }
+      // Logos: SST manager (left) + Company (right)
+      await renderReportLogos(pdf, pageWidth, {
+        sstLogoUrl,
+        companyLogoUrl: assessment.companies?.logo_url || null,
+        topY: 8,
+        maxHeight: 28,
+        maxWidth: 45,
+      });
       
       pdf.setFontSize(24);
       pdf.setFont('helvetica', 'bold');

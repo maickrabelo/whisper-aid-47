@@ -54,6 +54,7 @@ interface HSEITReportEditorProps {
   questionAverages: { questionNumber: number; text: string; category: string; average: number }[];
   sstLogoUrl?: string | null;
   sstName?: string | null;
+  companyLogoUrl?: string | null;
 }
 
 // Default recommendations based on health impact
@@ -104,7 +105,8 @@ export function HSEITReportEditor({
   departments,
   questionAverages,
   sstLogoUrl,
-  sstName
+  sstName,
+  companyLogoUrl
 }: HSEITReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("preview");
@@ -227,6 +229,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         executiveSummary,
         sstLogoUrl,
         sstName,
+        companyLogoUrl,
         sstCpf: sstCpf || undefined,
         sstRegistration: sstRegistration || undefined,
         methodology: 'hseit',

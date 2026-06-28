@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { renderReportLogos } from '@/lib/pdfLogos';
 
 // ─────────────────────────────────────────────────────────────
 // Tipos
@@ -23,7 +24,9 @@ export interface PGRReportInput {
   company: {
     name: string;
     cnpj: string;
+    logo_url?: string | null;
   };
+  sstLogoUrl?: string | null;
   ghes: Array<{
     id: string;
     name: string;
@@ -109,7 +112,7 @@ const slugify = (s: string) =>
 // Gerador
 // ─────────────────────────────────────────────────────────────
 
-export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
+export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   const state = { y: TOP_Y, page: 1, skipChrome: true };
 
@@ -375,6 +378,14 @@ export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
   doc.rect(0, 0, PAGE_W, 90, 'F');
   doc.setFillColor(...COLORS.accent);
   doc.rect(0, 86, PAGE_W, 4, 'F');
+
+  await renderReportLogos(doc, PAGE_W, {
+    sstLogoUrl: input.sstLogoUrl,
+    companyLogoUrl: input.company.logo_url,
+    topY: 8,
+    maxHeight: 24,
+    maxWidth: 45,
+  });
 
   setText(36, true, [255, 255, 255]);
   doc.text('PGR', PAGE_W / 2, 50, { align: 'center' });
@@ -713,8 +724,8 @@ export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
   return doc;
 }
 
-export function downloadPGRReport(input: PGRReportInput) {
-  const doc = generatePGRReportPDF(input);
+export async function downloadPGRReport(input: PGRReportInput) {
+  const doc = await generatePGRReportPDF(input);
   const fname = `PGR_${slugify(input.company.name)}_v${input.pgr.version}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fname);
 }

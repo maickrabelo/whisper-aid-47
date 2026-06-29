@@ -263,7 +263,11 @@ function remapRowsForExistingAccount(normalized: Record<string, any[]>, targetUs
     const newestImported = importedManagers
       .slice()
       .sort((a: any, b: any) => new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime())[0] || {};
-    normalized.sst_managers = [{ ...newestImported, id: targetManagerId }];
+    const safeManagerPatch: Record<string, unknown> = { id: targetManagerId };
+    for (const field of ["name", "email", "cnpj", "phone", "address", "logo_url", "slug", "brand_color", "onboarding_completed_pages"]) {
+      if (newestImported[field] !== undefined) safeManagerPatch[field] = newestImported[field];
+    }
+    normalized.sst_managers = [safeManagerPatch];
   }
 
   if (targetUserId && importedProfileIds.size > 0) {

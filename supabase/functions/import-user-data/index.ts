@@ -130,6 +130,12 @@ const NESTED_GROUP_ALIASES: Record<string, Record<string, string>> = {
     company_access: "sst_training_company_access",
     portal_trainings: "sst_portal_trainings",
   },
+  training: {
+    modules: "sst_training_modules",
+    materials: "sst_training_materials",
+    company_access: "sst_training_company_access",
+    portal_trainings: "sst_portal_trainings",
+  },
 };
 
 const BATCH_SIZE = 50;

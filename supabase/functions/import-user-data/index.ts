@@ -234,12 +234,27 @@ async function consolidateSstManagersByEmail(supabase: any, email: string, prefe
       patch.pgr_module_enabled = true;
       target.pgr_module_enabled = true;
     }
+    if (patch.cnpj || patch.slug) {
+      await supabase.from("sst_managers").update({
+        ...(patch.cnpj ? { cnpj: null } : {}),
+        ...(patch.slug ? { slug: null } : {}),
+      }).eq("id", source.id);
+    }
     if (Object.keys(patch).length > 0) {
       await supabase.from("sst_managers").update(patch).eq("id", target.id);
     }
 
     await supabase.from("profiles").update({ sst_manager_id: target.id }).eq("sst_manager_id", source.id);
-    await supabase.from("company_sst_assignments").update({ sst_manager_id: target.id }).eq("sst_manager_id", source.id);
+    const { data: sourceAssignments } = await supabase
+      .from("company_sst_assignments")
+      .select("company_id, assigned_at")
+      .eq("sst_manager_id", source.id);
+    for (const assignment of sourceAssignments ?? []) {
+      await supabase
+        .from("company_sst_assignments")
+        .upsert({ company_id: assignment.company_id, sst_manager_id: target.id, assigned_at: assignment.assigned_at }, { onConflict: "company_id" });
+    }
+    await supabase.from("company_sst_assignments").delete().eq("sst_manager_id", source.id);
     await supabase.from("account_invitations").update({ sst_manager_id: target.id }).eq("sst_manager_id", source.id);
     await supabase.from("sst_extra_slot_purchases").update({ sst_manager_id: target.id }).eq("sst_manager_id", source.id);
     await supabase.from("sst_training_modules").update({ sst_manager_id: target.id }).eq("sst_manager_id", source.id);

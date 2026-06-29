@@ -1,34 +1,49 @@
-## Objetivo
-A oferta da Hotmart de **R$ 9,90** (offer code `zwf07kdh`, product `7952854`) deve provisionar **conta de teste de 7 dias** (plano `teste-sms`), e não a conta paga `sr-sms`. Quando o mesmo comprador depois adquirir a oferta de **R$ 97,90** (offer code `cxxuc6kw`), o webhook converte o trial em assinatura ativa mensal, **mantendo todos os dados**.
+Plano de correção:
 
-Hoje o mapeamento em `hotmart_product_plans` é só por `hotmart_product_id`, e ambas as ofertas (9,90 e 97,90) compartilham o mesmo product_id `7952854` → toda compra cai no `sr-sms`.
+1. **Corrigir a duplicata atual da imagem**
+   - Consolidar os dois cadastros de `jose.simieli@gmail.com` na gestora SST mais nova, de 29/06.
+   - Migrar para ela todos os vínculos possíveis: empresas geridas, perfil, colaboradores, convites, treinamentos, compras de slots e dados relacionados.
+   - Remover o cadastro antigo/orfão para não aparecer mais duplicado no Master Dashboard.
 
-## O que mudar
+2. **Blindar o webhook da Hotmart contra novas duplicatas**
+   - Alterar a busca de conta existente para não usar `maybeSingle`, porque quando já existem duplicatas ele pode falhar ou escolher errado.
+   - Buscar todas as gestoras/empresas/profiles por e-mail normalizado e escolher sempre a conta mais recente como destino.
+   - Antes de ativar o plano comprado, executar uma consolidação automática:
+     - mover tudo das contas antigas para a mais nova;
+     - cancelar assinaturas antigas/trial;
+     - ativar o plano comprado na conta mais recente;
+     - resetar senha provisória;
+     - enviar o e-mail via Resend com a nova senha;
+     - manter empresas, avaliações, PGR, ouvidoria, treinamentos e histórico.
 
-### 1. Mapeamento por oferta (Hotmart `offer.code`)
-- Migration: adicionar coluna `hotmart_offer_code text` em `hotmart_product_plans` (nullable). Índice em `(hotmart_product_id, hotmart_offer_code)`.
-- Inserir nova linha mapeando `product 7952854 + offer zwf07kdh → plano teste-sms` (com nota "Oferta R$ 9,90 – trial 7 dias").
-- Atualizar a linha existente do `7952854` para gravar `hotmart_offer_code='cxxuc6kw'` (oferta R$ 97,90 → `sr-sms`).
-- A linha do offer ID `1341462` (legacy) também ganha `hotmart_offer_code='cxxuc6kw'`.
+3. **Melhorar a importação JSON do Master Dashboard**
+   - Atualizar `import-user-data` para receber o backup e primeiro detectar o e-mail do usuário no JSON.
+   - Se já existir conta/gestora com esse e-mail, importar tudo para a conta mais recente, sem criar uma nova gestora duplicada.
+   - Reescrever os IDs do backup durante a importação quando necessário:
+     - `profiles.sst_manager_id`;
+     - `user_sst_managers.sst_manager_id`;
+     - `company_sst_assignments.sst_manager_id`;
+     - `sst_training_modules.sst_manager_id`;
+     - `account_invitations.sst_manager_id`;
+     - `sst_extra_slot_purchases.sst_manager_id`.
+   - Continuar ignorando erros não críticos/duplicatas e seguir importando o restante, como faço manualmente.
+   - Processar em lotes pequenos para backups grandes não quebrarem por timeout.
 
-### 2. `supabase/functions/hotmart-webhook/index.ts`
-No bloco de lookup (linhas ~538-545):
-- Extrair `offerCode = payload.data.purchase.offer?.code`.
-- Buscar primeiro por `(hotmart_product_id IN lookupIds AND hotmart_offer_code = offerCode)`.
-- Fallback: linha com `hotmart_offer_code IS NULL` e product id batendo (compatível com mapeamentos antigos).
-- Quando o plano resolvido for `teste-sms` (ou qualquer plano com `trial_days > 0`):
-  - Criar `subscriptions.status = 'trial'`, `current_period_end = now() + trial_days`, `amount_cents = 0`, `metadata.hotmart_offer_code`.
-  - Marcar `sst_managers.subscription_status = 'trialing'` e `trial_ends_at = end`.
-  - E-mail Resend usa o mesmo template de boas-vindas, mencionando "teste de 7 dias".
-- Quando o plano resolvido for `sr-sms` (97,90) e já existir conta/assinatura ativa para o e-mail (trial `teste-sms` ou qualquer outro): cair no fluxo `upgradeExistingAccount` já existente — cancela a sub antiga, cria nova `sr-sms` `active`, mantém empresas/avaliações/PGR. Apenas garantir que esse fluxo também limpa `sst_managers.trial_ends_at` e seta `subscription_status='active'`.
+4. **Adicionar rotina reutilizável de consolidação**
+   - Criar dentro das funções uma rotina padrão `merge duplicate SST managers by email`, usada tanto pelo webhook quanto pelo importador.
+   - Critério fixo: **a conta mais recente por `created_at` vence**.
+   - Campos da conta antiga só serão copiados se estiverem faltando na conta mais nova.
+   - Empresas, avaliações e PGR não serão recriados; apenas os vínculos serão apontados para a conta final.
 
-### 3. Correção retroativa
-Identificar usuários criados pelo offer `zwf07kdh` como `sr-sms` por engano (consulta por `subscriptions.plan_id = sr-sms` + e-mails que aparecem nos webhook_logs com offer `zwf07kdh`) e mover para `teste-sms` trial de 7 dias contados da data da compra (ou prorrogar a partir de hoje se já expirou — confirmar com você antes de aplicar). Atualizar `sst_managers` correspondentes.
+5. **Feedback visual no importador**
+   - Atualizar o diálogo “Importar Dados de Usuário” para mostrar:
+     - e-mail detectado;
+     - conta destino usada;
+     - quantidade de duplicatas consolidadas;
+     - tabelas importadas;
+     - erros ignorados.
 
-### 4. Teste
-Disparar `test-hotmart-webhook` simulando:
-- `PURCHASE_APPROVED` com offer `zwf07kdh` e e-mail novo → conta criada como `teste-sms`, 7 dias, e-mail enviado.
-- `PURCHASE_APPROVED` com offer `cxxuc6kw` para o mesmo e-mail → upgrade in-place: assinatura vira `sr-sms active`, trial cancelado, dados preservados, e-mail com nova senha enviado.
-
-## Perguntas antes de implementar
-1. Para os usuários que já foram criados como `sr-sms` pela oferta de 9,90 (ex.: contas recentes com offer `zwf07kdh` nos webhook_logs), eu **(a)** reseto trial de 7 dias contados de **hoje**, **(b)** conto a partir da data original da compra (pode já estar expirado), ou **(c)** deixo como está e só corrijo daqui pra frente?
+6. **Validação final**
+   - Conferir no banco que `jose.simieli@gmail.com` ficou com apenas uma gestora SST.
+   - Testar/importar um JSON em conta já existente e confirmar que não duplica.
+   - Revisar logs do webhook para garantir que compras Hotmart de e-mail existente passam pelo fluxo de upgrade/consolidação, não pelo fluxo de criação nova.

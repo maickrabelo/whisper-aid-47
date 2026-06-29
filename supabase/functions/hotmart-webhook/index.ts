@@ -183,6 +183,87 @@ async function findAuthUserByEmail(supabase: any, email: string) {
   return null;
 }
 
+function normalizeEmail(email: string | null | undefined) {
+  return String(email || '').trim().toLowerCase();
+}
+
+async function findSstManagersByEmail(supabase: any, email: string) {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return [];
+  const { data, error } = await supabase
+    .from('sst_managers')
+    .select('*')
+    .ilike('email', normalized)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+async function consolidateSstManagersByEmail(supabase: any, email: string, preferredTargetId?: string | null) {
+  const managers = await findSstManagersByEmail(supabase, email);
+  if (managers.length === 0) {
+    return { target: null, mergedIds: [] as string[] };
+  }
+
+  const target = preferredTargetId
+    ? (managers.find((m: any) => m.id === preferredTargetId) ?? managers[0])
+    : managers[0];
+  const sources = managers.filter((m: any) => m.id !== target.id);
+  const mergedIds: string[] = [];
+
+  for (const source of sources) {
+    const fillPatch: Record<string, unknown> = {};
+    for (const field of ['name', 'email', 'cnpj', 'phone', 'address', 'logo_url', 'slug']) {
+      if ((target[field] === null || target[field] === undefined || target[field] === '') && source[field]) {
+        fillPatch[field] = source[field];
+        target[field] = source[field];
+      }
+    }
+    if ((target.max_companies === null || target.max_companies === undefined || target.max_companies === 0) && typeof source.max_companies === 'number') {
+      fillPatch.max_companies = source.max_companies;
+      target.max_companies = source.max_companies;
+    }
+    if (typeof source.extra_company_slots === 'number' && typeof target.extra_company_slots === 'number') {
+      fillPatch.extra_company_slots = Math.max(target.extra_company_slots, source.extra_company_slots);
+      target.extra_company_slots = fillPatch.extra_company_slots;
+    }
+    if (source.pgr_module_enabled === true && target.pgr_module_enabled !== true) {
+      fillPatch.pgr_module_enabled = true;
+      target.pgr_module_enabled = true;
+    }
+    if (Object.keys(fillPatch).length > 0) {
+      await supabase.from('sst_managers').update(fillPatch).eq('id', target.id);
+    }
+
+    await supabase.from('profiles').update({ sst_manager_id: target.id }).eq('sst_manager_id', source.id);
+    await supabase.from('company_sst_assignments').update({ sst_manager_id: target.id }).eq('sst_manager_id', source.id);
+    await supabase.from('account_invitations').update({ sst_manager_id: target.id }).eq('sst_manager_id', source.id);
+    await supabase.from('sst_extra_slot_purchases').update({ sst_manager_id: target.id }).eq('sst_manager_id', source.id);
+    await supabase.from('sst_training_modules').update({ sst_manager_id: target.id }).eq('sst_manager_id', source.id);
+    await supabase.from('sector_viewer_access').update({ sst_manager_id: target.id }).eq('sst_manager_id', source.id);
+
+    const { data: sourceUsers } = await supabase
+      .from('user_sst_managers')
+      .select('user_id')
+      .eq('sst_manager_id', source.id);
+    for (const row of sourceUsers ?? []) {
+      await supabase
+        .from('user_sst_managers')
+        .upsert({ user_id: row.user_id, sst_manager_id: target.id }, { onConflict: 'user_id,sst_manager_id' });
+    }
+    await supabase.from('user_sst_managers').delete().eq('sst_manager_id', source.id);
+
+    const { error: deleteError } = await supabase.from('sst_managers').delete().eq('id', source.id);
+    if (deleteError) {
+      console.warn('Could not delete duplicate SST manager after merge', { sourceId: source.id, error: deleteError.message });
+    } else {
+      mergedIds.push(source.id);
+    }
+  }
+
+  return { target, mergedIds };
+}
+
 /**
  * Reaproveita uma conta existente (auth user, company ou sst_manager) e ativa o plano
  * recém-comprado via Hotmart. Não duplica usuários, preserva todos os dados.
@@ -241,6 +322,13 @@ async function upgradeExistingAccount(supabase: any, ctx: {
   await supabase.from('profiles').upsert({
     id: userId!, full_name: buyerName, must_change_password: true,
   });
+
+  if ((plan.category === 'manager' || plan.category === 'sst') && existingManager?.id) {
+    await supabase.from('profiles').update({ sst_manager_id: existingManager.id }).eq('id', userId!);
+  }
+  if (plan.category === 'company' && existingCompany?.id) {
+    await supabase.from('profiles').update({ company_id: existingCompany.id }).eq('id', userId!);
+  }
 
   // 2) Cancela assinaturas anteriores ativas/trial deste usuário
   const { data: prevSubs } = await supabase
@@ -581,16 +669,15 @@ Deno.serve(async (req) => {
 
       // ===== Detecção: e-mail já cadastrado =====
       const existingAuthUser = await findAuthUserByEmail(supabase, buyerEmail);
-      const { data: existingCompany } = await supabase
+      const { data: existingCompanies } = await supabase
         .from('companies')
         .select('id')
         .ilike('email', buyerEmail)
-        .maybeSingle();
-      const { data: existingManager } = await supabase
-        .from('sst_managers')
-        .select('id')
-        .ilike('email', buyerEmail)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
+      const existingCompany = existingCompanies?.[0] ?? null;
+
+      const mergeInfo = await consolidateSstManagersByEmail(supabase, buyerEmail);
+      const existingManager = mergeInfo.target ? { id: mergeInfo.target.id } : null;
 
       // ===== UPGRADE IN-PLACE: e-mail já existe em qualquer forma =====
       // Reaproveita usuário existente: reseta senha, cancela assinaturas anteriores,
@@ -612,7 +699,10 @@ Deno.serve(async (req) => {
         eventType,
       });
       if (upgradeResult) {
-        return await logAndRespond(200, upgradeResult, 'upgraded_existing_account');
+        return await logAndRespond(200, {
+          ...upgradeResult,
+          merged_duplicate_sst_manager_ids: mergeInfo.mergedIds,
+        }, 'upgraded_existing_account');
       }
 
 

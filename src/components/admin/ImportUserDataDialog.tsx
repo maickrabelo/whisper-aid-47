@@ -31,7 +31,7 @@ export function ImportUserDataDialog() {
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Falha na importação");
-      setResult(data.results);
+      setResult(data);
       toast({ title: "Importação concluída", description: "Veja o resumo abaixo." });
     } catch (e: any) {
       toast({ title: "Erro ao importar", description: getSafeErrorMessage(e), variant: "destructive" });
@@ -79,6 +79,16 @@ export function ImportUserDataDialog() {
 
           {result && (
             <div className="bg-muted rounded p-3 text-xs max-h-[260px] overflow-y-auto">
+              <div className="mb-3 space-y-1">
+                <p><strong>E-mail detectado:</strong> {result.detected_email || "não informado"}</p>
+                <p><strong>Usuário destino:</strong> {result.target_user_id || "novo/inalterado"}</p>
+                <p><strong>Gestora destino:</strong> {result.target_sst_manager_id || "nova/inalterada"}</p>
+                {result.merged_duplicate_sst_manager_ids?.length > 0 && (
+                  <p className="text-amber-700">
+                    <strong>Duplicidades unificadas:</strong> {result.merged_duplicate_sst_manager_ids.length}
+                  </p>
+                )}
+              </div>
               <p className="font-semibold mb-2">Resultado por tabela:</p>
               <table className="w-full">
                 <thead>
@@ -87,7 +97,7 @@ export function ImportUserDataDialog() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(result).map(([t, r]: any) => (
+                  {Object.entries(result.results || {}).map(([t, r]: any) => (
                     <tr key={t} className={r.err > 0 ? "text-destructive" : ""}>
                       <td>{t}</td>
                       <td>{r.ok}</td>

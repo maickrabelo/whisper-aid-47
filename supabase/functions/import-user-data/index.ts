@@ -18,6 +18,10 @@ const TABLE_ORDER: Array<[string, string]> = [
   ["user_companies", "user_id,company_id"],
   ["company_feature_access", "company_id"],
   ["subscriptions", "id"],
+  ["sst_training_modules", "id"],
+  ["sst_training_materials", "id"],
+  ["sst_training_company_access", "id"],
+  ["sst_portal_trainings", "id"],
   ["hseit_assessments", "id"],
   ["hseit_departments", "id"],
   ["hseit_responses", "id"],
@@ -119,6 +123,12 @@ const NESTED_GROUP_ALIASES: Record<string, Record<string, string>> = {
     reports: "beta_ouvidoria_reports",
     updates: "beta_ouvidoria_updates",
     attachments: "beta_ouvidoria_attachments",
+  },
+  trainings: {
+    modules: "sst_training_modules",
+    materials: "sst_training_materials",
+    company_access: "sst_training_company_access",
+    portal_trainings: "sst_portal_trainings",
   },
 };
 

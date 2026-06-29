@@ -53,8 +53,8 @@ export function ImportUserDataDialog() {
           <DialogTitle>Importar Dados de Usuário (JSON)</DialogTitle>
           <DialogDescription>
             Envia o JSON exportado para o edge function <code>import-user-data</code>.
-            Faz upsert idempotente em profile, sst_manager, roles, companies, assignments,
-            HSE-IT/COPSOQ/Burnout/Clima/Pulse, reports, beta_ouvidoria e PGR completo.
+            Detecta o e-mail, reaproveita a conta já existente, junta duplicidades na gestora mais recente
+            e importa HSE-IT/COPSOQ/Burnout/Clima/Pulse, reports, ouvidoria, treinamentos e PGR completo.
           </DialogDescription>
         </DialogHeader>
 

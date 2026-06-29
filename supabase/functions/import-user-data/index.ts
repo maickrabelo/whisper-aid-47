@@ -287,6 +287,7 @@ function remapRowsForExistingAccount(normalized: Record<string, any[]>, targetUs
       for (const row of rows) {
         if (SST_MANAGER_REF_TABLES.has(table) && importedManagerIds.has(row?.sst_manager_id)) {
           row.sst_manager_id = targetManagerId;
+          if (["user_sst_managers", "company_sst_assignments"].includes(table)) delete row.id;
         }
       }
     }
@@ -306,6 +307,7 @@ function remapRowsForExistingAccount(normalized: Record<string, any[]>, targetUs
       for (const row of rows) {
         if (["user_roles", "user_sst_managers", "user_companies", "sector_viewer_access"].includes(table) && importedProfileIds.has(row?.user_id)) {
           row.user_id = targetUserId;
+          if (["user_roles", "user_sst_managers", "user_companies"].includes(table)) delete row.id;
         }
         if (table === "subscriptions" && importedProfileIds.has(row?.owner_user_id)) {
           row.owner_user_id = targetUserId;

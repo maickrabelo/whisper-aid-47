@@ -29,6 +29,8 @@ interface Training {
 const PortalTrainings = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewing, setViewing] = useState<Training | null>(null);
+
 
   useEffect(() => {
     fetchTrainings();

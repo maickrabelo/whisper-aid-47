@@ -118,18 +118,51 @@ const PortalTrainings = () => {
               {training.content_url && (
                 <Button
                   size="sm"
-                  onClick={() => window.open(training.content_url!, "_blank")}
+                  onClick={() => {
+                    const ytId = extractYouTubeId(training.content_url!);
+                    if (ytId) {
+                      setViewing(training);
+                    } else {
+                      window.open(training.content_url!, "_blank");
+                    }
+                  }}
                 >
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  Acessar
+                  {extractYouTubeId(training.content_url) ? (
+                    <><Play className="h-4 w-4 mr-1" /> Assistir</>
+                  ) : (
+                    <><ExternalLink className="h-4 w-4 mr-1" /> Acessar</>
+                  )}
                 </Button>
               )}
             </div>
           </CardContent>
         </Card>
       ))}
+
+      <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{viewing?.title}</DialogTitle>
+          </DialogHeader>
+          {viewing?.content_url && extractYouTubeId(viewing.content_url) && (
+            <div className="aspect-video w-full rounded-lg overflow-hidden border border-border bg-black">
+              <iframe
+                src={`https://www.youtube.com/embed/${extractYouTubeId(viewing.content_url)}?autoplay=1`}
+                title={viewing.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            </div>
+          )}
+          {viewing?.description && (
+            <p className="text-sm text-muted-foreground">{viewing.description}</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
 
 export default PortalTrainings;

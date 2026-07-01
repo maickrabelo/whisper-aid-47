@@ -455,6 +455,44 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                 </span>
               </div>
 
+              {term.isRural && form.category === 'quimico' && (
+                <div className="space-y-3 p-3 rounded-md border border-primary/30 bg-primary/5">
+                  <Label className="flex items-center gap-2 font-semibold"><Wheat className="h-4 w-4" /> Dados do Agrotóxico (NR-31.8)</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Nome comercial do produto</Label>
+                      <Input value={form.pesticide_product} onChange={e => setForm({ ...form, pesticide_product: e.target.value })} placeholder="Ex: Roundup, Gramoxone" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Princípio ativo</Label>
+                      <Input value={form.pesticide_active_ingredient} onChange={e => setForm({ ...form, pesticide_active_ingredient: e.target.value })} placeholder="Ex: Glifosato, Paraquat" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Classe toxicológica</Label>
+                      <select
+                        className="w-full h-10 rounded-md border border-input bg-background px-3"
+                        value={form.pesticide_toxicity_class}
+                        onChange={e => setForm({ ...form, pesticide_toxicity_class: e.target.value })}
+                      >
+                        <option value="">— Selecionar —</option>
+                        <option value="I">Classe I — Extremamente tóxico</option>
+                        <option value="II">Classe II — Altamente tóxico</option>
+                        <option value="III">Classe III — Medianamente tóxico</option>
+                        <option value="IV">Classe IV — Pouco tóxico</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Período de reentrada</Label>
+                      <Input value={form.pesticide_reentry_period} onChange={e => setForm({ ...form, pesticide_reentry_period: e.target.value })} placeholder="Ex: 24h, 48h, 7 dias" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>EPI obrigatório para aplicação</Label>
+                    <Textarea rows={2} value={form.pesticide_required_epi} onChange={e => setForm({ ...form, pesticide_required_epi: e.target.value })} placeholder="Macacão impermeável, luvas nitrílica, respirador, óculos, botas..." />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2"><Label>EPC existentes</Label><Textarea rows={2} value={form.existing_epc} onChange={e => setForm({ ...form, existing_epc: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>EPI</Label><Input value={form.existing_epi} onChange={e => setForm({ ...form, existing_epi: e.target.value })} /></div>

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2, Pencil, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 
 interface GHE {
   id: string;

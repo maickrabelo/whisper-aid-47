@@ -366,9 +366,13 @@ async function upgradeExistingAccount(supabase: any, ctx: {
   ) || (plan.price_monthly_cents ?? plan.base_price_cents ?? 0);
   const trialDays = (plan as any).trial_days as number | null | undefined;
   const isTrialPlan = typeof trialDays === 'number' && trialDays > 0;
-  const trialEndsAt = isTrialPlan
-    ? new Date(Date.now() + trialDays! * 24 * 60 * 60 * 1000).toISOString()
-    : null;
+  const nowIso = new Date();
+  const periodEnd = isTrialPlan
+    ? new Date(Date.now() + trialDays! * 24 * 60 * 60 * 1000)
+    : (billingCycle === 'annual'
+      ? new Date(new Date().setFullYear(nowIso.getFullYear() + 1))
+      : new Date(new Date().setMonth(nowIso.getMonth() + 1)));
+  const trialEndsAt = periodEnd.toISOString();
 
   const { data: newSub, error: subErr } = await supabase
     .from('subscriptions')
@@ -777,9 +781,13 @@ Deno.serve(async (req) => {
       // Trial-mode plans (e.g. Teste SMS): provisiona como trial com expiração automática
       const trialDays = (plan as any).trial_days as number | null | undefined;
       const isTrialPlan = typeof trialDays === 'number' && trialDays > 0;
-      const trialEndsAt = isTrialPlan
-        ? new Date(Date.now() + trialDays! * 24 * 60 * 60 * 1000).toISOString()
-        : null;
+      const nowIso2 = new Date();
+      const periodEnd2 = isTrialPlan
+        ? new Date(Date.now() + trialDays! * 24 * 60 * 60 * 1000)
+        : (billingCycle === 'annual'
+          ? new Date(new Date().setFullYear(nowIso2.getFullYear() + 1))
+          : new Date(new Date().setMonth(nowIso2.getMonth() + 1)));
+      const trialEndsAt = periodEnd2.toISOString();
 
       const { data: newSub, error: subErr } = await supabase
         .from('subscriptions')

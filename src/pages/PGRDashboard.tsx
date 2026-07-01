@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ArrowLeft, FileText, FlaskConical, Users, ClipboardList, Activity, Download, Plus, Trash2, Pencil, LayoutDashboard } from "lucide-react";
+import { Loader2, ArrowLeft, FileText, FlaskConical, Users, ClipboardList, Activity, Download, Plus, Trash2, Pencil, LayoutDashboard, Wheat } from "lucide-react";
 import { toast } from "sonner";
 import { PGROverview } from "@/components/pgr/PGROverview";
 import { GHEManager } from "@/components/pgr/GHEManager";
@@ -19,6 +19,8 @@ import { RiskInventory } from "@/components/pgr/RiskInventory";
 import { ActionPlanEditor } from "@/components/pgr/ActionPlanEditor";
 import { ESocialExportDialog } from "@/components/pgr/ESocialExportDialog";
 import { PGRMonitoringDashboard } from "@/components/pgr/PGRMonitoringDashboard";
+import { CreateDocumentDialog } from "@/components/pgr/CreateDocumentDialog";
+import { usePgrTerminology, type PgrDocType } from "@/hooks/usePgrTerminology";
 
 export interface PGRDocument {
   id: string;
@@ -35,7 +37,15 @@ export interface PGRDocument {
   cnae: string | null;
   risk_grade: string | null;
   address: string | null;
+  document_type?: 'pgr' | 'pgtr' | null;
+  rural_activity?: string | null;
+  rural_area_hectares?: number | null;
+  work_regime?: string | null;
+  has_lodging?: boolean | null;
+  lodging_description?: string | null;
+  worker_transport?: string | null;
 }
+
 
 const PGRDashboard = () => {
   const { companyId } = useParams<{ companyId: string }>();
@@ -48,7 +58,9 @@ const PGRDashboard = () => {
   const [companyCnpj, setCompanyCnpj] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [exportOpen, setExportOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const term = usePgrTerminology(pgr?.document_type);
 
   useEffect(() => {
     if (authLoading || accessLoading) return;
@@ -77,23 +89,24 @@ const PGRDashboard = () => {
       setPgr((pgrData as any) || null);
     } catch (e: any) {
       console.error(e);
-      toast.error('Erro ao carregar PGR');
+      toast.error('Erro ao carregar documento');
     } finally {
       setLoading(false);
     }
   };
 
-  const createPGR = async () => {
+  const createPGR = async (docType: PgrDocType) => {
     if (!companyId) return;
-    setCreating(true);
     try {
+      const label = docType === 'pgtr' ? 'PGTR' : 'PGR';
       const { data, error } = await supabase
         .from('pgr_documents')
         .insert({
           company_id: companyId,
-          title: `PGR ${new Date().getFullYear()} - ${companyName}`,
+          title: `${label} ${new Date().getFullYear()} - ${companyName}`,
           status: 'draft',
           version: 1,
+          document_type: docType,
           validity_start: new Date().toISOString().split('T')[0],
           validity_end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
         } as any)
@@ -101,11 +114,10 @@ const PGRDashboard = () => {
         .single();
       if (error) throw error;
       setPgr(data as any);
-      toast.success('PGR criado com sucesso!');
+      setCreateOpen(false);
+      toast.success(`${label} criado com sucesso!`);
     } catch (e: any) {
-      toast.error('Erro ao criar PGR: ' + e.message);
-    } finally {
-      setCreating(false);
+      toast.error('Erro ao criar documento: ' + e.message);
     }
   };
 
@@ -127,10 +139,11 @@ const PGRDashboard = () => {
             </Button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold">PGR — {companyName}</h1>
+                <h1 className="text-xl font-bold">{term.shortName} — {companyName}</h1>
+                {pgr && <Badge variant={term.isRural ? 'default' : 'secondary'}>{term.regulation}</Badge>}
               </div>
               <p className="text-xs text-muted-foreground">
-                Programa de Gerenciamento de Riscos (NR-1) + Exportação e-Social S-2240
+                {term.fullName} ({term.regulation}) + Exportação e-Social S-2240
               </p>
             </div>
           </div>
@@ -147,13 +160,13 @@ const PGRDashboard = () => {
           <Card>
             <CardContent className="py-12 text-center">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum PGR criado para esta empresa</h3>
+              <h3 className="text-lg font-semibold mb-2">Nenhum documento criado para esta empresa</h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Crie um novo PGR para começar a registrar GHEs, riscos e plano de ação.
+                Escolha entre PGR (NR-01) ou PGTR (NR-31 — trabalhador rural) para começar.
               </p>
-              <Button onClick={createPGR} disabled={creating}>
-                {creating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-                Criar PGR {new Date().getFullYear()}
+              <Button onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Criar documento {new Date().getFullYear()}
               </Button>
             </CardContent>
           </Card>
@@ -162,7 +175,7 @@ const PGRDashboard = () => {
             <TabsList className="grid grid-cols-5 max-w-3xl">
               <TabsTrigger value="dashboard" className="gap-1"><LayoutDashboard className="h-4 w-4" /> Dashboard</TabsTrigger>
               <TabsTrigger value="overview" className="gap-1"><FileText className="h-4 w-4" /> Visão Geral</TabsTrigger>
-              <TabsTrigger value="ghe" className="gap-1"><Users className="h-4 w-4" /> GHEs</TabsTrigger>
+              <TabsTrigger value="ghe" className="gap-1"><Users className="h-4 w-4" /> {term.gheLabel}s</TabsTrigger>
               <TabsTrigger value="risks" className="gap-1"><FlaskConical className="h-4 w-4" /> Inventário</TabsTrigger>
               <TabsTrigger value="actions" className="gap-1"><ClipboardList className="h-4 w-4" /> Plano de Ação</TabsTrigger>
             </TabsList>
@@ -173,10 +186,10 @@ const PGRDashboard = () => {
               <PGROverview pgr={pgr} onUpdated={loadPGR} companyName={companyName} companyCnpj={companyCnpj} />
             </TabsContent>
             <TabsContent value="ghe">
-              <GHEManager pgrDocumentId={pgr.id} />
+              <GHEManager pgrDocumentId={pgr.id} documentType={pgr.document_type || 'pgr'} />
             </TabsContent>
             <TabsContent value="risks">
-              <RiskInventory pgrDocumentId={pgr.id} companyId={pgr.company_id} />
+              <RiskInventory pgrDocumentId={pgr.id} companyId={pgr.company_id} documentType={pgr.document_type || 'pgr'} />
             </TabsContent>
             <TabsContent value="actions">
               <ActionPlanEditor pgrDocumentId={pgr.id} />
@@ -184,6 +197,9 @@ const PGRDashboard = () => {
           </Tabs>
         )}
       </div>
+
+      <CreateDocumentDialog open={createOpen} onOpenChange={setCreateOpen} onSelect={createPGR} />
+
 
       {pgr && (
         <ESocialExportDialog

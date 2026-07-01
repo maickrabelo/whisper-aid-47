@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2, Pencil, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 
 interface GHE {
   id: string;
@@ -20,7 +21,8 @@ interface GHE {
   work_schedule: string | null;
 }
 
-export const GHEManager = ({ pgrDocumentId }: { pgrDocumentId: string }) => {
+export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: string; documentType?: 'pgr' | 'pgtr' }) => {
+  const term = usePgrTerminology(documentType);
   const [ghes, setGhes] = useState<GHE[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -94,10 +96,14 @@ export const GHEManager = ({ pgrDocumentId }: { pgrDocumentId: string }) => {
       <CardContent className="pt-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold flex items-center gap-2"><Users className="h-5 w-5" /> Grupos Homogêneos de Exposição</h3>
-            <p className="text-sm text-muted-foreground">Agrupe trabalhadores que compartilham as mesmas condições de exposição.</p>
+            <h3 className="text-lg font-semibold flex items-center gap-2"><Users className="h-5 w-5" /> {term.gheLabelLong}{term.isRural ? 's Rurais' : 's'} ({term.gheLabel})</h3>
+            <p className="text-sm text-muted-foreground">
+              {term.isRural
+                ? 'Agrupe trabalhadores rurais que compartilham as mesmas condições de exposição (cultura, atividade, propriedade).'
+                : 'Agrupe trabalhadores que compartilham as mesmas condições de exposição.'}
+            </p>
           </div>
-          <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo GHE</Button>
+          <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo {term.gheLabel}</Button>
         </div>
 
         {loading ? (
@@ -134,12 +140,12 @@ export const GHEManager = ({ pgrDocumentId }: { pgrDocumentId: string }) => {
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent>
-            <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Novo'} GHE</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Novo'} {term.gheLabel}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2"><Label>Nome do GHE *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Ex: Operadores de máquina linha 1" /></div>
+              <div className="space-y-2"><Label>Nome do {term.gheLabel} *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={term.isRural ? "Ex: Aplicadores de defensivos — talhão A" : "Ex: Operadores de máquina linha 1"} /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>Setor</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Cargo</Label><Input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} /></div>
+                <div className="space-y-2"><Label>{term.isRural ? 'Talhão / Área' : 'Setor'}</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
+                <div className="space-y-2"><Label>{term.isRural ? 'Função rural' : 'Cargo'}</Label><Input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder={term.isRural ? 'Ex: Tratorista, colhedor, aplicador' : ''} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>Nº trabalhadores</Label><Input type="number" min={0} value={form.worker_count} onChange={e => setForm({ ...form, worker_count: parseInt(e.target.value) || 0 })} /></div>

@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Wheat } from "lucide-react";
 import { toast } from "sonner";
+import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 import type { PGRDocument } from "@/pages/PGRDashboard";
 
 interface Props {
@@ -25,6 +26,7 @@ const statusLabel: Record<string, { label: string; variant: "default" | "seconda
 };
 
 export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props) => {
+  const term = usePgrTerminology(pgr.document_type);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: pgr.title,
@@ -38,6 +40,12 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
     cnae: pgr.cnae || "",
     risk_grade: pgr.risk_grade || "",
     address: pgr.address || "",
+    rural_activity: pgr.rural_activity || "",
+    rural_area_hectares: pgr.rural_area_hectares ?? "",
+    work_regime: pgr.work_regime || "",
+    has_lodging: pgr.has_lodging ?? false,
+    lodging_description: pgr.lodging_description || "",
+    worker_transport: pgr.worker_transport || "",
   });
 
   const save = async () => {
@@ -134,6 +142,51 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
           </div>
         </CardContent>
       </Card>
+
+      {term.isRural && (
+        <Card className="border-primary/40">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2"><Wheat className="h-5 w-5 text-primary" /> Caracterização Rural (NR-31)</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Atividade rural principal</Label>
+              <Input value={form.rural_activity} onChange={e => setForm({ ...form, rural_activity: e.target.value })} placeholder="Ex: Cultivo de café, pecuária de corte, silvicultura..." />
+            </div>
+            <div className="space-y-2">
+              <Label>Área total (hectares)</Label>
+              <Input type="number" step="0.01" value={form.rural_area_hectares as any} onChange={e => setForm({ ...form, rural_area_hectares: e.target.value })} placeholder="Ex: 150" />
+            </div>
+            <div className="space-y-2">
+              <Label>Regime de trabalho</Label>
+              <select className="w-full h-10 rounded-md border border-input bg-background px-3" value={form.work_regime} onChange={e => setForm({ ...form, work_regime: e.target.value })}>
+                <option value="">— Selecionar —</option>
+                <option value="permanente">Trabalhador permanente</option>
+                <option value="safrista">Safrista</option>
+                <option value="temporario">Temporário</option>
+                <option value="misto">Misto (permanente + temporário)</option>
+              </select>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={form.has_lodging} onChange={e => setForm({ ...form, has_lodging: e.target.checked })} />
+                <span className="text-sm">Empresa possui alojamento para trabalhadores</span>
+              </label>
+            </div>
+            {form.has_lodging && (
+              <div className="space-y-2 md:col-span-2">
+                <Label>Descrição do alojamento</Label>
+                <Textarea rows={2} value={form.lodging_description} onChange={e => setForm({ ...form, lodging_description: e.target.value })} placeholder="Capacidade, condições sanitárias, ventilação..." />
+              </div>
+            )}
+            <div className="space-y-2 md:col-span-2">
+              <Label>Transporte de trabalhadores</Label>
+              <Textarea rows={2} value={form.worker_transport} onChange={e => setForm({ ...form, worker_transport: e.target.value })} placeholder="Tipo de veículo, itinerário, condições de segurança..." />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
 
       <Card>
         <CardHeader><CardTitle className="text-lg">Resumo Executivo</CardTitle></CardHeader>

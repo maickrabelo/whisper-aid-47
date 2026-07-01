@@ -20,6 +20,13 @@ export interface PGRReportInput {
     cnae: string | null;
     risk_grade: string | null;
     address: string | null;
+    document_type?: 'pgr' | 'pgtr' | null;
+    rural_activity?: string | null;
+    rural_area_hectares?: number | null;
+    work_regime?: string | null;
+    has_lodging?: boolean | null;
+    lodging_description?: string | null;
+    worker_transport?: string | null;
   };
   company: {
     name: string;
@@ -115,6 +122,10 @@ const slugify = (s: string) =>
 export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   const state = { y: TOP_Y, page: 1, skipChrome: true };
+  const isRural = input.pgr.document_type === 'pgtr';
+  const shortName = isRural ? 'PGTR' : 'PGR';
+  const fullName = isRural ? 'Plano de Gerenciamento de Riscos do Trabalhador Rural' : 'Programa de Gerenciamento de Riscos';
+  const regulation = isRural ? 'NR-31 — Portaria MTP 1.887/2022' : 'NR-01 — Portaria 6.730/2020';
 
   const setText = (size: number, bold = false, color: [number, number, number] = COLORS.text) => {
     doc.setFont('helvetica', bold ? 'bold' : 'normal');
@@ -127,7 +138,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     doc.setFillColor(...COLORS.headerBg);
     doc.rect(0, 0, PAGE_W, MARGIN + 6, 'F');
     setText(8, true, COLORS.primary);
-    doc.text('PGR – PROGRAMA DE GERENCIAMENTO DE RISCOS', MARGIN, MARGIN);
+    doc.text(`${shortName} – ${fullName.toUpperCase()}`, MARGIN, MARGIN);
     setText(8, false, COLORS.muted);
     const rev = `Revisão ${String(input.pgr.version).padStart(2, '0')}  •  ${todayBR()}`;
     doc.text(rev, PAGE_W - MARGIN, MARGIN, { align: 'right' });
@@ -388,11 +399,11 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   });
 
   setText(36, true, FOREST);
-  doc.text('PGR', PAGE_W / 2, 55, { align: 'center' });
+  doc.text(shortName, PAGE_W / 2, 55, { align: 'center' });
   setText(13, false, FOREST);
-  doc.text('Programa de Gerenciamento de Riscos', PAGE_W / 2, 65, { align: 'center' });
+  doc.text(fullName, PAGE_W / 2, 65, { align: 'center' });
   setText(9, false, [80, 80, 80]);
-  doc.text('NR-01 — Portaria 6.730/2020', PAGE_W / 2, 72, { align: 'center' });
+  doc.text(regulation, PAGE_W / 2, 72, { align: 'center' });
 
   doc.setFillColor(...LIME);
   doc.rect(MARGIN, 80, CONTENT_W, 1.2, 'F');
@@ -452,14 +463,36 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   sectionTitle('PARTE I — Disposições Gerais');
 
   subTitle('1.1 Introdução');
-  paragraph(
-    `O Documento Base do Programa de Gerenciamento de Riscos (PGR) se insere no contexto da Política de Gestão de SST de ${input.company.name || '(EMPRESA)'} buscando a melhoria contínua do ambiente de trabalho e a preservação da saúde dos seus colaboradores e contratados. Está estruturado conforme disposto na NR-01, Portaria 3.214 de 08 de junho de 1978, com redação atualizada pela Portaria 6.730 de 12 de março de 2020.`
-  );
+  if (isRural) {
+    paragraph(
+      `O Documento Base do Plano de Gerenciamento de Riscos do Trabalhador Rural (PGTR) de ${input.company.name || '(EMPRESA)'} está estruturado conforme a NR-31 — Segurança e Saúde no Trabalho na Agricultura, Pecuária, Silvicultura, Exploração Florestal e Aquicultura (Portaria MTP nº 1.887/2022). Contempla os riscos peculiares à atividade rural, incluindo exposição a agrotóxicos, máquinas agrícolas, agentes biológicos, condições climáticas, alojamento e transporte de trabalhadores.`
+    );
+    subTitle('1.2 Objetivo');
+    paragraph(
+      'O PGTR tem por objetivo estabelecer diretrizes para o gerenciamento dos riscos ocupacionais em ambientes rurais, contemplando trabalhadores permanentes, safristas e temporários, com medidas de prevenção adaptadas à atividade agropecuária, silvicultura, exploração florestal e aquicultura, em conformidade com a NR-31.'
+    );
+  } else {
+    paragraph(
+      `O Documento Base do Programa de Gerenciamento de Riscos (PGR) se insere no contexto da Política de Gestão de SST de ${input.company.name || '(EMPRESA)'} buscando a melhoria contínua do ambiente de trabalho e a preservação da saúde dos seus colaboradores e contratados. Está estruturado conforme disposto na NR-01, Portaria 3.214 de 08 de junho de 1978, com redação atualizada pela Portaria 6.730 de 12 de março de 2020.`
+    );
+    subTitle('1.2 Objetivo');
+    paragraph(
+      'O PGR tem por objetivo estabelecer as diretrizes para o Gerenciamento de Riscos Ocupacionais (GRO) e as medidas de prevenção em Segurança e Saúde no Trabalho (SST), promovendo a identificação, avaliação, controle e monitoramento dos riscos ocupacionais existentes na organização.'
+    );
+  }
 
-  subTitle('1.2 Objetivo');
-  paragraph(
-    'O PGR tem por objetivo estabelecer as diretrizes para o Gerenciamento de Riscos Ocupacionais (GRO) e as medidas de prevenção em Segurança e Saúde no Trabalho (SST), promovendo a identificação, avaliação, controle e monitoramento dos riscos ocupacionais existentes na organização.'
-  );
+  if (isRural && (input.pgr.rural_activity || input.pgr.rural_area_hectares || input.pgr.work_regime || input.pgr.has_lodging || input.pgr.worker_transport)) {
+    subTitle('1.2.1 Caracterização da Atividade Rural');
+    const items: string[] = [];
+    if (input.pgr.rural_activity) items.push(`Atividade rural principal: ${input.pgr.rural_activity}`);
+    if (input.pgr.rural_area_hectares) items.push(`Área total: ${input.pgr.rural_area_hectares} hectares`);
+    if (input.pgr.work_regime) items.push(`Regime de trabalho: ${input.pgr.work_regime}`);
+    if (input.pgr.has_lodging) items.push(`Alojamento: SIM${input.pgr.lodging_description ? ' — ' + input.pgr.lodging_description : ''}`);
+    else items.push('Alojamento: NÃO');
+    if (input.pgr.worker_transport) items.push(`Transporte de trabalhadores: ${input.pgr.worker_transport}`);
+    bullets(items);
+  }
+
 
   subTitle('1.3 Termos e Definições');
   bullets([
@@ -729,6 +762,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
 
 export async function downloadPGRReport(input: PGRReportInput) {
   const doc = await generatePGRReportPDF(input);
-  const fname = `PGR_${slugify(input.company.name)}_v${input.pgr.version}_${new Date().toISOString().split('T')[0]}.pdf`;
+  const prefix = input.pgr.document_type === 'pgtr' ? 'PGTR' : 'PGR';
+  const fname = `${prefix}_${slugify(input.company.name)}_v${input.pgr.version}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fname);
 }

@@ -1589,13 +1589,18 @@ export type Database = {
           company_id: string
           created_at: string
           created_by: string | null
+          document_type: string
           executive_summary: string | null
+          has_lodging: boolean | null
           id: string
           last_review_at: string | null
+          lodging_description: string | null
           responsible_cpf: string | null
           responsible_name: string | null
           responsible_registration: string | null
           risk_grade: string | null
+          rural_activity: string | null
+          rural_area_hectares: number | null
           sst_manager_id: string | null
           status: string
           title: string
@@ -1603,6 +1608,8 @@ export type Database = {
           validity_end: string | null
           validity_start: string | null
           version: number
+          work_regime: string | null
+          worker_transport: string | null
         }
         Insert: {
           address?: string | null
@@ -1610,13 +1617,18 @@ export type Database = {
           company_id: string
           created_at?: string
           created_by?: string | null
+          document_type?: string
           executive_summary?: string | null
+          has_lodging?: boolean | null
           id?: string
           last_review_at?: string | null
+          lodging_description?: string | null
           responsible_cpf?: string | null
           responsible_name?: string | null
           responsible_registration?: string | null
           risk_grade?: string | null
+          rural_activity?: string | null
+          rural_area_hectares?: number | null
           sst_manager_id?: string | null
           status?: string
           title?: string
@@ -1624,6 +1636,8 @@ export type Database = {
           validity_end?: string | null
           validity_start?: string | null
           version?: number
+          work_regime?: string | null
+          worker_transport?: string | null
         }
         Update: {
           address?: string | null
@@ -1631,13 +1645,18 @@ export type Database = {
           company_id?: string
           created_at?: string
           created_by?: string | null
+          document_type?: string
           executive_summary?: string | null
+          has_lodging?: boolean | null
           id?: string
           last_review_at?: string | null
+          lodging_description?: string | null
           responsible_cpf?: string | null
           responsible_name?: string | null
           responsible_registration?: string | null
           risk_grade?: string | null
+          rural_activity?: string | null
+          rural_area_hectares?: number | null
           sst_manager_id?: string | null
           status?: string
           title?: string
@@ -1645,6 +1664,8 @@ export type Database = {
           validity_end?: string | null
           validity_start?: string | null
           version?: number
+          work_regime?: string | null
+          worker_transport?: string | null
         }
         Relationships: []
       }
@@ -1841,6 +1862,11 @@ export type Database = {
           measurement_unit: string | null
           measurement_value: number | null
           observations: string | null
+          pesticide_active_ingredient: string | null
+          pesticide_product: string | null
+          pesticide_reentry_period: string | null
+          pesticide_required_epi: string | null
+          pesticide_toxicity_class: string | null
           pgr_document_id: string
           probability: number
           risk_level: string
@@ -1867,6 +1893,11 @@ export type Database = {
           measurement_unit?: string | null
           measurement_value?: number | null
           observations?: string | null
+          pesticide_active_ingredient?: string | null
+          pesticide_product?: string | null
+          pesticide_reentry_period?: string | null
+          pesticide_required_epi?: string | null
+          pesticide_toxicity_class?: string | null
           pgr_document_id: string
           probability?: number
           risk_level?: string
@@ -1893,6 +1924,11 @@ export type Database = {
           measurement_unit?: string | null
           measurement_value?: number | null
           observations?: string | null
+          pesticide_active_ingredient?: string | null
+          pesticide_product?: string | null
+          pesticide_reentry_period?: string | null
+          pesticide_required_epi?: string | null
+          pesticide_toxicity_class?: string | null
           pgr_document_id?: string
           probability?: number
           risk_level?: string
@@ -1919,6 +1955,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pgtr_agents_catalog: {
+        Row: {
+          agent_name: string
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          typical_epi: string | null
+          typical_probability: number | null
+          typical_severity: number | null
+        }
+        Insert: {
+          agent_name: string
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          typical_epi?: string | null
+          typical_probability?: number | null
+          typical_severity?: number | null
+        }
+        Update: {
+          agent_name?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          typical_epi?: string | null
+          typical_probability?: number | null
+          typical_severity?: number | null
+        }
+        Relationships: []
       }
       plan_upgrade_pricing: {
         Row: {

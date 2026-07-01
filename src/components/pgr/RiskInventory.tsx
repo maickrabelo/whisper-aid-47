@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download } from "lucide-react";
+import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat } from "lucide-react";
 import { toast } from "sonner";
+import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 
 type MatrixSize = 3 | 4 | 5;
 
@@ -85,14 +86,23 @@ const emptyForm = {
   existing_epc: '',
   existing_epi: '',
   epi_ca: '',
+  pesticide_product: '',
+  pesticide_active_ingredient: '',
+  pesticide_toxicity_class: '',
+  pesticide_required_epi: '',
+  pesticide_reentry_period: '',
 };
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
 
-export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: string; companyId: string }) => {
+interface PgtrAgent { id: string; category: string; agent_name: string; typical_severity: number | null; typical_probability: number | null; typical_epi: string | null; description: string | null; }
+
+export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrDocumentId: string; companyId: string; documentType?: 'pgr' | 'pgtr' }) => {
+  const term = usePgrTerminology(documentType);
   const [risks, setRisks] = useState<Risk[]>([]);
   const [ghes, setGhes] = useState<GHE[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [pgtrAgents, setPgtrAgents] = useState<PgtrAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Risk | null>(null);
@@ -102,21 +112,26 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
 
   const load = async () => {
     setLoading(true);
-    const [{ data: r }, { data: g }, { data: a }] = await Promise.all([
+    const promises: any[] = [
       supabase.from('pgr_risks').select('*').eq('pgr_document_id', pgrDocumentId).order('created_at'),
       supabase.from('pgr_ghe').select('id, name').eq('pgr_document_id', pgrDocumentId).order('name'),
       supabase.from('esocial_agents_catalog').select('code, category, name').order('code'),
-    ]);
-    setRisks((r as any) || []);
-    setGhes((g as any) || []);
-    setAgents((a as any) || []);
+    ];
+    if (term.isRural) {
+      promises.push(supabase.from('pgtr_agents_catalog' as any).select('*').order('category, agent_name'));
+    }
+    const results = await Promise.all(promises);
+    setRisks((results[0].data as any) || []);
+    setGhes((results[1].data as any) || []);
+    setAgents((results[2].data as any) || []);
+    if (term.isRural) setPgtrAgents((results[3].data as any) || []);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [pgrDocumentId]);
+  useEffect(() => { load(); }, [pgrDocumentId, term.isRural]);
 
   const openNew = () => { setEditing(null); setForm(emptyForm); setOpen(true); };
-  const openEdit = (r: Risk) => {
+  const openEdit = (r: any) => {
     setEditing(r);
     setForm({
       ghe_id: r.ghe_id || '',
@@ -131,6 +146,11 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
       existing_epc: r.existing_epc || '',
       existing_epi: r.existing_epi || '',
       epi_ca: r.epi_ca || '',
+      pesticide_product: r.pesticide_product || '',
+      pesticide_active_ingredient: r.pesticide_active_ingredient || '',
+      pesticide_toxicity_class: r.pesticide_toxicity_class || '',
+      pesticide_required_epi: r.pesticide_required_epi || '',
+      pesticide_reentry_period: r.pesticide_reentry_period || '',
     });
     setOpen(true);
   };
@@ -360,6 +380,36 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
                 </div>
               )}
 
+              {term.isRural && pgtrAgents.filter(a => a.category === form.category).length > 0 && (
+                <div className="space-y-2 p-3 rounded-md border border-primary/30 bg-primary/5">
+                  <Label className="flex items-center gap-2"><Wheat className="h-4 w-4" /> Catálogo NR-31 — preencher a partir de agente rural típico</Label>
+                  <select
+                    className="w-full h-10 rounded-md border border-input bg-background px-3"
+                    value=""
+                    onChange={e => {
+                      const sel = pgtrAgents.find(a => a.id === e.target.value);
+                      if (!sel) return;
+                      const sev = Math.min(sel.typical_severity || form.severity, form.matrix_size);
+                      const prob = Math.min(sel.typical_probability || form.probability, form.matrix_size);
+                      setForm(f => ({
+                        ...f,
+                        agent_name: sel.agent_name,
+                        exposure_description: sel.description || f.exposure_description,
+                        existing_epi: sel.typical_epi || f.existing_epi,
+                        severity: sev,
+                        probability: prob,
+                      }));
+                    }}
+                  >
+                    <option value="">— Selecionar agente rural típico —</option>
+                    {pgtrAgents.filter(a => a.category === form.category).map(a => (
+                      <option key={a.id} value={a.id}>{a.agent_name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">Selecionar preenche automaticamente nome, descrição, EPI e severidade/probabilidade típicos.</p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label>Nome do agente / risco *</Label>
                 <Input value={form.agent_name} onChange={e => setForm({ ...form, agent_name: e.target.value })} />
@@ -404,6 +454,44 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
                   {LEVEL_LABELS[classifyRisk(form.matrix_size, form.severity, form.probability)]}
                 </span>
               </div>
+
+              {term.isRural && form.category === 'quimico' && (
+                <div className="space-y-3 p-3 rounded-md border border-primary/30 bg-primary/5">
+                  <Label className="flex items-center gap-2 font-semibold"><Wheat className="h-4 w-4" /> Dados do Agrotóxico (NR-31.8)</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Nome comercial do produto</Label>
+                      <Input value={form.pesticide_product} onChange={e => setForm({ ...form, pesticide_product: e.target.value })} placeholder="Ex: Roundup, Gramoxone" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Princípio ativo</Label>
+                      <Input value={form.pesticide_active_ingredient} onChange={e => setForm({ ...form, pesticide_active_ingredient: e.target.value })} placeholder="Ex: Glifosato, Paraquat" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Classe toxicológica</Label>
+                      <select
+                        className="w-full h-10 rounded-md border border-input bg-background px-3"
+                        value={form.pesticide_toxicity_class}
+                        onChange={e => setForm({ ...form, pesticide_toxicity_class: e.target.value })}
+                      >
+                        <option value="">— Selecionar —</option>
+                        <option value="I">Classe I — Extremamente tóxico</option>
+                        <option value="II">Classe II — Altamente tóxico</option>
+                        <option value="III">Classe III — Medianamente tóxico</option>
+                        <option value="IV">Classe IV — Pouco tóxico</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Período de reentrada</Label>
+                      <Input value={form.pesticide_reentry_period} onChange={e => setForm({ ...form, pesticide_reentry_period: e.target.value })} placeholder="Ex: 24h, 48h, 7 dias" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>EPI obrigatório para aplicação</Label>
+                    <Textarea rows={2} value={form.pesticide_required_epi} onChange={e => setForm({ ...form, pesticide_required_epi: e.target.value })} placeholder="Macacão impermeável, luvas nitrílica, respirador, óculos, botas..." />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2"><Label>EPC existentes</Label><Textarea rows={2} value={form.existing_epc} onChange={e => setForm({ ...form, existing_epc: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-3">

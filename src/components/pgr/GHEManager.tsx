@@ -96,10 +96,14 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
       <CardContent className="pt-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold flex items-center gap-2"><Users className="h-5 w-5" /> Grupos Homogêneos de Exposição</h3>
-            <p className="text-sm text-muted-foreground">Agrupe trabalhadores que compartilham as mesmas condições de exposição.</p>
+            <h3 className="text-lg font-semibold flex items-center gap-2"><Users className="h-5 w-5" /> {term.gheLabelLong}{term.isRural ? 's Rurais' : 's'} ({term.gheLabel})</h3>
+            <p className="text-sm text-muted-foreground">
+              {term.isRural
+                ? 'Agrupe trabalhadores rurais que compartilham as mesmas condições de exposição (cultura, atividade, propriedade).'
+                : 'Agrupe trabalhadores que compartilham as mesmas condições de exposição.'}
+            </p>
           </div>
-          <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo GHE</Button>
+          <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo {term.gheLabel}</Button>
         </div>
 
         {loading ? (

@@ -399,11 +399,11 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   });
 
   setText(36, true, FOREST);
-  doc.text('PGR', PAGE_W / 2, 55, { align: 'center' });
+  doc.text(shortName, PAGE_W / 2, 55, { align: 'center' });
   setText(13, false, FOREST);
-  doc.text('Programa de Gerenciamento de Riscos', PAGE_W / 2, 65, { align: 'center' });
+  doc.text(fullName, PAGE_W / 2, 65, { align: 'center' });
   setText(9, false, [80, 80, 80]);
-  doc.text('NR-01 — Portaria 6.730/2020', PAGE_W / 2, 72, { align: 'center' });
+  doc.text(regulation, PAGE_W / 2, 72, { align: 'center' });
 
   doc.setFillColor(...LIME);
   doc.rect(MARGIN, 80, CONTENT_W, 1.2, 'F');

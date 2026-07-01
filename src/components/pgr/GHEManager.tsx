@@ -140,12 +140,12 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent>
-            <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Novo'} GHE</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Novo'} {term.gheLabel}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2"><Label>Nome do GHE *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Ex: Operadores de máquina linha 1" /></div>
+              <div className="space-y-2"><Label>Nome do {term.gheLabel} *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={term.isRural ? "Ex: Aplicadores de defensivos — talhão A" : "Ex: Operadores de máquina linha 1"} /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>Setor</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Cargo</Label><Input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} /></div>
+                <div className="space-y-2"><Label>{term.isRural ? 'Talhão / Área' : 'Setor'}</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
+                <div className="space-y-2"><Label>{term.isRural ? 'Função rural' : 'Cargo'}</Label><Input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder={term.isRural ? 'Ex: Tratorista, colhedor, aplicador' : ''} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>Nº trabalhadores</Label><Input type="number" min={0} value={form.worker_count} onChange={e => setForm({ ...form, worker_count: parseInt(e.target.value) || 0 })} /></div>

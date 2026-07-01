@@ -122,6 +122,10 @@ const slugify = (s: string) =>
 export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   const state = { y: TOP_Y, page: 1, skipChrome: true };
+  const isRural = input.pgr.document_type === 'pgtr';
+  const shortName = isRural ? 'PGTR' : 'PGR';
+  const fullName = isRural ? 'Plano de Gerenciamento de Riscos do Trabalhador Rural' : 'Programa de Gerenciamento de Riscos';
+  const regulation = isRural ? 'NR-31 — Portaria MTP 1.887/2022' : 'NR-01 — Portaria 6.730/2020';
 
   const setText = (size: number, bold = false, color: [number, number, number] = COLORS.text) => {
     doc.setFont('helvetica', bold ? 'bold' : 'normal');
@@ -134,7 +138,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     doc.setFillColor(...COLORS.headerBg);
     doc.rect(0, 0, PAGE_W, MARGIN + 6, 'F');
     setText(8, true, COLORS.primary);
-    doc.text('PGR – PROGRAMA DE GERENCIAMENTO DE RISCOS', MARGIN, MARGIN);
+    doc.text(`${shortName} – ${fullName.toUpperCase()}`, MARGIN, MARGIN);
     setText(8, false, COLORS.muted);
     const rev = `Revisão ${String(input.pgr.version).padStart(2, '0')}  •  ${todayBR()}`;
     doc.text(rev, PAGE_W - MARGIN, MARGIN, { align: 'right' });

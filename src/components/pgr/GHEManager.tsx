@@ -21,7 +21,8 @@ interface GHE {
   work_schedule: string | null;
 }
 
-export const GHEManager = ({ pgrDocumentId }: { pgrDocumentId: string }) => {
+export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: string; documentType?: 'pgr' | 'pgtr' }) => {
+  const term = usePgrTerminology(documentType);
   const [ghes, setGhes] = useState<GHE[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);

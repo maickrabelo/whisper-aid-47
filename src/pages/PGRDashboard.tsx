@@ -58,7 +58,9 @@ const PGRDashboard = () => {
   const [companyCnpj, setCompanyCnpj] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [exportOpen, setExportOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const term = usePgrTerminology(pgr?.document_type);
 
   useEffect(() => {
     if (authLoading || accessLoading) return;
@@ -87,23 +89,24 @@ const PGRDashboard = () => {
       setPgr((pgrData as any) || null);
     } catch (e: any) {
       console.error(e);
-      toast.error('Erro ao carregar PGR');
+      toast.error('Erro ao carregar documento');
     } finally {
       setLoading(false);
     }
   };
 
-  const createPGR = async () => {
+  const createPGR = async (docType: PgrDocType) => {
     if (!companyId) return;
-    setCreating(true);
     try {
+      const label = docType === 'pgtr' ? 'PGTR' : 'PGR';
       const { data, error } = await supabase
         .from('pgr_documents')
         .insert({
           company_id: companyId,
-          title: `PGR ${new Date().getFullYear()} - ${companyName}`,
+          title: `${label} ${new Date().getFullYear()} - ${companyName}`,
           status: 'draft',
           version: 1,
+          document_type: docType,
           validity_start: new Date().toISOString().split('T')[0],
           validity_end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
         } as any)
@@ -111,11 +114,10 @@ const PGRDashboard = () => {
         .single();
       if (error) throw error;
       setPgr(data as any);
-      toast.success('PGR criado com sucesso!');
+      setCreateOpen(false);
+      toast.success(`${label} criado com sucesso!`);
     } catch (e: any) {
-      toast.error('Erro ao criar PGR: ' + e.message);
-    } finally {
-      setCreating(false);
+      toast.error('Erro ao criar documento: ' + e.message);
     }
   };
 

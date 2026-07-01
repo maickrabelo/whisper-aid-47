@@ -235,11 +235,27 @@ const Index = () => {
                   <span className="text-lime italic font-normal">Todas as ferramentas.</span>
                 </h2>
                 <p className="text-cream/75 text-lg leading-relaxed mb-8">
-                  Sem upsell, sem cobrança por usuário, sem limite de avaliações. Cobrança mensal via Hotmart.
+                  Sem upsell, sem cobrança por usuário, sem limite de avaliações. Cobrança via Hotmart.
                 </p>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-display text-6xl md:text-7xl font-bold text-lime">R$ 97,90</span>
-                  <span className="text-cream/60 text-lg">/mês</span>
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-cream/50 text-xs uppercase tracking-widest font-bold mb-1">Mensal</div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-display text-4xl md:text-5xl font-bold text-lime">R$ 97,90</span>
+                      <span className="text-cream/60">/mês</span>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-cream/10">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-cream/50 text-xs uppercase tracking-widest font-bold">Anual</span>
+                      <span className="pill bg-lime text-forest-deep border-0 text-[10px] px-2 py-0.5 font-bold">Economize ~17%</span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-display text-4xl md:text-5xl font-bold text-lime">R$ 979,00</span>
+                      <span className="text-cream/60">/ano</span>
+                    </div>
+                    <div className="text-cream/50 text-xs mt-1">Equivalente a R$ 81,58/mês</div>
+                  </div>
                 </div>
               </div>
 
@@ -258,16 +274,24 @@ const Index = () => {
                 <div className="flex flex-col gap-2">
                   <Button
                     size="lg"
-                    onClick={() => window.open(HOTMART_URL, '_blank')}
+                    onClick={() => window.open(HOTMART_ANNUAL_URL, '_blank')}
                     className="rounded-full bg-forest text-lime hover:bg-forest-deep h-12 font-semibold"
                   >
-                    Assinar agora <ArrowRight className="ml-2 h-4 w-4" />
+                    Assinar anual — R$ 979,00 <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                   <Button
                     size="lg"
+                    onClick={() => window.open(HOTMART_URL, '_blank')}
                     variant="outline"
+                    className="rounded-full border-forest bg-transparent text-forest hover:bg-forest hover:text-lime h-12 font-semibold"
+                  >
+                    Assinar mensal — R$ 97,90/mês
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="ghost"
                     onClick={() => window.open(WHATSAPP_URL, '_blank')}
-                    className="rounded-full border-forest/20 text-forest hover:bg-forest/5 h-12"
+                    className="rounded-full text-forest/70 hover:bg-forest/5 h-11"
                   >
                     Tirar dúvidas
                   </Button>

@@ -9,21 +9,25 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return json(401, { error: 'Unauthorized' });
-
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
+    const authHeader = req.headers.get('Authorization') || '';
     const token = authHeader.replace('Bearer ', '');
-    const { data: userRes } = await supabase.auth.getUser(token);
-    const userId = userRes?.user?.id;
-    if (!userId) return json(401, { error: 'Unauthorized' });
-
-    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
-    if (!isAdmin) return json(403, { error: 'Forbidden' });
+    // Allow either service-role key or an admin JWT
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    let allowed = token === serviceKey;
+    if (!allowed && token) {
+      const { data: userRes } = await supabase.auth.getUser(token);
+      const userId = userRes?.user?.id;
+      if (userId) {
+        const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
+        allowed = !!isAdmin;
+      }
+    }
+    if (!allowed) return json(401, { error: 'Unauthorized' });
 
     const body = await req.json().catch(() => ({}));
     const productId: string = body?.product_id || '1343825';

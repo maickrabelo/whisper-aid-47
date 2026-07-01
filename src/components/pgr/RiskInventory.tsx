@@ -86,14 +86,23 @@ const emptyForm = {
   existing_epc: '',
   existing_epi: '',
   epi_ca: '',
+  pesticide_product: '',
+  pesticide_active_ingredient: '',
+  pesticide_toxicity_class: '',
+  pesticide_required_epi: '',
+  pesticide_reentry_period: '',
 };
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
 
-export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: string; companyId: string }) => {
+interface PgtrAgent { id: string; category: string; agent_name: string; typical_severity: number | null; typical_probability: number | null; typical_epi: string | null; description: string | null; }
+
+export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrDocumentId: string; companyId: string; documentType?: 'pgr' | 'pgtr' }) => {
+  const term = usePgrTerminology(documentType);
   const [risks, setRisks] = useState<Risk[]>([]);
   const [ghes, setGhes] = useState<GHE[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [pgtrAgents, setPgtrAgents] = useState<PgtrAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Risk | null>(null);

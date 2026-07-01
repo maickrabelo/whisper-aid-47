@@ -26,6 +26,7 @@ import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
 import usePageSEO from '@/hooks/usePageSEO';
 
 const HOTMART_URL = 'https://pay.hotmart.com/Y106371701W?off=cxxuc6kw&checkoutMode=6';
+const HOTMART_ANNUAL_URL = 'https://pay.hotmart.com/Y106371701W?off=yvxqo18j&checkoutMode=6';
 const WHATSAPP_URL = 'https://wa.me/5527998443852?text=' + encodeURIComponent('Olá! Quero conhecer o Sr.SMS.');
 
 const features = [

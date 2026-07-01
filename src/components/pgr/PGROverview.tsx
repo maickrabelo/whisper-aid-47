@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Wheat } from "lucide-react";
 import { toast } from "sonner";
+import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 import type { PGRDocument } from "@/pages/PGRDashboard";
 
 interface Props {
@@ -25,6 +26,7 @@ const statusLabel: Record<string, { label: string; variant: "default" | "seconda
 };
 
 export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props) => {
+  const term = usePgrTerminology(pgr.document_type);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: pgr.title,
@@ -38,6 +40,12 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
     cnae: pgr.cnae || "",
     risk_grade: pgr.risk_grade || "",
     address: pgr.address || "",
+    rural_activity: pgr.rural_activity || "",
+    rural_area_hectares: pgr.rural_area_hectares ?? "",
+    work_regime: pgr.work_regime || "",
+    has_lodging: pgr.has_lodging ?? false,
+    lodging_description: pgr.lodging_description || "",
+    worker_transport: pgr.worker_transport || "",
   });
 
   const save = async () => {

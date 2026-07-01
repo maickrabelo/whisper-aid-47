@@ -35,7 +35,17 @@ export interface PGRDocument {
   cnae: string | null;
   risk_grade: string | null;
   address: string | null;
+  document_type?: 'pgr' | 'pgtr' | null;
+  rural_activity?: string | null;
+  rural_area_hectares?: number | null;
+  work_regime?: string | null;
+  has_lodging?: boolean | null;
+  lodging_description?: string | null;
+  worker_transport?: string | null;
 }
+
+import { CreateDocumentDialog } from "@/components/pgr/CreateDocumentDialog";
+import { usePgrTerminology, type PgrDocType } from "@/hooks/usePgrTerminology";
 
 const PGRDashboard = () => {
   const { companyId } = useParams<{ companyId: string }>();

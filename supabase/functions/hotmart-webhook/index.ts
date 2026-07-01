@@ -366,9 +366,13 @@ async function upgradeExistingAccount(supabase: any, ctx: {
   ) || (plan.price_monthly_cents ?? plan.base_price_cents ?? 0);
   const trialDays = (plan as any).trial_days as number | null | undefined;
   const isTrialPlan = typeof trialDays === 'number' && trialDays > 0;
-  const trialEndsAt = isTrialPlan
-    ? new Date(Date.now() + trialDays! * 24 * 60 * 60 * 1000).toISOString()
-    : null;
+  const nowIso = new Date();
+  const periodEnd = isTrialPlan
+    ? new Date(Date.now() + trialDays! * 24 * 60 * 60 * 1000)
+    : (billingCycle === 'annual'
+      ? new Date(new Date().setFullYear(nowIso.getFullYear() + 1))
+      : new Date(new Date().setMonth(nowIso.getMonth() + 1)));
+  const trialEndsAt = periodEnd.toISOString();
 
   const { data: newSub, error: subErr } = await supabase
     .from('subscriptions')

@@ -762,6 +762,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
 
 export async function downloadPGRReport(input: PGRReportInput) {
   const doc = await generatePGRReportPDF(input);
-  const fname = `PGR_${slugify(input.company.name)}_v${input.pgr.version}_${new Date().toISOString().split('T')[0]}.pdf`;
+  const prefix = input.pgr.document_type === 'pgtr' ? 'PGTR' : 'PGR';
+  const fname = `${prefix}_${slugify(input.company.name)}_v${input.pgr.version}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fname);
 }

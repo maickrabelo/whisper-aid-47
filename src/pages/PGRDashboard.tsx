@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ArrowLeft, FileText, FlaskConical, Users, ClipboardList, Activity, Download, Plus, Trash2, Pencil, LayoutDashboard } from "lucide-react";
+import { Loader2, ArrowLeft, FileText, FlaskConical, Users, ClipboardList, Activity, Download, Plus, Trash2, Pencil, LayoutDashboard, Wheat } from "lucide-react";
 import { toast } from "sonner";
 import { PGROverview } from "@/components/pgr/PGROverview";
 import { GHEManager } from "@/components/pgr/GHEManager";
@@ -19,6 +19,8 @@ import { RiskInventory } from "@/components/pgr/RiskInventory";
 import { ActionPlanEditor } from "@/components/pgr/ActionPlanEditor";
 import { ESocialExportDialog } from "@/components/pgr/ESocialExportDialog";
 import { PGRMonitoringDashboard } from "@/components/pgr/PGRMonitoringDashboard";
+import { CreateDocumentDialog } from "@/components/pgr/CreateDocumentDialog";
+import { usePgrTerminology, type PgrDocType } from "@/hooks/usePgrTerminology";
 
 export interface PGRDocument {
   id: string;

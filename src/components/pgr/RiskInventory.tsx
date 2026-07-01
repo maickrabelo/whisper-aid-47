@@ -112,21 +112,26 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
 
   const load = async () => {
     setLoading(true);
-    const [{ data: r }, { data: g }, { data: a }] = await Promise.all([
+    const promises: any[] = [
       supabase.from('pgr_risks').select('*').eq('pgr_document_id', pgrDocumentId).order('created_at'),
       supabase.from('pgr_ghe').select('id, name').eq('pgr_document_id', pgrDocumentId).order('name'),
       supabase.from('esocial_agents_catalog').select('code, category, name').order('code'),
-    ]);
-    setRisks((r as any) || []);
-    setGhes((g as any) || []);
-    setAgents((a as any) || []);
+    ];
+    if (term.isRural) {
+      promises.push(supabase.from('pgtr_agents_catalog' as any).select('*').order('category, agent_name'));
+    }
+    const results = await Promise.all(promises);
+    setRisks((results[0].data as any) || []);
+    setGhes((results[1].data as any) || []);
+    setAgents((results[2].data as any) || []);
+    if (term.isRural) setPgtrAgents((results[3].data as any) || []);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [pgrDocumentId]);
+  useEffect(() => { load(); }, [pgrDocumentId, term.isRural]);
 
   const openNew = () => { setEditing(null); setForm(emptyForm); setOpen(true); };
-  const openEdit = (r: Risk) => {
+  const openEdit = (r: any) => {
     setEditing(r);
     setForm({
       ghe_id: r.ghe_id || '',
@@ -141,6 +146,11 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       existing_epc: r.existing_epc || '',
       existing_epi: r.existing_epi || '',
       epi_ca: r.epi_ca || '',
+      pesticide_product: r.pesticide_product || '',
+      pesticide_active_ingredient: r.pesticide_active_ingredient || '',
+      pesticide_toxicity_class: r.pesticide_toxicity_class || '',
+      pesticide_required_epi: r.pesticide_required_epi || '',
+      pesticide_reentry_period: r.pesticide_reentry_period || '',
     });
     setOpen(true);
   };

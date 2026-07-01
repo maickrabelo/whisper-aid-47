@@ -46,8 +46,6 @@ export interface PGRDocument {
   worker_transport?: string | null;
 }
 
-import { CreateDocumentDialog } from "@/components/pgr/CreateDocumentDialog";
-import { usePgrTerminology, type PgrDocType } from "@/hooks/usePgrTerminology";
 
 const PGRDashboard = () => {
   const { companyId } = useParams<{ companyId: string }>();

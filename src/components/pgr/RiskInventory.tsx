@@ -380,6 +380,36 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                 </div>
               )}
 
+              {term.isRural && pgtrAgents.filter(a => a.category === form.category).length > 0 && (
+                <div className="space-y-2 p-3 rounded-md border border-primary/30 bg-primary/5">
+                  <Label className="flex items-center gap-2"><Wheat className="h-4 w-4" /> Catálogo NR-31 — preencher a partir de agente rural típico</Label>
+                  <select
+                    className="w-full h-10 rounded-md border border-input bg-background px-3"
+                    value=""
+                    onChange={e => {
+                      const sel = pgtrAgents.find(a => a.id === e.target.value);
+                      if (!sel) return;
+                      const sev = Math.min(sel.typical_severity || form.severity, form.matrix_size);
+                      const prob = Math.min(sel.typical_probability || form.probability, form.matrix_size);
+                      setForm(f => ({
+                        ...f,
+                        agent_name: sel.agent_name,
+                        exposure_description: sel.description || f.exposure_description,
+                        existing_epi: sel.typical_epi || f.existing_epi,
+                        severity: sev,
+                        probability: prob,
+                      }));
+                    }}
+                  >
+                    <option value="">— Selecionar agente rural típico —</option>
+                    {pgtrAgents.filter(a => a.category === form.category).map(a => (
+                      <option key={a.id} value={a.id}>{a.agent_name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">Selecionar preenche automaticamente nome, descrição, EPI e severidade/probabilidade típicos.</p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label>Nome do agente / risco *</Label>
                 <Input value={form.agent_name} onChange={e => setForm({ ...form, agent_name: e.target.value })} />

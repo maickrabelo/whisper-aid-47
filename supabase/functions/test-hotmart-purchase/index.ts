@@ -14,21 +14,6 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    const authHeader = req.headers.get('Authorization') || '';
-    const token = authHeader.replace('Bearer ', '');
-    // Allow either service-role key or an admin JWT
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    let allowed = token === serviceKey;
-    if (!allowed && token) {
-      const { data: userRes } = await supabase.auth.getUser(token);
-      const userId = userRes?.user?.id;
-      if (userId) {
-        const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
-        allowed = !!isAdmin;
-      }
-    }
-    if (!allowed) return json(401, { error: 'Unauthorized' });
-
     const body = await req.json().catch(() => ({}));
     const productId: string = body?.product_id || '1343825';
     const recurrencyPeriod: number = body?.recurrency_period ?? 12;

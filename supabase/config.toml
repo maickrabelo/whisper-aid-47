@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.import-user-data]
 verify_jwt = false
+
+[functions.test-hotmart-purchase]
+verify_jwt = false

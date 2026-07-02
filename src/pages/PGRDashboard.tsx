@@ -174,13 +174,13 @@ const PGRDashboard = () => {
           </Card>
         ) : (
           <Tabs defaultValue="dashboard" className="space-y-4">
-            <TabsList className="grid grid-cols-6 max-w-4xl">
+            <TabsList className={`grid ${aepAllowed ? 'grid-cols-6' : 'grid-cols-5'} max-w-4xl`}>
               <TabsTrigger value="dashboard" className="gap-1"><LayoutDashboard className="h-4 w-4" /> Dashboard</TabsTrigger>
               <TabsTrigger value="overview" className="gap-1"><FileText className="h-4 w-4" /> Visão Geral</TabsTrigger>
               <TabsTrigger value="ghe" className="gap-1"><Users className="h-4 w-4" /> {term.gheLabel}s</TabsTrigger>
               <TabsTrigger value="risks" className="gap-1"><FlaskConical className="h-4 w-4" /> Inventário</TabsTrigger>
               <TabsTrigger value="actions" className="gap-1"><ClipboardList className="h-4 w-4" /> Plano de Ação</TabsTrigger>
-              <TabsTrigger value="aep" className="gap-1"><ClipboardList className="h-4 w-4" /> AEP</TabsTrigger>
+              {aepAllowed && <TabsTrigger value="aep" className="gap-1"><ClipboardList className="h-4 w-4" /> AEP</TabsTrigger>}
             </TabsList>
             <TabsContent value="dashboard">
               <PGRMonitoringDashboard pgr={pgr} />

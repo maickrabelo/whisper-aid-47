@@ -395,6 +395,11 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
                           <span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[level]}`}>
                             {LEVEL_LABELS[level]}
                           </span>
+                          {f.source_assessment_type && (
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-[10px]">
+                              Importado do {f.source_assessment_type === 'hseit' ? 'HSE-IT' : 'COPSOQ II'}
+                            </Badge>
+                          )}
                         </div>
                         <Input value={f.fator_nome} onChange={e => updateFator(f.tempId, { fator_nome: e.target.value })}
                           className="font-medium" />

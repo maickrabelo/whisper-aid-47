@@ -167,6 +167,7 @@ const SSTDashboard = () => {
   const { toast } = useToast();
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
+  const { allowed: aepAllowed } = useAEPBetaAccess();
   const { isSmartOnly } = useSmartOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
   const { isSmsPlan } = useSmsPlan();

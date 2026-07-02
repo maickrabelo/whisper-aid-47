@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
-import { Loader2, Trash2, Plus, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Loader2, Trash2, Plus, ChevronLeft, ChevronRight, Check, Download } from "lucide-react";
 import { toast } from "sonner";
 import {
   useAEPFatoresCatalog,
@@ -18,6 +18,7 @@ import {
   type AEPFatorCatalogo,
 } from "@/hooks/useAEPFatoresCatalog";
 import { classifyRisk, LEVEL_LABELS, LEVEL_STYLES } from "@/lib/aepRiskLevel";
+import { ImportAssessmentDialog, type ImportedFator } from "@/components/aep/ImportAssessmentDialog";
 
 interface Props {
   open: boolean;
@@ -46,6 +47,8 @@ interface FatorForm {
   severity: number;
   probability: number;
   observacoes: string;
+  source_assessment_type?: 'hseit' | 'copsoq' | null;
+  source_assessment_id?: string | null;
 }
 
 interface ParticipanteForm {
@@ -80,6 +83,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
   const [fatores, setFatores] = useState<FatorForm[]>([]);
   const [fatorCategoria, setFatorCategoria] = useState<AEPFatorCatalogo['categoria']>('ergonomico_fisico');
   const [fatorSelecionado, setFatorSelecionado] = useState('');
+  const [importDialog, setImportDialog] = useState<null | 'hseit' | 'copsoq'>(null);
 
   // Step 4
   const [participantes, setParticipantes] = useState<ParticipanteForm[]>([]);
@@ -203,6 +207,8 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
             probability: f.probability,
             matrix_size: 5,
             observacoes: f.observacoes,
+            source_assessment_type: f.source_assessment_type || null,
+            source_assessment_id: f.source_assessment_id || null,
           })) as any
         );
         if (err2) throw err2;
@@ -333,6 +339,21 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
         {/* Step 3 */}
         {step === 3 && (
           <div className="space-y-4">
+            <Card className="p-3 bg-primary/5 border-primary/20">
+              <Label className="text-xs">Importar dimensões de avaliações psicossociais existentes</Label>
+              <div className="flex gap-2 mt-2 flex-wrap">
+                <Button size="sm" variant="outline" onClick={() => setImportDialog('hseit')}>
+                  <Download className="h-4 w-4 mr-1" /> Importar do HSE-IT
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setImportDialog('copsoq')}>
+                  <Download className="h-4 w-4 mr-1" /> Importar do COPSOQ II
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Traz automaticamente as dimensões em risco como fatores psicossociais desta AEP, com rastreabilidade da origem.
+              </p>
+            </Card>
+
             <Card className="p-3 bg-muted/30">
               <Label className="text-xs">Adicionar fator a partir da biblioteca NR-17 / Psicossocial</Label>
               <div className="grid grid-cols-3 gap-2 mt-2">
@@ -356,6 +377,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
               </div>
             </Card>
 
+
             <div className="space-y-3">
               {fatores.length === 0 && (
                 <div className="text-sm text-muted-foreground text-center py-6">Nenhum fator adicionado ainda.</div>
@@ -373,6 +395,11 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
                           <span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[level]}`}>
                             {LEVEL_LABELS[level]}
                           </span>
+                          {f.source_assessment_type && (
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-[10px]">
+                              Importado do {f.source_assessment_type === 'hseit' ? 'HSE-IT' : 'COPSOQ II'}
+                            </Badge>
+                          )}
                         </div>
                         <Input value={f.fator_nome} onChange={e => updateFator(f.tempId, { fator_nome: e.target.value })}
                           className="font-medium" />
@@ -521,6 +548,35 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
           )}
         </div>
       </DialogContent>
+
+      {importDialog && (
+        <ImportAssessmentDialog
+          open={!!importDialog}
+          onOpenChange={(v) => { if (!v) setImportDialog(null); }}
+          type={importDialog}
+          companyId={companyId}
+          onImport={(imported: ImportedFator[]) => {
+            setFatores(prev => [
+              ...prev,
+              ...imported.map(i => ({
+                tempId: crypto.randomUUID(),
+                categoria: 'psicossocial' as const,
+                fator_codigo: null,
+                fator_nome: i.fator_nome,
+                fonte_causa: i.fonte_causa,
+                grupos_expostos: '',
+                evidencia_texto: i.evidencia_texto,
+                severity: i.severity,
+                probability: i.probability,
+                observacoes: '',
+                source_assessment_type: i.source_assessment_type,
+                source_assessment_id: i.source_assessment_id,
+              })),
+            ]);
+          }}
+        />
+      )}
     </Dialog>
   );
 }
+

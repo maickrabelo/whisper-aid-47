@@ -105,6 +105,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
   const [ghes, setGhes] = useState<GHE[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [pgtrAgents, setPgtrAgents] = useState<PgtrAgent[]>([]);
+  const [aepFatorToAep, setAepFatorToAep] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Risk | null>(null);
@@ -123,10 +124,22 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       promises.push(supabase.from('pgtr_agents_catalog' as any).select('*').order('category, agent_name'));
     }
     const results = await Promise.all(promises);
-    setRisks((results[0].data as any) || []);
+    const riskList = (results[0].data as any[]) || [];
+    setRisks(riskList);
     setGhes((results[1].data as any) || []);
     setAgents((results[2].data as any) || []);
     if (term.isRural) setPgtrAgents((results[3].data as any) || []);
+
+    // Load AEP fator → aep_id mapping for badge links
+    const aepFatorIds = riskList.filter(r => r.source_module === 'aep' && r.source_module_id).map(r => r.source_module_id);
+    if (aepFatorIds.length) {
+      const { data: fats } = await supabase.from('aep_fatores_avaliados' as any).select('id, aep_id').in('id', aepFatorIds);
+      const map: Record<string, string> = {};
+      (fats as any[] || []).forEach(f => { map[f.id] = f.aep_id; });
+      setAepFatorToAep(map);
+    } else {
+      setAepFatorToAep({});
+    }
     setLoading(false);
   };
 

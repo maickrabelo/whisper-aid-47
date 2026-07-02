@@ -40,14 +40,38 @@ export function SendToInventoryDialog({ open, onOpenChange, aepId, pgrDocumentId
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [rows, setRows] = useState<FatorRow[]>([]);
+  const [resolvedPgrId, setResolvedPgrId] = useState<string | null>(pgrDocumentId);
+  const [noPgrFound, setNoPgrFound] = useState(false);
 
   useEffect(() => {
-    if (!open || !pgrDocumentId) return;
+    if (!open) return;
     (async () => {
       setLoading(true);
+      setNoPgrFound(false);
+      // Resolve PGR: use provided, else find latest for company, and link back to AEP
+      let effectivePgrId = pgrDocumentId;
+      if (!effectivePgrId && companyId) {
+        const { data: latestPgr } = await supabase
+          .from('pgr_documents')
+          .select('id')
+          .eq('company_id', companyId)
+          .order('version', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        effectivePgrId = (latestPgr as any)?.id || null;
+        if (effectivePgrId) {
+          await supabase.from('aep_avaliacoes' as any).update({ pgr_document_id: effectivePgrId } as any).eq('id', aepId);
+        }
+      }
+      setResolvedPgrId(effectivePgrId);
+      if (!effectivePgrId) {
+        setNoPgrFound(true);
+        setLoading(false);
+        return;
+      }
       const [fatoresRes, existingRisksRes, vinculosRes] = await Promise.all([
         supabase.from('aep_fatores_avaliados' as any).select('*').eq('aep_id', aepId).order('created_at'),
-        supabase.from('pgr_risks').select('id, agent_name, ghe_id, category').eq('pgr_document_id', pgrDocumentId),
+        supabase.from('pgr_risks').select('id, agent_name, ghe_id, category').eq('pgr_document_id', effectivePgrId),
         supabase.from('aep_pgr_vinculo' as any).select('aep_fator_id, pgr_risk_id'),
       ]);
       const fatores = (fatoresRes.data as any[]) || [];
@@ -82,10 +106,10 @@ export function SendToInventoryDialog({ open, onOpenChange, aepId, pgrDocumentId
       setRows(rowsData);
       setLoading(false);
     })();
-  }, [open, aepId, pgrDocumentId, gheId]);
+  }, [open, aepId, pgrDocumentId, companyId, gheId]);
 
   const submit = async () => {
-    if (!pgrDocumentId) return;
+    if (!resolvedPgrId) return;
     setSaving(true);
     try {
       const { data: authData } = await supabase.auth.getUser();
@@ -96,7 +120,7 @@ export function SendToInventoryDialog({ open, onOpenChange, aepId, pgrDocumentId
         let riskId = r.suggestedRiskId;
         if (r.linkMode === 'new' || !riskId) {
           const { data: newRisk, error } = await supabase.from('pgr_risks').insert({
-            pgr_document_id: pgrDocumentId,
+            pgr_document_id: resolvedPgrId,
             ghe_id: gheId,
             category: aepCategoriaToPgr(r.categoria),
             agent_name: r.fator_nome,
@@ -130,7 +154,7 @@ export function SendToInventoryDialog({ open, onOpenChange, aepId, pgrDocumentId
     }
   };
 
-  if (!pgrDocumentId) {
+  if (noPgrFound) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>

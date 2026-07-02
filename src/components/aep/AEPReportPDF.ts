@@ -32,11 +32,10 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
 
   // Cabeçalho com logos
   try {
-    await renderReportLogos(doc, {
+    await renderReportLogos(doc, PAGE_W, {
       sstLogoUrl: input.sstLogoUrl || null,
       companyLogoUrl: company.logo_url || null,
-      margin: MARGIN,
-      y: 12,
+      topY: 8,
       maxHeight: 14,
     });
   } catch { /* noop */ }

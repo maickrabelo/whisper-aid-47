@@ -3,7 +3,7 @@ import type jsPDF from 'jspdf';
 function withCacheBuster(url: string): string {
   try {
     const sep = url.includes('?') ? '&' : '?';
-    return `${url}${sep}cb=${Date.now()}`;
+    return `${url}${sep}cb=${Date.now()}-${Math.random().toString(36).slice(2)}`;
   } catch {
     return url;
   }
@@ -11,13 +11,39 @@ function withCacheBuster(url: string): string {
 
 async function loadImage(url: string): Promise<HTMLImageElement | null> {
   try {
+    const finalUrl = withCacheBuster(url);
+    let objectUrl: string | null = null;
+    let imageUrl = finalUrl;
+
+    try {
+      const response = await fetch(finalUrl, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+        imageUrl = objectUrl;
+      }
+    } catch {
+      imageUrl = finalUrl;
+    }
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    const finalUrl = withCacheBuster(url);
     await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = (e) => reject(e);
-      img.src = finalUrl;
+      img.onload = () => {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        resolve();
+      };
+      img.onerror = (e) => {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        reject(e);
+      };
+      img.src = imageUrl;
     });
     return img;
   } catch (e) {

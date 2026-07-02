@@ -18,6 +18,11 @@ interface Props {
 
 const sanitizeXml = (v: any) => String(v ?? '').replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' }[c]!));
 const onlyDigits = (v: string) => (v || '').replace(/\D/g, '');
+const freshLogoUrl = (url?: string | null) => {
+  if (!url) return null;
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}fresh=${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
 
 // PDF agora é gerado pelo módulo dedicado em PGRReportPDF.ts
 
@@ -83,30 +88,69 @@ const buildS2240Xml = (pgr: PGRDocument, companyCnpj: string, worker: any, ghe: 
 export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, companyCnpj }: Props) => {
   const [generating, setGenerating] = useState<'pdf' | 'xml' | null>(null);
 
+  const fetchCurrentSstLogoUrl = async () => {
+    const [{ data: assignments }, { data: auth }] = await Promise.all([
+      supabase
+        .from('company_sst_assignments')
+        .select('sst_manager_id')
+        .eq('company_id', pgr.company_id),
+      supabase.auth.getUser(),
+    ]);
+
+    const managerIds = new Set<string>();
+    (assignments || []).forEach((assignment: any) => {
+      if (assignment?.sst_manager_id) managerIds.add(assignment.sst_manager_id);
+    });
+
+    const userId = auth?.user?.id;
+    if (userId) {
+      const [{ data: profileRow }, { data: linkedManagers }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('sst_manager_id')
+          .eq('id', userId)
+          .maybeSingle(),
+        supabase
+          .from('user_sst_managers')
+          .select('sst_manager_id')
+          .eq('user_id', userId),
+      ]);
+
+      if ((profileRow as any)?.sst_manager_id) managerIds.add((profileRow as any).sst_manager_id);
+      (linkedManagers || []).forEach((manager: any) => {
+        if (manager?.sst_manager_id) managerIds.add(manager.sst_manager_id);
+      });
+    }
+
+    const ids = Array.from(managerIds);
+    if (ids.length === 0) return null;
+
+    const { data: managers } = await supabase
+      .from('sst_managers')
+      .select('id, logo_url')
+      .in('id', ids);
+
+    const assignedId = (assignments || []).find((assignment: any) => assignment?.sst_manager_id)?.sst_manager_id;
+    const manager = (managers || []).find((item: any) => item.id === assignedId && item.logo_url)
+      || (managers || []).find((item: any) => item.logo_url);
+
+    return freshLogoUrl((manager as any)?.logo_url || null);
+  };
+
   const generatePDF = async () => {
     setGenerating('pdf');
     try {
-      const [{ data: ghes }, { data: risks }, { data: actions }, { data: companyRow }, { data: assignment }] = await Promise.all([
+      const [{ data: ghes }, { data: risks }, { data: actions }, { data: companyRow }, sstLogoUrl] = await Promise.all([
         supabase.from('pgr_ghe').select('*').eq('pgr_document_id', pgr.id),
         supabase.from('pgr_risks').select('*').eq('pgr_document_id', pgr.id),
         supabase.from('pgr_action_items').select('*').eq('pgr_document_id', pgr.id),
         supabase.from('companies').select('logo_url').eq('id', pgr.company_id).maybeSingle(),
-        supabase.from('company_sst_assignments').select('sst_manager_id').eq('company_id', pgr.company_id).maybeSingle(),
+        fetchCurrentSstLogoUrl(),
       ]);
-
-      let sstLogoUrl: string | null = null;
-      if (assignment?.sst_manager_id) {
-        const { data: mgr } = await supabase
-          .from('sst_managers')
-          .select('logo_url')
-          .eq('id', assignment.sst_manager_id)
-          .maybeSingle();
-        sstLogoUrl = (mgr as any)?.logo_url || null;
-      }
 
       await downloadPGRReport({
         pgr,
-        company: { name: companyName, cnpj: companyCnpj, logo_url: (companyRow as any)?.logo_url || null },
+        company: { name: companyName, cnpj: companyCnpj, logo_url: freshLogoUrl((companyRow as any)?.logo_url || null) },
         sstLogoUrl,
         ghes: (ghes as any) || [],
         risks: (risks as any) || [],

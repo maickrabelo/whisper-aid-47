@@ -53,6 +53,7 @@ const PGRDashboard = () => {
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading } = useRealAuth();
   const { hasAccess, isLoading: accessLoading } = usePGRModuleAccess();
+  const { allowed: aepAllowed } = useAEPBetaAccess();
 
   const [pgr, setPgr] = useState<PGRDocument | null>(null);
   const [companyName, setCompanyName] = useState<string>("");

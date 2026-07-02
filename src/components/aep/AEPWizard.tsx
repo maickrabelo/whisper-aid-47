@@ -548,6 +548,35 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
           )}
         </div>
       </DialogContent>
+
+      {importDialog && (
+        <ImportAssessmentDialog
+          open={!!importDialog}
+          onOpenChange={(v) => { if (!v) setImportDialog(null); }}
+          type={importDialog}
+          companyId={companyId}
+          onImport={(imported: ImportedFator[]) => {
+            setFatores(prev => [
+              ...prev,
+              ...imported.map(i => ({
+                tempId: crypto.randomUUID(),
+                categoria: 'psicossocial' as const,
+                fator_codigo: null,
+                fator_nome: i.fator_nome,
+                fonte_causa: i.fonte_causa,
+                grupos_expostos: '',
+                evidencia_texto: i.evidencia_texto,
+                severity: i.severity,
+                probability: i.probability,
+                observacoes: '',
+                source_assessment_type: i.source_assessment_type,
+                source_assessment_id: i.source_assessment_id,
+              })),
+            ]);
+          }}
+        />
+      )}
     </Dialog>
   );
 }
+

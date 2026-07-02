@@ -28,7 +28,7 @@ interface CompanyData {
 }
 
 const CompanyProfile = () => {
-  const { profile, companies, activeCompanyId, switchCompany, refreshRole } = useRealAuth();
+  const { user, profile, role, companies, activeCompanyId, switchCompany, refreshRole } = useRealAuth();
   const { toast } = useToast();
   const [company, setCompany] = useState<CompanyData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -122,6 +122,19 @@ const CompanyProfile = () => {
       const { error: updErr } = await supabase
         .from(table as any).update({ logo_url: finalUrl }).eq('id', company.id);
       if (updErr) throw updErr;
+
+      const shouldSyncSstLogo = !!sstManagerId && (
+        isSstMode ||
+        (role === 'sst' && !!company.email && !!user?.email && company.email.toLowerCase() === user.email.toLowerCase())
+      );
+
+      if (shouldSyncSstLogo) {
+        const { error: sstUpdErr } = await supabase
+          .from('sst_managers' as any)
+          .update({ logo_url: finalUrl })
+          .eq('id', sstManagerId);
+        if (sstUpdErr) throw sstUpdErr;
+      }
       toast({ title: 'Logo atualizada' });
       await loadCompany();
       await refreshRole();

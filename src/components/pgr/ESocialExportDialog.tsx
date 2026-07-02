@@ -103,11 +103,12 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
     });
 
     const userId = auth?.user?.id;
+    let currentProfileCompanyId: string | null = null;
     if (userId) {
       const [{ data: profileRow }, { data: linkedManagers }] = await Promise.all([
         supabase
           .from('profiles')
-          .select('sst_manager_id')
+          .select('sst_manager_id, company_id')
           .eq('id', userId)
           .maybeSingle(),
         supabase
@@ -117,6 +118,7 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
       ]);
 
       if ((profileRow as any)?.sst_manager_id) managerIds.add((profileRow as any).sst_manager_id);
+      currentProfileCompanyId = (profileRow as any)?.company_id || null;
       (linkedManagers || []).forEach((manager: any) => {
         if (manager?.sst_manager_id) managerIds.add(manager.sst_manager_id);
       });
@@ -127,7 +129,7 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
 
     const { data: managers } = await supabase
       .from('sst_managers')
-      .select('id, logo_url')
+      .select('id, email, logo_url, updated_at')
       .in('id', ids);
 
     // Prefer the SST manager assigned to this PGR's company; only if none is
@@ -137,7 +139,39 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
       ? (managers || []).find((item: any) => item.id === assignedId)
       : (managers || []).find((item: any) => item.logo_url);
 
-    return freshLogoUrl((manager as any)?.logo_url || null);
+    const companyCandidates: Array<{ logo_url?: string | null; updated_at?: string | null }> = [];
+    const matchingEmail = (manager as any)?.email || auth?.user?.email || null;
+
+    if (currentProfileCompanyId || matchingEmail) {
+      let query = supabase
+        .from('companies')
+        .select('id, email, logo_url, updated_at')
+        .not('logo_url', 'is', null);
+
+      if (currentProfileCompanyId && matchingEmail) {
+        query = query.or(`id.eq.${currentProfileCompanyId},email.eq.${matchingEmail}`);
+      } else if (currentProfileCompanyId) {
+        query = query.eq('id', currentProfileCompanyId);
+      } else if (matchingEmail) {
+        query = query.eq('email', matchingEmail);
+      }
+
+      const { data: companiesWithLogo } = await query;
+      (companiesWithLogo || []).forEach((company: any) => {
+        const sameEmail = matchingEmail && company.email?.toLowerCase?.() === matchingEmail.toLowerCase();
+        const sameProfileCompany = currentProfileCompanyId && company.id === currentProfileCompanyId;
+        if (sameEmail || sameProfileCompany) companyCandidates.push(company);
+      });
+    }
+
+    const candidates = [
+      ...companyCandidates,
+      manager as any,
+    ]
+      .filter((item: any) => item?.logo_url)
+      .sort((a: any, b: any) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime());
+
+    return freshLogoUrl((candidates[0] as any)?.logo_url || null);
   };
 
   const generatePDF = async () => {

@@ -11,6 +11,7 @@ import { ArrowLeft, ClipboardList, Loader2, Plus, AlertTriangle, TrendingUp } fr
 import { toast } from "sonner";
 import { AEPWizard } from "@/components/aep/AEPWizard";
 import { AEP_STATUS_LABELS, AEP_STATUS_STYLES } from "@/lib/aepRiskLevel";
+import { useAEPBetaAccess } from "@/hooks/useAEPBetaAccess";
 
 interface AEP {
   id: string;

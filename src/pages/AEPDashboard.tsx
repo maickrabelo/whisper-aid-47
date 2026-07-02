@@ -50,6 +50,7 @@ const AEPDashboard = () => {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [kpis, setKpis] = useState<KPIs>({ total: 0, concluidas: 0, vencidas: 0, rascunhos: 0, fatoresTotal: 0, fatoresVinculados: 0 });
   const [pgrDocId, setPgrDocId] = useState<string | null>(null);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const load = async () => {
     if (!companyId) return;

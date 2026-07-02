@@ -652,6 +652,7 @@ const SSTDashboard = () => {
                               <FileText className="h-4 w-4" />
                             </Button>
                           )}
+                          {aepAllowed && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -664,6 +665,7 @@ const SSTDashboard = () => {
                           >
                             <ClipboardList className="h-4 w-4" />
                           </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"

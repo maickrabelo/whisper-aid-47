@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
+import { AEPBadge } from "@/components/aep/AEPBadge";
 
 type MatrixSize = 3 | 4 | 5;
 

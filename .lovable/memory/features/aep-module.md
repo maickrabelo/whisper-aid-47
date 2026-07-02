@@ -1,11 +1,16 @@
 ---
 name: AEP Module (NR-17)
-description: Avaliação Ergonômica Preliminar — módulo independente por empresa com atalho no PGR; alimenta inventário de riscos com rastreabilidade
+description: Avaliação Ergonômica Preliminar — módulo por empresa; PDF consolidado; importa dimensões HSE-IT/COPSOQ como fatores psicossociais
 type: feature
 ---
 
 ## Escopo
 Módulo AEP (NR-17 item 17.3.1) implementado como submódulo independente por empresa (`/aep/:companyId`) com atalho a partir do `PGRDashboard` (aba AEP) e ícone `ClipboardList` roxo no card da empresa em `SSTDashboard`. AEP pode existir sem PGR (ME/EPP dispensadas), mas envio ao inventário exige PGR vinculado.
+
+## Consolidado + importação de psicossociais
+- Botão "AEP Consolidado (PDF)" no `AEPDashboard` gera um único documento com capa, sumário executivo, índice, seções de todas as AEPs finalizadas (completed/revised) e tabela anexa de fatores. `src/components/aep/AEPConsolidatedReportPDF.ts`.
+- Wizard passo 3 permite "Importar do HSE-IT" e "Importar do COPSOQ II": traz dimensões em risco alto/muito alto como fatores psicossociais com severity/probability pré-preenchidos. `ImportAssessmentDialog.tsx` + libs `src/lib/hseitDimensionScoring.ts` e `src/lib/copsoqDimensionScoring.ts`.
+- Rastreabilidade em `aep_fatores_avaliados.source_assessment_type` (`hseit`|`copsoq`) e `source_assessment_id`. Badge "Importado do HSE-IT/COPSOQ II" no card do fator e no PDF consolidado.
 
 ## Tabelas
 - `aep_avaliacoes` — registro principal (setor, função, ghe_id opcional, situação, metodologias[], responsável técnico, status, version, parent_version_id, signature_hash)

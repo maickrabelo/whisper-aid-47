@@ -12,29 +12,38 @@ function withCacheBuster(url: string): string {
 async function loadImage(url: string): Promise<HTMLImageElement | null> {
   try {
     const finalUrl = withCacheBuster(url);
-    const response = await fetch(finalUrl, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-      },
-    });
-    if (!response.ok) throw new Error(`Logo HTTP ${response.status}`);
+    let objectUrl: string | null = null;
+    let imageUrl = finalUrl;
 
-    const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
+    try {
+      const response = await fetch(finalUrl, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+        imageUrl = objectUrl;
+      }
+    } catch {
+      imageUrl = finalUrl;
+    }
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
     await new Promise<void>((resolve, reject) => {
       img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
         resolve();
       };
       img.onerror = (e) => {
-        URL.revokeObjectURL(objectUrl);
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
         reject(e);
       };
-      img.src = objectUrl;
+      img.src = imageUrl;
     });
     return img;
   } catch (e) {

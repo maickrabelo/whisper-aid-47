@@ -130,9 +130,12 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
       .select('id, logo_url')
       .in('id', ids);
 
+    // Prefer the SST manager assigned to this PGR's company; only if none is
+    // assigned we fall back to a manager linked to the current user.
     const assignedId = (assignments || []).find((assignment: any) => assignment?.sst_manager_id)?.sst_manager_id;
-    const manager = (managers || []).find((item: any) => item.id === assignedId && item.logo_url)
-      || (managers || []).find((item: any) => item.logo_url);
+    const manager = assignedId
+      ? (managers || []).find((item: any) => item.id === assignedId)
+      : (managers || []).find((item: any) => item.logo_url);
 
     return freshLogoUrl((manager as any)?.logo_url || null);
   };

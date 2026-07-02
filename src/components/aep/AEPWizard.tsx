@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
-import { Loader2, Trash2, Plus, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Loader2, Trash2, Plus, ChevronLeft, ChevronRight, Check, Download } from "lucide-react";
 import { toast } from "sonner";
 import {
   useAEPFatoresCatalog,
@@ -18,6 +18,7 @@ import {
   type AEPFatorCatalogo,
 } from "@/hooks/useAEPFatoresCatalog";
 import { classifyRisk, LEVEL_LABELS, LEVEL_STYLES } from "@/lib/aepRiskLevel";
+import { ImportAssessmentDialog, type ImportedFator } from "@/components/aep/ImportAssessmentDialog";
 
 interface Props {
   open: boolean;

@@ -19,37 +19,62 @@ const ResetPassword = () => {
   const [success, setSuccess] = useState(false);
 
   // Recovery flow: Supabase puts tokens in URL hash (#access_token=...&type=recovery)
-  // The client auto-processes this and creates a recovery session.
+  // or an error in the hash (#error=...&error_description=...).
   useEffect(() => {
-    const checkSession = async () => {
-      // Listen for the PASSWORD_RECOVERY event triggered by hash tokens
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
-          setHasValidSession(true);
-          setValidating(false);
-        }
-      });
-
-      // Also check if a session already exists (in case event fired before listener)
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setHasValidSession(true);
-        setValidating(false);
-      } else {
-        // Give the SDK a moment to process the URL hash
-        setTimeout(async () => {
-          const { data: { session: s2 } } = await supabase.auth.getSession();
-          if (s2) {
-            setHasValidSession(true);
-          }
-          setValidating(false);
-        }, 1500);
-      }
-
-      return () => subscription.unsubscribe();
+    let cancelled = false;
+    let settled = false;
+    const markValid = () => {
+      if (cancelled || settled) return;
+      settled = true;
+      setHasValidSession(true);
+      setValidating(false);
+    };
+    const markInvalid = () => {
+      if (cancelled || settled) return;
+      settled = true;
+      setHasValidSession(false);
+      setValidating(false);
     };
 
-    checkSession();
+    // 1) Detect explicit error in hash (expired link, invalid token, etc.)
+    const hash = window.location.hash || '';
+    if (hash.includes('error=') || hash.includes('error_code=')) {
+      markInvalid();
+      return () => { cancelled = true; };
+    }
+
+    // 2) Listen for the PASSWORD_RECOVERY / SIGNED_IN event fired after the SDK
+    //    exchanges the hash tokens for a session.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        markValid();
+      }
+    });
+
+    // 3) If a session already exists (SDK processed the hash before listener
+    //    was attached), accept it immediately.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) markValid();
+    });
+
+    // 4) Fallback: poll a few times before giving up, in case the SDK is slow.
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      if (settled || cancelled) { clearInterval(interval); return; }
+      attempts += 1;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) { clearInterval(interval); markValid(); return; }
+      if (attempts >= 8) { // ~4s total
+        clearInterval(interval);
+        markInvalid();
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -338,7 +338,12 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                   <TableRow key={r.id}>
                     <TableCell><Badge variant="outline">{CATEGORY_LABELS[r.category]}</Badge></TableCell>
                     <TableCell className="font-medium">
-                      {r.agent_name}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>{r.agent_name}</span>
+                        {r.source_module === 'aep' && r.source_module_id && (
+                          <AEPBadge aepId={aepFatorToAep[r.source_module_id]} companyId={companyId} />
+                        )}
+                      </div>
                       {r.esocial_agent_code && <span className="block text-xs text-muted-foreground">e-Social: {r.esocial_agent_code}</span>}
                     </TableCell>
                     <TableCell className="text-sm">{ghes.find(g => g.id === r.ghe_id)?.name || '-'}</TableCell>

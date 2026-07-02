@@ -80,6 +80,8 @@ const PulseSurveyForm = React.lazy(() => import("./pages/PulseSurveyForm"));
 const BetaOuvidoriaForm = React.lazy(() => import("./pages/BetaOuvidoriaForm"));
 const BetaOuvidoriaTrack = React.lazy(() => import("./pages/BetaOuvidoriaTrack"));
 const BetaOuvidoriaDashboard = React.lazy(() => import("./pages/BetaOuvidoriaDashboard"));
+const AEPDashboard = React.lazy(() => import("./pages/AEPDashboard"));
+const AEPDetail = React.lazy(() => import("./pages/AEPDetail"));
 
 const queryClient = new QueryClient({
   defaultOptions: {

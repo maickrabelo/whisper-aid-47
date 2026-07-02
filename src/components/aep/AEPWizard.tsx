@@ -207,6 +207,8 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
             probability: f.probability,
             matrix_size: 5,
             observacoes: f.observacoes,
+            source_assessment_type: f.source_assessment_type || null,
+            source_assessment_id: f.source_assessment_id || null,
           })) as any
         );
         if (err2) throw err2;

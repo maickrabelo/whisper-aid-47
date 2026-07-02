@@ -83,6 +83,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
   const [fatores, setFatores] = useState<FatorForm[]>([]);
   const [fatorCategoria, setFatorCategoria] = useState<AEPFatorCatalogo['categoria']>('ergonomico_fisico');
   const [fatorSelecionado, setFatorSelecionado] = useState('');
+  const [importDialog, setImportDialog] = useState<null | 'hseit' | 'copsoq'>(null);
 
   // Step 4
   const [participantes, setParticipantes] = useState<ParticipanteForm[]>([]);

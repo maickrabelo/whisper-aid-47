@@ -61,11 +61,12 @@ Deno.serve(async (req) => {
     const actionLink = linkData.properties.action_link;
     const logoUrl = "https://soia.app.br/lovable-uploads/Logo_SOIA.png";
 
-    await resend.emails.send({
-      from: "SOIA <noreply@soia.app.br>",
-      to: [normalizedEmail],
-      subject: "Recuperação de senha - SOIA",
-      html: `
+    // Try preferred sender first; fall back to Resend's default onboarding sender
+    // if the domain isn't verified (which silently drops the email otherwise).
+    const preferredFrom = "SOIA <noreply@soia.app.br>";
+    const fallbackFrom = "SOIA <onboarding@resend.dev>";
+
+    const htmlBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
           <div style="text-align: center; margin-bottom: 30px;">
             <img src="${logoUrl}" alt="SOIA" style="max-width: 180px; height: auto; margin-bottom: 20px;" />
@@ -73,11 +74,9 @@ Deno.serve(async (req) => {
           </div>
 
           <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <p style="color: #333; font-size: 15px; line-height: 1.6; margin: 0 0 12px;">Olá!</p>
             <p style="color: #333; font-size: 15px; line-height: 1.6; margin: 0 0 12px;">
-              Olá!
-            </p>
-            <p style="color: #333; font-size: 15px; line-height: 1.6; margin: 0 0 12px;">
-              Recebemos uma solicitação para redefinir a senha da sua conta SOIA.
+              Recebemos uma solicitação para redefinir a senha da sua conta.
             </p>
             <p style="color: #333; font-size: 15px; line-height: 1.6; margin: 0;">
               Clique no botão abaixo para criar uma nova senha. Este link é válido por <strong>1 hora</strong>.
@@ -108,10 +107,38 @@ Deno.serve(async (req) => {
             SOIA — Sistema de Saúde, Segurança e Compliance
           </p>
         </div>
-      `,
-    });
+      `;
 
-    log("Reset email sent", { email: normalizedEmail });
+    const trySend = async (from: string) => {
+      const result = await resend.emails.send({
+        from,
+        to: [normalizedEmail],
+        subject: "Recuperação de senha - SOIA",
+        html: htmlBody,
+      });
+      return result as { data?: { id?: string } | null; error?: { name?: string; message?: string; statusCode?: number } | null };
+    };
+
+    let sendResult = await trySend(preferredFrom);
+    if (sendResult.error) {
+      log("Resend primary send FAILED", { from: preferredFrom, error: sendResult.error });
+      // Retry with fallback sender if domain/from problem
+      const errMsg = (sendResult.error.message || "").toLowerCase();
+      const shouldFallback =
+        errMsg.includes("domain") || errMsg.includes("verify") || errMsg.includes("from") ||
+        sendResult.error.statusCode === 403 || sendResult.error.statusCode === 400;
+      if (shouldFallback) {
+        sendResult = await trySend(fallbackFrom);
+        if (sendResult.error) {
+          log("Resend fallback send FAILED", { from: fallbackFrom, error: sendResult.error });
+        } else {
+          log("Reset email sent via fallback sender", { email: normalizedEmail, id: sendResult.data?.id });
+        }
+      }
+    } else {
+      log("Reset email sent", { email: normalizedEmail, id: sendResult.data?.id });
+    }
+
 
     return new Response(
       JSON.stringify({ success: true, message: "Se o email existir, enviaremos as instruções." }),

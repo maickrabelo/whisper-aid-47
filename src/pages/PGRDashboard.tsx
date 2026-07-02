@@ -172,12 +172,13 @@ const PGRDashboard = () => {
           </Card>
         ) : (
           <Tabs defaultValue="dashboard" className="space-y-4">
-            <TabsList className="grid grid-cols-5 max-w-3xl">
+            <TabsList className="grid grid-cols-6 max-w-4xl">
               <TabsTrigger value="dashboard" className="gap-1"><LayoutDashboard className="h-4 w-4" /> Dashboard</TabsTrigger>
               <TabsTrigger value="overview" className="gap-1"><FileText className="h-4 w-4" /> Visão Geral</TabsTrigger>
               <TabsTrigger value="ghe" className="gap-1"><Users className="h-4 w-4" /> {term.gheLabel}s</TabsTrigger>
               <TabsTrigger value="risks" className="gap-1"><FlaskConical className="h-4 w-4" /> Inventário</TabsTrigger>
               <TabsTrigger value="actions" className="gap-1"><ClipboardList className="h-4 w-4" /> Plano de Ação</TabsTrigger>
+              <TabsTrigger value="aep" className="gap-1"><ClipboardList className="h-4 w-4" /> AEP</TabsTrigger>
             </TabsList>
             <TabsContent value="dashboard">
               <PGRMonitoringDashboard pgr={pgr} />
@@ -193,6 +194,20 @@ const PGRDashboard = () => {
             </TabsContent>
             <TabsContent value="actions">
               <ActionPlanEditor pgrDocumentId={pgr.id} />
+            </TabsContent>
+            <TabsContent value="aep">
+              <Card>
+                <CardContent className="py-8 text-center space-y-3">
+                  <ClipboardList className="h-12 w-12 text-primary mx-auto" />
+                  <h3 className="text-lg font-semibold">AEP — Avaliação Ergonômica Preliminar (NR-17)</h3>
+                  <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+                    A AEP é obrigatória para TODAS as empresas (item 17.3.1). Cobre fatores ergonômicos e psicossociais e alimenta o inventário de riscos do PGR, mantendo rastreabilidade completa.
+                  </p>
+                  <Button onClick={() => navigate(`/aep/${pgr.company_id}`)} className="gap-2">
+                    <ExternalLink className="h-4 w-4" /> Abrir módulo AEP
+                  </Button>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         )}

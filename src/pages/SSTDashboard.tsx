@@ -653,6 +653,18 @@ const SSTDashboard = () => {
                           <Button
                             variant="ghost"
                             size="sm"
+                            className="h-8 w-8 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                            title="AEP — Avaliação Ergonômica Preliminar (NR-17)"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/aep/${company.id}`);
+                            }}
+                          >
+                            <ClipboardList className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="h-8 w-8 p-0"
                             title="Ferramentas disponíveis"
                             onClick={(e) => {

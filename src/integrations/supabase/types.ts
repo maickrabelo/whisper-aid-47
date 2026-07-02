@@ -127,6 +127,342 @@ export type Database = {
           },
         ]
       }
+      aep_avaliacoes: {
+        Row: {
+          anonymity_ensured: boolean
+          assessment_date: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          funcao_nome: string | null
+          ghe_id: string | null
+          id: string
+          instrument_name: string | null
+          methodologies: string[]
+          methodology_details: string | null
+          next_review_date: string | null
+          parent_version_id: string | null
+          pgr_document_id: string | null
+          responsible_name: string | null
+          responsible_registration: string | null
+          responsible_role: string | null
+          setor_nome: string | null
+          signature_hash: string | null
+          signed_at: string | null
+          situacao_trabalho: string
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          anonymity_ensured?: boolean
+          assessment_date?: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          funcao_nome?: string | null
+          ghe_id?: string | null
+          id?: string
+          instrument_name?: string | null
+          methodologies?: string[]
+          methodology_details?: string | null
+          next_review_date?: string | null
+          parent_version_id?: string | null
+          pgr_document_id?: string | null
+          responsible_name?: string | null
+          responsible_registration?: string | null
+          responsible_role?: string | null
+          setor_nome?: string | null
+          signature_hash?: string | null
+          signed_at?: string | null
+          situacao_trabalho: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          anonymity_ensured?: boolean
+          assessment_date?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          funcao_nome?: string | null
+          ghe_id?: string | null
+          id?: string
+          instrument_name?: string | null
+          methodologies?: string[]
+          methodology_details?: string | null
+          next_review_date?: string | null
+          parent_version_id?: string | null
+          pgr_document_id?: string | null
+          responsible_name?: string | null
+          responsible_registration?: string | null
+          responsible_role?: string | null
+          setor_nome?: string | null
+          signature_hash?: string | null
+          signed_at?: string | null
+          situacao_trabalho?: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aep_avaliacoes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aep_avaliacoes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aep_avaliacoes_ghe_id_fkey"
+            columns: ["ghe_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_ghe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aep_avaliacoes_parent_version_id_fkey"
+            columns: ["parent_version_id"]
+            isOneToOne: false
+            referencedRelation: "aep_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aep_avaliacoes_pgr_document_id_fkey"
+            columns: ["pgr_document_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aep_evidencias: {
+        Row: {
+          aep_id: string
+          descricao: string | null
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          aep_id: string
+          descricao?: string | null
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          aep_id?: string
+          descricao?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aep_evidencias_aep_id_fkey"
+            columns: ["aep_id"]
+            isOneToOne: false
+            referencedRelation: "aep_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aep_fatores_avaliados: {
+        Row: {
+          aep_id: string
+          categoria: string
+          created_at: string
+          evidencia_texto: string | null
+          fator_codigo: string | null
+          fator_nome: string
+          fonte_causa: string | null
+          grupos_expostos: string | null
+          id: string
+          matrix_size: number
+          observacoes: string | null
+          probability: number
+          severity: number
+          updated_at: string
+        }
+        Insert: {
+          aep_id: string
+          categoria: string
+          created_at?: string
+          evidencia_texto?: string | null
+          fator_codigo?: string | null
+          fator_nome: string
+          fonte_causa?: string | null
+          grupos_expostos?: string | null
+          id?: string
+          matrix_size?: number
+          observacoes?: string | null
+          probability?: number
+          severity?: number
+          updated_at?: string
+        }
+        Update: {
+          aep_id?: string
+          categoria?: string
+          created_at?: string
+          evidencia_texto?: string | null
+          fator_codigo?: string | null
+          fator_nome?: string
+          fonte_causa?: string | null
+          grupos_expostos?: string | null
+          id?: string
+          matrix_size?: number
+          observacoes?: string | null
+          probability?: number
+          severity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aep_fatores_avaliados_aep_id_fkey"
+            columns: ["aep_id"]
+            isOneToOne: false
+            referencedRelation: "aep_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aep_fatores_catalogo: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          codigo: string
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          probabilidade_tipica: number | null
+          severidade_tipica: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          categoria: string
+          codigo: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          probabilidade_tipica?: number | null
+          severidade_tipica?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          codigo?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          probabilidade_tipica?: number | null
+          severidade_tipica?: number | null
+        }
+        Relationships: []
+      }
+      aep_participantes: {
+        Row: {
+          aep_id: string
+          anonimizado: boolean
+          created_at: string
+          data_participacao: string | null
+          funcao: string | null
+          id: string
+          nome: string | null
+          tipo_participacao: string | null
+        }
+        Insert: {
+          aep_id: string
+          anonimizado?: boolean
+          created_at?: string
+          data_participacao?: string | null
+          funcao?: string | null
+          id?: string
+          nome?: string | null
+          tipo_participacao?: string | null
+        }
+        Update: {
+          aep_id?: string
+          anonimizado?: boolean
+          created_at?: string
+          data_participacao?: string | null
+          funcao?: string | null
+          id?: string
+          nome?: string | null
+          tipo_participacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aep_participantes_aep_id_fkey"
+            columns: ["aep_id"]
+            isOneToOne: false
+            referencedRelation: "aep_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aep_pgr_vinculo: {
+        Row: {
+          aep_fator_id: string
+          id: string
+          linked_at: string
+          linked_by: string | null
+          pgr_risk_id: string
+        }
+        Insert: {
+          aep_fator_id: string
+          id?: string
+          linked_at?: string
+          linked_by?: string | null
+          pgr_risk_id: string
+        }
+        Update: {
+          aep_fator_id?: string
+          id?: string
+          linked_at?: string
+          linked_by?: string | null
+          pgr_risk_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aep_pgr_vinculo_aep_fator_id_fkey"
+            columns: ["aep_fator_id"]
+            isOneToOne: false
+            referencedRelation: "aep_fatores_avaliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aep_pgr_vinculo_pgr_risk_id_fkey"
+            columns: ["pgr_risk_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_risks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_leads: {
         Row: {
           affiliate_id: string
@@ -3737,6 +4073,10 @@ export type Database = {
       }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }
+      user_has_aep_access: {
+        Args: { _aep_id: string; _user_id: string }
+        Returns: boolean
+      }
       user_has_pgr_shortcut_plan: {
         Args: { _user_id: string }
         Returns: boolean

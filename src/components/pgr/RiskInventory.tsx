@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
+import { AEPBadge } from "@/components/aep/AEPBadge";
 
 type MatrixSize = 3 | 4 | 5;
 
@@ -30,6 +31,7 @@ interface Risk {
   existing_epi: string | null;
   epi_ca: string | null;
   source_module: string | null;
+  source_module_id: string | null;
 }
 interface GHE { id: string; name: string; }
 interface Agent { code: string; category: string; name: string; }
@@ -103,6 +105,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
   const [ghes, setGhes] = useState<GHE[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [pgtrAgents, setPgtrAgents] = useState<PgtrAgent[]>([]);
+  const [aepFatorToAep, setAepFatorToAep] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Risk | null>(null);
@@ -121,10 +124,22 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       promises.push(supabase.from('pgtr_agents_catalog' as any).select('*').order('category, agent_name'));
     }
     const results = await Promise.all(promises);
-    setRisks((results[0].data as any) || []);
+    const riskList = (results[0].data as any[]) || [];
+    setRisks(riskList);
     setGhes((results[1].data as any) || []);
     setAgents((results[2].data as any) || []);
     if (term.isRural) setPgtrAgents((results[3].data as any) || []);
+
+    // Load AEP fator → aep_id mapping for badge links
+    const aepFatorIds = riskList.filter(r => r.source_module === 'aep' && r.source_module_id).map(r => r.source_module_id);
+    if (aepFatorIds.length) {
+      const { data: fats } = await supabase.from('aep_fatores_avaliados' as any).select('id, aep_id').in('id', aepFatorIds);
+      const map: Record<string, string> = {};
+      (fats as any[] || []).forEach(f => { map[f.id] = f.aep_id; });
+      setAepFatorToAep(map);
+    } else {
+      setAepFatorToAep({});
+    }
     setLoading(false);
   };
 
@@ -323,7 +338,12 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                   <TableRow key={r.id}>
                     <TableCell><Badge variant="outline">{CATEGORY_LABELS[r.category]}</Badge></TableCell>
                     <TableCell className="font-medium">
-                      {r.agent_name}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>{r.agent_name}</span>
+                        {r.source_module === 'aep' && r.source_module_id && (
+                          <AEPBadge aepId={aepFatorToAep[r.source_module_id]} companyId={companyId} />
+                        )}
+                      </div>
                       {r.esocial_agent_code && <span className="block text-xs text-muted-foreground">e-Social: {r.esocial_agent_code}</span>}
                     </TableCell>
                     <TableCell className="text-sm">{ghes.find(g => g.id === r.ghe_id)?.name || '-'}</TableCell>

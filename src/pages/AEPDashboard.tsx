@@ -112,6 +112,60 @@ const AEPDashboard = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
+  const handleDownloadConsolidated = async () => {
+    if (!companyId) return;
+    const elegiveis = aeps.filter(a => a.status === 'completed' || a.status === 'revised');
+    if (elegiveis.length === 0) {
+      toast.error('Nenhuma AEP finalizada para incluir no consolidado');
+      return;
+    }
+    setGeneratingPdf(true);
+    try {
+      // Buscar detalhes da empresa (com cnpj + logo)
+      const { data: comp } = await supabase.from('companies').select('name, cnpj, logo_url').eq('id', companyId).maybeSingle();
+      // Buscar SST logo
+      let sstLogoUrl: string | null = null;
+      const { data: assign } = await supabase.from('company_sst_assignments').select('sst_manager_id').eq('company_id', companyId).limit(1).maybeSingle();
+      if ((assign as any)?.sst_manager_id) {
+        const { data: sst } = await supabase.from('sst_managers').select('logo_url').eq('id', (assign as any).sst_manager_id).maybeSingle();
+        sstLogoUrl = (sst as any)?.logo_url || null;
+      }
+
+      const ids = elegiveis.map(a => a.id);
+      const [{ data: allAeps }, { data: fatores }, { data: participantes }, { data: evidencias }] = await Promise.all([
+        supabase.from('aep_avaliacoes' as any).select('*').in('id', ids),
+        supabase.from('aep_fatores_avaliados' as any).select('*').in('aep_id', ids),
+        supabase.from('aep_participantes' as any).select('*').in('aep_id', ids),
+        supabase.from('aep_evidencias' as any).select('*').in('aep_id', ids),
+      ]);
+
+      const bundles = ((allAeps as any[]) || []).map(a => ({
+        aep: a,
+        fatores: ((fatores as any[]) || []).filter(f => f.aep_id === a.id),
+        participantes: ((participantes as any[]) || []).filter(p => p.aep_id === a.id),
+        evidencias: ((evidencias as any[]) || []).filter(e => e.aep_id === a.id),
+      }));
+      // Ordena por setor / data
+      bundles.sort((x, y) => (x.aep.setor_nome || '').localeCompare(y.aep.setor_nome || '') || (x.aep.assessment_date || '').localeCompare(y.aep.assessment_date || ''));
+
+      await generateAEPConsolidatedReportPDF({
+        company: {
+          name: (comp as any)?.name || companyName,
+          cnpj: (comp as any)?.cnpj || '',
+          logo_url: (comp as any)?.logo_url || null,
+        },
+        sstLogoUrl,
+        bundles,
+      });
+      toast.success('Documento AEP consolidado gerado com sucesso');
+    } catch (e: any) {
+      toast.error('Erro ao gerar consolidado: ' + e.message);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
+
   if (authLoading || loading || aepLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }

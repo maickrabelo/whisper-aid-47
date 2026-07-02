@@ -3,7 +3,7 @@ import type jsPDF from 'jspdf';
 function withCacheBuster(url: string): string {
   try {
     const sep = url.includes('?') ? '&' : '?';
-    return `${url}${sep}cb=${Date.now()}`;
+    return `${url}${sep}cb=${Date.now()}-${Math.random().toString(36).slice(2)}`;
   } catch {
     return url;
   }
@@ -11,13 +11,30 @@ function withCacheBuster(url: string): string {
 
 async function loadImage(url: string): Promise<HTMLImageElement | null> {
   try {
+    const finalUrl = withCacheBuster(url);
+    const response = await fetch(finalUrl, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
+    });
+    if (!response.ok) throw new Error(`Logo HTTP ${response.status}`);
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    const finalUrl = withCacheBuster(url);
     await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = (e) => reject(e);
-      img.src = finalUrl;
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve();
+      };
+      img.onerror = (e) => {
+        URL.revokeObjectURL(objectUrl);
+        reject(e);
+      };
+      img.src = objectUrl;
     });
     return img;
   } catch (e) {

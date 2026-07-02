@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck } from "lucide-react";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
 import { usePGRModuleAccess } from "@/hooks/usePGRModuleAccess";
+import { useAEPBetaAccess } from "@/hooks/useAEPBetaAccess";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';

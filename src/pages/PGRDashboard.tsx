@@ -197,6 +197,7 @@ const PGRDashboard = () => {
             <TabsContent value="actions">
               <ActionPlanEditor pgrDocumentId={pgr.id} />
             </TabsContent>
+            {aepAllowed && (
             <TabsContent value="aep">
               <Card>
                 <CardContent className="py-8 text-center space-y-3">
@@ -211,6 +212,7 @@ const PGRDashboard = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+            )}
           </Tabs>
         )}
       </div>

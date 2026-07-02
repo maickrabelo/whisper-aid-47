@@ -31,6 +31,7 @@ interface Risk {
   existing_epi: string | null;
   epi_ca: string | null;
   source_module: string | null;
+  source_module_id: string | null;
 }
 interface GHE { id: string; name: string; }
 interface Agent { code: string; category: string; name: string; }

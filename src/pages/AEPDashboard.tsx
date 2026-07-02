@@ -203,9 +203,15 @@ const AEPDashboard = () => {
               <p className="text-xs text-muted-foreground">Avaliação Ergonômica Preliminar — item 17.3.1</p>
             </div>
           </div>
-          <Button onClick={() => setWizardOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" /> Nova AEP
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleDownloadConsolidated} disabled={generatingPdf} className="gap-2">
+              {generatingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+              AEP Consolidado (PDF)
+            </Button>
+            <Button onClick={() => setWizardOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" /> Nova AEP
+            </Button>
+          </div>
         </div>
       </div>
 

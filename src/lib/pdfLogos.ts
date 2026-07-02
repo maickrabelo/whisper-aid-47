@@ -1,13 +1,23 @@
 import type jsPDF from 'jspdf';
 
+function withCacheBuster(url: string): string {
+  try {
+    const sep = url.includes('?') ? '&' : '?';
+    return `${url}${sep}cb=${Date.now()}`;
+  } catch {
+    return url;
+  }
+}
+
 async function loadImage(url: string): Promise<HTMLImageElement | null> {
   try {
     const img = new Image();
     img.crossOrigin = 'anonymous';
+    const finalUrl = withCacheBuster(url);
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve();
       img.onerror = (e) => reject(e);
-      img.src = url;
+      img.src = finalUrl;
     });
     return img;
   } catch (e) {

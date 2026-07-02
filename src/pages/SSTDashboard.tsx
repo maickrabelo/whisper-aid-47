@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck } from "lucide-react";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
 import { usePGRModuleAccess } from "@/hooks/usePGRModuleAccess";
+import { useAEPBetaAccess } from "@/hooks/useAEPBetaAccess";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -166,6 +167,7 @@ const SSTDashboard = () => {
   const { toast } = useToast();
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
+  const { allowed: aepAllowed } = useAEPBetaAccess();
   const { isSmartOnly } = useSmartOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
   const { isSmsPlan } = useSmsPlan();
@@ -650,6 +652,7 @@ const SSTDashboard = () => {
                               <FileText className="h-4 w-4" />
                             </Button>
                           )}
+                          {aepAllowed && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -662,6 +665,7 @@ const SSTDashboard = () => {
                           >
                             <ClipboardList className="h-4 w-4" />
                           </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"

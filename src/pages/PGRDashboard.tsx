@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { usePGRModuleAccess } from "@/hooks/usePGRModuleAccess";
+import { useAEPBetaAccess } from "@/hooks/useAEPBetaAccess";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,6 +53,7 @@ const PGRDashboard = () => {
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading } = useRealAuth();
   const { hasAccess, isLoading: accessLoading } = usePGRModuleAccess();
+  const { allowed: aepAllowed } = useAEPBetaAccess();
 
   const [pgr, setPgr] = useState<PGRDocument | null>(null);
   const [companyName, setCompanyName] = useState<string>("");
@@ -172,13 +174,13 @@ const PGRDashboard = () => {
           </Card>
         ) : (
           <Tabs defaultValue="dashboard" className="space-y-4">
-            <TabsList className="grid grid-cols-6 max-w-4xl">
+            <TabsList className={`grid ${aepAllowed ? 'grid-cols-6' : 'grid-cols-5'} max-w-4xl`}>
               <TabsTrigger value="dashboard" className="gap-1"><LayoutDashboard className="h-4 w-4" /> Dashboard</TabsTrigger>
               <TabsTrigger value="overview" className="gap-1"><FileText className="h-4 w-4" /> Visão Geral</TabsTrigger>
               <TabsTrigger value="ghe" className="gap-1"><Users className="h-4 w-4" /> {term.gheLabel}s</TabsTrigger>
               <TabsTrigger value="risks" className="gap-1"><FlaskConical className="h-4 w-4" /> Inventário</TabsTrigger>
               <TabsTrigger value="actions" className="gap-1"><ClipboardList className="h-4 w-4" /> Plano de Ação</TabsTrigger>
-              <TabsTrigger value="aep" className="gap-1"><ClipboardList className="h-4 w-4" /> AEP</TabsTrigger>
+              {aepAllowed && <TabsTrigger value="aep" className="gap-1"><ClipboardList className="h-4 w-4" /> AEP</TabsTrigger>}
             </TabsList>
             <TabsContent value="dashboard">
               <PGRMonitoringDashboard pgr={pgr} />
@@ -195,6 +197,7 @@ const PGRDashboard = () => {
             <TabsContent value="actions">
               <ActionPlanEditor pgrDocumentId={pgr.id} />
             </TabsContent>
+            {aepAllowed && (
             <TabsContent value="aep">
               <Card>
                 <CardContent className="py-8 text-center space-y-3">
@@ -209,6 +212,7 @@ const PGRDashboard = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+            )}
           </Tabs>
         )}
       </div>

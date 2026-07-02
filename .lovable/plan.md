@@ -1,115 +1,112 @@
 ## Objetivo
-Adicionar o módulo AEP (Avaliação Ergonômica Preliminar — NR-17 item 17.3.1) como submódulo independente por empresa, com atalho dentro do PGR. AEP cobre fatores ergonômicos (físico/biomecânico, organizacional, cognitivo) e psicossociais, alimenta o inventário de riscos do PGR mantendo rastreabilidade completa e suporta versionamento, anexos de evidências, alertas de revisão e PDF assinável.
+
+Duas capacidades novas no módulo AEP:
+
+1. **Relatório AEP Consolidado da Empresa** — um único PDF completo que reúne todas as AEPs de uma empresa (independente do PGR), servindo como o documento oficial de Avaliação Ergonômica Preliminar entregável para fiscalização/auditoria.
+2. **Importação de dados de HSE-IT e COPSOQ** — durante a criação/edição da AEP, permitir puxar automaticamente resultados dos módulos psicossociais existentes da mesma empresa como fatores AEP, mantendo rastreabilidade da origem.
 
 ## Como o usuário verá
 
-- Nova rota `/aep/:companyId` acessível pelo card da empresa no SST Dashboard e por uma nova aba "AEP" dentro do `PGRDashboard`.
-- Dentro da empresa, o usuário vê a **lista de AEPs** (filtros por setor, status, responsável, data + indicadores de "convertidas em riscos" e "vencidas para revisão").
-- Botão **"Nova AEP"** abre um **wizard de 5 passos**:
-  1. Identificação (setor, função, GHE quando houver PGR, descrição da situação de trabalho)
-  2. Metodologia (multi-select: observação / entrevista / grupo focal / questionário validado / outro; nome do instrumento; checkbox de anonimato)
-  3. Levantamento de fatores (formulário dinâmico com biblioteca pré-carregada de fatores NR-17 e psicossociais, agrupados por categoria; permite fator customizado; cada fator recebe severidade/probabilidade na mesma escala da matriz do PGR)
-  4. Evidências e participação dos trabalhadores (upload de fotos, atas, documentos; registro de quem foi ouvido/consultado; campo de anonimato)
-  5. Revisão e assinatura (dados do responsável técnico: nome, cargo, registro CREA/CRP/outro; data; confirmação)
-- **Tela de detalhe da AEP** com abas: dados gerais, fatores levantados, evidências, histórico de versões, riscos vinculados no PGR e botão **"Exportar PDF assinável"**.
-- **Integração com PGR** (tela de "Envio ao inventário"): lista os fatores da AEP concluída com preview de como cada um ficará em `pgr_risks`, sugestão de vínculo com riscos existentes equivalentes (busca por setor + fator similar) e botão de envio individual ou em lote.
-- **Badge "Origem: AEP"** em cada linha do inventário de riscos do PGR (`RiskInventory.tsx`), com link para a AEP de origem — reusa `pgr_risks.source_module` que já existe.
-- **Versionamento**: botão "Nova versão" no detalhe cria um clone com incremento de `version`, mantendo o histórico. Todas as versões continuam consultáveis; apenas a mais recente aparece por padrão na listagem.
-- **Alertas de revisão**: badge amarela quando `next_review_date` está a ≤30 dias e vermelha quando vencida; card no dashboard resume AEPs vencidas.
-- **Mini dashboard** no topo da lista: AEPs por status, % setores avaliados (usa `pgr_ghe` como base quando existir), fatores mais recorrentes, AEPs vencidas.
+### 1. Relatório AEP Consolidado
+
+- Na página `/aep/:companyId` (AEPDashboard), ao lado do botão "Nova AEP", adicionar um botão **"Baixar AEP Consolidado (PDF)"**.
+- O PDF gerado inclui:
+  - Capa com logo da gestora SST + logo da empresa + CNPJ + data de emissão + total de AEPs no documento.
+  - Sumário executivo: quantidade de setores avaliados, total de fatores por categoria (físico/organizacional/cognitivo/psicossocial), fatores em nível intolerável/substancial.
+  - Índice das AEPs incluídas (setor · função · data · versão · status).
+  - Para cada AEP concluída (status `completed` ou `revised`): as mesmas seções do PDF individual atual (identificação, metodologia, fatores, participantes, evidências, assinatura do responsável técnico), separadas por quebra de página e numeradas ("AEP 1 de N", "AEP 2 de N", ...).
+  - Anexo final: consolidação de todos os fatores em uma tabela única (setor · categoria · fator · severidade · probabilidade · nível), útil para leitura rápida por fiscal.
+  - Rodapé em todas as páginas: "Documento consolidado AEP — {empresa} — página X/Y".
+- AEPs em `draft` ou `in_progress` **não** entram no consolidado (avisar em toast se não houver nenhuma finalizada).
+- Filtro opcional antes de gerar: selecionar quais AEPs incluir (por padrão todas as finalizadas), com um `Dialog` de checkboxes.
+
+### 2. Importar HSE-IT / COPSOQ dentro do Wizard AEP
+
+- No **Passo 3 (Fatores)** do `AEPWizard`, adicionar acima do formulário de fator dois botões:
+  - **"Importar do HSE-IT"**
+  - **"Importar do COPSOQ II"**
+- Cada botão abre um `Dialog` que:
+  1. Lista as avaliações HSE-IT/COPSOQ **da mesma empresa** com status finalizado (e opcionalmente filtrando por setor/departamento que bate com o `setor_nome` da AEP em criação).
+  2. Ao selecionar uma avaliação, mostra as dimensões/fatores calculados que ficaram em nível de **risco alto ou muito alto** (HSE-IT usa os thresholds já implementados; COPSOQ usa a normalização 0-100 com faixas do módulo).
+  3. Usuário marca quais dimensões deseja trazer como fatores AEP e clica "Importar N fatores".
+- Cada dimensão importada vira uma linha de fator AEP com:
+  - `categoria` = `psicossocial` (HSE-IT e COPSOQ são psicossociais)
+  - `fator_nome` = nome da dimensão (ex.: "Demandas — HSE-IT", "Exigências quantitativas — COPSOQ II")
+  - `fonte_causa` = "Importado de avaliação {tipo} de {data} — {n} respondentes"
+  - `evidencia_texto` = escore/percentil calculado + faixa de risco
+  - `severity` e `probability` pré-preenchidos a partir da faixa de risco da dimensão (mapa: baixo→1/1, moderado→2/2, alto→3/4, muito alto→5/4)
+  - Novos campos opcionais: `source_assessment_type` (`hseit` | `copsoq`), `source_assessment_id` — para rastreabilidade.
+- O usuário ainda pode editar os campos antes de salvar a AEP.
+- Badge visual no card do fator quando foi importado ("Importado do HSE-IT" / "Importado do COPSOQ").
 
 ## Modelo de dados
 
-Tabelas novas em `public` (com GRANTs + RLS por empresa/SST, seguindo o mesmo padrão de `pgr_documents`):
+**Alteração em `aep_fatores_avaliados`** — adicionar duas colunas opcionais para rastrear origem:
 
-**`aep_avaliacoes`**
-- `id`, `company_id` (FK companies), `pgr_document_id` (FK pgr_documents, nullable — AEP pode existir sem PGR para ME/EPP)
-- `ghe_id` (FK pgr_ghe, nullable), `setor_nome` text, `funcao_nome` text
-- `situacao_trabalho` text (descrição da atividade avaliada)
-- `assessment_date` date, `next_review_date` date
-- `responsible_name`, `responsible_role`, `responsible_registration` (CREA/CRP/etc.)
-- `methodologies` text[] (multi-select), `methodology_details` text
-- `instrument_name` text (quando aplicável), `anonymity_ensured` boolean
-- `status` text check in ('draft','in_progress','completed','in_review','revised')
-- `version` int default 1, `parent_version_id` uuid (self-FK — encadeia versões)
-- `signed_at` timestamptz, `signature_hash` text (hash simples nome+data+conteúdo, sem certificado ICP)
-- `created_by`, `created_at`, `updated_at`
+```sql
+ALTER TABLE public.aep_fatores_avaliados
+  ADD COLUMN source_assessment_type text
+    CHECK (source_assessment_type IN ('hseit','copsoq') OR source_assessment_type IS NULL),
+  ADD COLUMN source_assessment_id uuid;
+```
 
-**`aep_fatores_avaliados`** (tabela filha de itens levantados)
-- `id`, `aep_id` FK cascade
-- `categoria` text check in ('ergonomico_fisico','ergonomico_organizacional','ergonomico_cognitivo','psicossocial')
-- `fator_codigo` text (referência à biblioteca; null quando customizado), `fator_nome` text
-- `fonte_causa` text, `grupos_expostos` text
-- `evidencia_texto` text
-- `severity` smallint (1–5), `probability` smallint (1–5), `matrix_size` smallint default 5
-- `observacoes` text
-- `created_at`, `updated_at`
+Sem FK dura (as tabelas de origem podem ser deletadas independente); a rastreabilidade fica no par tipo+id. Nenhum grant/RLS novo — herda das políticas atuais da tabela.
 
-**`aep_pgr_vinculo`** (rastreabilidade AEP → risco do PGR)
-- `id`, `aep_fator_id` FK, `pgr_risk_id` FK, `linked_at` timestamptz, `linked_by` uuid
-- unique(aep_fator_id, pgr_risk_id)
-
-**`aep_evidencias`** (anexos)
-- `id`, `aep_id` FK cascade, `file_path` text (bucket `aep-evidencias`), `file_name`, `mime_type`, `size_bytes`, `descricao`, `uploaded_by`, `uploaded_at`
-
-**`aep_participantes`** (registro de quem foi ouvido)
-- `id`, `aep_id` FK cascade, `nome`, `funcao`, `tipo_participacao` (entrevista/grupo focal/questionário), `data_participacao`, `anonimizado` boolean
-
-**`aep_fatores_catalogo`** (biblioteca pré-carregada, leitura pública para authenticated)
-- `id`, `codigo` unique, `categoria`, `nome`, `descricao`, `severidade_tipica`, `probabilidade_tipica`, `ativo` boolean
-- **Seed inicial (~40 itens)** cobrindo NR-17 e Guia MTE Psicossocial:
-  - Ergonômico físico: posto de trabalho inadequado, mobiliário sem regulagem, iluminação inadequada, ruído crônico, temperatura desconfortável, levantamento manual de cargas, movimentos repetitivos, postura estática prolongada, postura forçada.
-  - Ergonômico organizacional: jornada excessiva, ritmo/pressão de tempo, pausas insuficientes, metas inatingíveis, trabalho noturno/turnos, sobrecarga quantitativa.
-  - Ergonômico cognitivo: sobrecarga cognitiva, monotonia, atenção sustentada excessiva, tomada de decisão sob pressão.
-  - Psicossocial: baixa autonomia, ambiguidade de papel, conflito de papel, assédio moral, assédio sexual, discriminação, violência de terceiros, relações socioprofissionais degradadas, falta de suporte da chefia, falta de reconhecimento, insegurança no emprego, conflito trabalho-família, exigência emocional, exposição a sofrimento humano.
-
-**Alterações em `pgr_risks`**: nenhuma. Já existe `source_module` (usar `'aep'`) e `source_module_id` (usar `aep_fator_id`). Isso garante o badge "Origem: AEP" e o link reverso.
-
-**Bucket `aep-evidencias`** (privado) + policies alinhadas às RLS das tabelas.
-
-**RLS**: mesmo padrão das tabelas do PGR — SST gerencia via `company_sst_assignments` + `user_in_sst_manager`, empresa vê via `user_in_company`, admin gerencia tudo. Diferente do PGR, **não exige `has_pgr_module`** — AEP é disponível para toda empresa (obrigação NR-17 mesmo sem PGR).
-
-**Trigger** em `aep_fatores_avaliados` para clamp severity/probability como já é feito em `pgr_risks`.
-
-## Regras de negócio
-
-- Só é possível **concluir** uma AEP (status → `completed`) se houver ao menos 1 fator, 1 participante e o responsável técnico preenchido.
-- Após conclusão, a tela "Enviar ao inventário" aparece e permite:
-  - **Gerar novo risco**: cria linha em `pgr_risks` com `category` derivada (ergonomico_* → `ergonomico`; psicossocial → `psicossocial`), `agent_name = fator_nome`, `exposure_description = fonte_causa`, severidade/probabilidade copiadas do fator (editáveis no preview), `ghe_id` copiado, `source_module='aep'`, `source_module_id=aep_fator_id`. Depois grava `aep_pgr_vinculo`.
-  - **Vincular a risco existente**: busca em `pgr_risks` do mesmo `pgr_document_id` por `ghe_id` + `agent_name ILIKE` similar; se encontrar, sugere vínculo (só grava `aep_pgr_vinculo` sem duplicar).
-- Envio ao inventário exige que a AEP tenha `pgr_document_id`; se não tiver, a UI orienta a criar/vincular um PGR antes.
-- **Versionamento**: "Nova versão" copia AEP + fatores + participantes (sem evidências, que ficam por versão), incrementa `version`, aponta `parent_version_id` para a atual e coloca status `draft`. Vínculos com PGR ficam presos à versão de origem.
-- **Alerta de revisão**: campo `next_review_date` opcional; front calcula badges. Sem trigger/cron nesta v1.
-- **PDF**: reusa `pdfLogos.ts` (logo gestora + logo empresa) e o mesmo estilo visual do `PGRReportPDF.ts`. Inclui: identificação, metodologia, tabela de fatores com severidade/probabilidade/nível, lista de participantes, anexos listados, campo de assinatura do responsável técnico.
+Nenhuma outra tabela nova. O consolidado é gerado 100% no cliente.
 
 ## Frontend
 
 **Novos arquivos:**
-- `src/pages/AEPDashboard.tsx` — rota `/aep/:companyId`: header + lista + botão Nova AEP.
-- `src/pages/AEPDetail.tsx` — rota `/aep/:companyId/:aepId`: abas (Dados, Fatores, Evidências, Participantes, Versões, Riscos vinculados) + botão exportar PDF + botão "Enviar ao inventário".
-- `src/components/aep/AEPWizard.tsx` — wizard de 5 passos (usa `Dialog` fullscreen).
-- `src/components/aep/steps/StepIdentificacao.tsx`
-- `src/components/aep/steps/StepMetodologia.tsx`
-- `src/components/aep/steps/StepFatores.tsx` (autocomplete via `aep_fatores_catalogo`, badges de categoria, matriz mini para severidade/probabilidade)
-- `src/components/aep/steps/StepEvidencias.tsx` (upload + participantes)
-- `src/components/aep/steps/StepRevisao.tsx`
-- `src/components/aep/AEPList.tsx` — tabela filtrada + KPIs no topo.
-- `src/components/aep/AEPKPICards.tsx`
-- `src/components/aep/SendToInventoryDialog.tsx` — preview antes de gerar/ vincular.
-- `src/components/aep/AEPReportPDF.ts` — geração de PDF (mesmo padrão do `PGRReportPDF.ts`).
-- `src/components/aep/AEPBadge.tsx` — badge "Origem: AEP" reutilizável.
-- `src/hooks/useAEPAccess.ts` — libera acesso para role `sst` (assigned) / `company` / `admin`; não requer PGR module.
-- `src/hooks/useAEPFatoresCatalog.ts` — carrega e cacheia a biblioteca.
+- `src/components/aep/AEPConsolidatedReportPDF.ts` — geração do PDF consolidado. Reusa helpers de `AEPReportPDF.ts` (renderização de cabeçalho, lista de fatores, participantes, evidências) refatorados como funções puras `renderAEPSection(doc, y, aep, fatores, participantes, evidencias)` que retornam o novo `y`. Adiciona capa, sumário executivo e tabela final consolidada.
+- `src/components/aep/ImportAssessmentDialog.tsx` — dialog reutilizável com prop `type: 'hseit' | 'copsoq'`. Carrega avaliações da empresa, computa escores por dimensão (reusando lógica já existente em `HSEITResults.tsx` e `COPSOQResults.tsx`, extraída para libs — ver abaixo), oferece seleção e retorna os fatores importados via callback `onImport(fatores: PartialFator[])`.
+- `src/lib/hseitDimensionScoring.ts` — extrai da página `HSEITResults.tsx` a função que calcula os escores por dimensão + faixa de risco (baixo/moderado/alto/muito alto).
+- `src/lib/copsoqDimensionScoring.ts` — mesmo para COPSOQ (extraído de `COPSOQResults.tsx`).
+- `src/components/aep/ConsolidatedFilterDialog.tsx` — pequeno dialog opcional com checkboxes para o usuário escolher quais AEPs entram no consolidado antes de gerar o PDF.
 
 **Arquivos alterados:**
-- `src/App.tsx` — registra `/aep/:companyId` e `/aep/:companyId/:aepId`.
-- `src/pages/PGRDashboard.tsx` — adiciona aba "AEP" que renderiza `<AEPList companyId={...} pgrDocumentId={pgr.id} embedded />` com atalho para o dashboard completo.
-- `src/pages/SSTDashboard.tsx` — botão "AEP" no card da empresa (junto de PGR).
-- `src/components/pgr/RiskInventory.tsx` — quando `source_module = 'aep'`, mostra `<AEPBadge aepId={...} />` com link.
+- `src/pages/AEPDashboard.tsx`:
+  - Botão "Baixar AEP Consolidado" no header.
+  - Handler que abre o filtro, carrega em paralelo (Promise.all) os fatores/participantes/evidências de todas as AEPs elegíveis e chama `generateAEPConsolidatedReportPDF`.
+- `src/components/aep/AEPWizard.tsx` (StepFatores):
+  - Dois botões de importação no topo do passo de fatores.
+  - Estado local aceita a lista importada e mescla com fatores manuais.
+  - Ao salvar a AEP, persiste `source_assessment_type` e `source_assessment_id` em `aep_fatores_avaliados`.
+- `src/components/aep/AEPReportPDF.ts` — pequena refatoração para expor as funções de renderização de seção como exports nomeados, sem quebrar a chamada atual `generateAEPReportPDF`.
+- `src/integrations/supabase/types.ts` — adicionar as duas novas colunas em `aep_fatores_avaliados`.
+
+## Mapeamento faixa de risco → severity/probability
+
+Escala 1-5 (matriz padrão AEP):
+
+| Faixa da dimensão | severity | probability | Nível AEP resultante |
+| --- | --- | --- | --- |
+| Baixo               | 1 | 2 | tolerável |
+| Moderado            | 3 | 3 | moderado |
+| Alto                | 4 | 4 | substancial |
+| Muito alto / crítico| 5 | 5 | intolerável |
+
+Somente dimensões em **Alto** ou **Muito alto** aparecem por padrão marcadas no dialog (usuário pode desmarcar/marcar outras).
 
 ## Fora do escopo
-- Assinatura digital ICP-Brasil (usa hash simples + nome/data).
-- Cron/edge function de notificação por e-mail de AEPs vencidas (só badge visual).
-- Importação em massa de fatores por CSV.
-- Fluxo de aprovação multi-nível.
-- Integração com módulos Climate/HSE-IT/COPSOQ (podem virar fatores manualmente, mas sem auto-import nesta v1).
+
+- Auto-sync contínuo: se a HSE-IT/COPSOQ de origem for atualizada após a importação, o fator AEP **não** é reprocessado automaticamente (usuário precisa importar de novo). Só guardamos referência.
+- Importação de dados do Burnout ou Clima (fica para v2 se pedido).
+- Assinatura digital ICP-Brasil no consolidado (mantém hash simples como AEP individual).
+- Consolidado por período/data — nesta v1 é sempre "todas as AEPs finalizadas da empresa" (opcionalmente filtradas pelo dialog manual).
+
+## Resumo do fluxo
+
+```text
+Fluxo Consolidado:
+  AEPDashboard → [Baixar AEP Consolidado] → FilterDialog (opt-out por AEP)
+      → carrega fatores/participantes/evidências de N AEPs em paralelo
+      → generateAEPConsolidatedReportPDF → download PDF único
+
+Fluxo Importação:
+  AEPWizard passo 3 → [Importar HSE-IT | Importar COPSOQ]
+      → ImportAssessmentDialog lista avaliações finalizadas da empresa
+      → seleciona avaliação → mostra dimensões com faixa Alto/Muito alto
+      → marca dimensões → [Importar]
+      → fatores entram no estado do wizard já com severity/probability sugeridos
+      → salvar AEP grava source_assessment_type + source_assessment_id
+```

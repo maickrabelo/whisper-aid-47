@@ -154,7 +154,7 @@ export function SendToInventoryDialog({ open, onOpenChange, aepId, pgrDocumentId
     }
   };
 
-  if (!pgrDocumentId) {
+  if (noPgrFound) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>

@@ -106,10 +106,10 @@ export function SendToInventoryDialog({ open, onOpenChange, aepId, pgrDocumentId
       setRows(rowsData);
       setLoading(false);
     })();
-  }, [open, aepId, pgrDocumentId, gheId]);
+  }, [open, aepId, pgrDocumentId, companyId, gheId]);
 
   const submit = async () => {
-    if (!pgrDocumentId) return;
+    if (!resolvedPgrId) return;
     setSaving(true);
     try {
       const { data: authData } = await supabase.auth.getUser();
@@ -120,7 +120,7 @@ export function SendToInventoryDialog({ open, onOpenChange, aepId, pgrDocumentId
         let riskId = r.suggestedRiskId;
         if (r.linkMode === 'new' || !riskId) {
           const { data: newRisk, error } = await supabase.from('pgr_risks').insert({
-            pgr_document_id: pgrDocumentId,
+            pgr_document_id: resolvedPgrId,
             ghe_id: gheId,
             category: aepCategoriaToPgr(r.categoria),
             agent_name: r.fator_nome,

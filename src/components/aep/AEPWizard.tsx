@@ -339,6 +339,21 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
         {/* Step 3 */}
         {step === 3 && (
           <div className="space-y-4">
+            <Card className="p-3 bg-primary/5 border-primary/20">
+              <Label className="text-xs">Importar dimensões de avaliações psicossociais existentes</Label>
+              <div className="flex gap-2 mt-2 flex-wrap">
+                <Button size="sm" variant="outline" onClick={() => setImportDialog('hseit')}>
+                  <Download className="h-4 w-4 mr-1" /> Importar do HSE-IT
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setImportDialog('copsoq')}>
+                  <Download className="h-4 w-4 mr-1" /> Importar do COPSOQ II
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Traz automaticamente as dimensões em risco como fatores psicossociais desta AEP, com rastreabilidade da origem.
+              </p>
+            </Card>
+
             <Card className="p-3 bg-muted/30">
               <Label className="text-xs">Adicionar fator a partir da biblioteca NR-17 / Psicossocial</Label>
               <div className="grid grid-cols-3 gap-2 mt-2">
@@ -361,6 +376,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
                 </Button>
               </div>
             </Card>
+
 
             <div className="space-y-3">
               {fatores.length === 0 && (

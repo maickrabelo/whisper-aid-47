@@ -303,6 +303,8 @@ export type Database = {
           observacoes: string | null
           probability: number
           severity: number
+          source_assessment_id: string | null
+          source_assessment_type: string | null
           updated_at: string
         }
         Insert: {
@@ -319,6 +321,8 @@ export type Database = {
           observacoes?: string | null
           probability?: number
           severity?: number
+          source_assessment_id?: string | null
+          source_assessment_type?: string | null
           updated_at?: string
         }
         Update: {
@@ -335,6 +339,8 @@ export type Database = {
           observacoes?: string | null
           probability?: number
           severity?: number
+          source_assessment_id?: string | null
+          source_assessment_type?: string | null
           updated_at?: string
         }
         Relationships: [

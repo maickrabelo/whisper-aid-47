@@ -27,9 +27,9 @@ const ForgotPasswordDialog = ({ open, onOpenChange, defaultEmail = "" }: ForgotP
   const [sent, setSent] = useState(false);
 
   // Sync defaultEmail when dialog reopens
-  useState(() => {
-    setEmail(defaultEmail);
-  });
+  useEffect(() => {
+    if (open) setEmail(defaultEmail);
+  }, [open, defaultEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

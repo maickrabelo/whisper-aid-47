@@ -9,47 +9,56 @@ function withCacheBuster(url: string): string {
   }
 }
 
-async function loadImage(url: string): Promise<HTMLImageElement | null> {
+async function loadViaFetch(url: string): Promise<HTMLImageElement | null> {
   try {
-    const finalUrl = withCacheBuster(url);
-    let objectUrl: string | null = null;
-    let imageUrl = finalUrl;
+    const response = await fetch(url, {
+      cache: 'no-store',
+      mode: 'cors',
+      headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+    });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    const img = new Image();
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = (e) => reject(e);
+      img.src = dataUrl;
+    });
+    return img;
+  } catch {
+    return null;
+  }
+}
 
-    try {
-      const response = await fetch(finalUrl, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-        },
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        objectUrl = URL.createObjectURL(blob);
-        imageUrl = objectUrl;
-      }
-    } catch {
-      imageUrl = finalUrl;
-    }
-
+async function loadDirect(url: string): Promise<HTMLImageElement | null> {
+  try {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     await new Promise<void>((resolve, reject) => {
-      img.onload = () => {
-        if (objectUrl) URL.revokeObjectURL(objectUrl);
-        resolve();
-      };
-      img.onerror = (e) => {
-        if (objectUrl) URL.revokeObjectURL(objectUrl);
-        reject(e);
-      };
-      img.src = imageUrl;
+      img.onload = () => resolve();
+      img.onerror = (e) => reject(e);
+      img.src = url;
     });
     return img;
-  } catch (e) {
-    console.warn('PDF logo load failed:', url, e);
+  } catch {
     return null;
   }
+}
+
+async function loadImage(url: string): Promise<HTMLImageElement | null> {
+  const finalUrl = withCacheBuster(url);
+  const viaFetch = await loadViaFetch(finalUrl);
+  if (viaFetch) return viaFetch;
+  const direct = await loadDirect(finalUrl);
+  if (direct) return direct;
+  console.warn('PDF logo load failed:', url);
+  return null;
 }
 
 interface RenderLogosOptions {

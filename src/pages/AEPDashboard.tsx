@@ -135,8 +135,8 @@ const AEPDashboard = () => {
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/pgr/${companyId}`)}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Voltar ao PGR
             </Button>
             <div>
               <div className="flex items-center gap-2">

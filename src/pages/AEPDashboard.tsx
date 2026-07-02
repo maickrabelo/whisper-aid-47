@@ -40,6 +40,7 @@ const AEPDashboard = () => {
   const { companyId } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useRealAuth();
+  const { allowed: aepAllowed, loading: aepLoading } = useAEPBetaAccess();
   const [loading, setLoading] = useState(true);
   const [companyName, setCompanyName] = useState('');
   const [aeps, setAeps] = useState<AEP[]>([]);

@@ -47,6 +47,8 @@ interface FatorForm {
   severity: number;
   probability: number;
   observacoes: string;
+  source_assessment_type?: 'hseit' | 'copsoq' | null;
+  source_assessment_id?: string | null;
 }
 
 interface ParticipanteForm {

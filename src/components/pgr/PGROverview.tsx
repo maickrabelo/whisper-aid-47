@@ -51,9 +51,18 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
   const save = async () => {
     setSaving(true);
     try {
+      const payload: any = {
+        ...form,
+        validity_start: form.validity_start || null,
+        validity_end: form.validity_end || null,
+        rural_area_hectares:
+          form.rural_area_hectares === "" || form.rural_area_hectares === null
+            ? null
+            : Number(form.rural_area_hectares),
+      };
       const { error } = await supabase
         .from("pgr_documents")
-        .update(form as any)
+        .update(payload)
         .eq("id", pgr.id);
       if (error) throw error;
       toast.success("PGR atualizado");

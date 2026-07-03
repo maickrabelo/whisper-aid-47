@@ -77,6 +77,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const { features } = useCompanyFeatures(companyId);
   const { hasSST } = useCompanyHasSST(companyId);
   const { shouldShowTour, completeTour } = useOnboarding('company-dashboard');
+  const { allowed: aepAllowed } = useAEPBetaAccess();
 
   const companyTourSteps: TourStep[] = [
     { targetId: 'company-tour-anchor', title: 'Bem-vinda à SOIA! 🎉', description: 'Você tem 7 dias para testar a plataforma. Vamos te mostrar as principais ferramentas.', position: 'bottom' },

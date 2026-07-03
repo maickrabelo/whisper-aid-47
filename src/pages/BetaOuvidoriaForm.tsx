@@ -57,7 +57,7 @@ const BetaOuvidoriaForm = () => {
         allowed = !!rpc;
       }
       if (!allowed) { setLoading(false); return; }
-      const { data } = await supabase.from("companies").select("id, name, logo_url").eq("id", companyId).maybeSingle();
+      const { data } = await supabase.from("companies_public" as any).select("id, name, logo_url").eq("id", companyId).maybeSingle();
       setCompany(data as any);
       setLoading(false);
     };

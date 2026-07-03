@@ -50,7 +50,13 @@ const AEPDetail = () => {
       const fats = (fatRes.data as any[]) || [];
       setFatores(fats);
       setParticipantes((parRes.data as any[]) || []);
-      setEvidencias((evRes.data as any[]) || []);
+      const evs = (evRes.data as any[]) || [];
+      // Generate signed URLs (1h) so we can preview images inline and embed in PDFs
+      const withUrls = await Promise.all(evs.map(async (e) => {
+        const { data } = await supabase.storage.from('aep-evidencias').createSignedUrl(e.file_path, 3600);
+        return { ...e, signed_url: data?.signedUrl || null };
+      }));
+      setEvidencias(withUrls);
 
       if (aepData?.company_id) {
         const { data: c } = await supabase.from('companies').select('name, cnpj, logo_url').eq('id', aepData.company_id).maybeSingle();

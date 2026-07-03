@@ -619,6 +619,23 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 </div>
               </CardContent>
             </Card>
+            {aepAllowed && companyId && (
+              <Card
+                id="company-tool-aep"
+                className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
+                onClick={() => navigate(`/aep/${companyId}`)}
+              >
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <ClipboardCheck className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">AEP — Avaliação Ergonômica</h3>
+                    <p className="text-sm text-muted-foreground">NR-17 · Alimenta o PGR</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             {features.ouvidoria_smart && (
               <Card
                 id="company-tool-ouvidoria-smart"

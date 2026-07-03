@@ -229,14 +229,48 @@ const AEPDetail = () => {
               <p className="text-xs text-muted-foreground">{company?.name}</p>
             </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
+            <Select
+              value={aep.status}
+              onValueChange={async (newStatus) => {
+                try {
+                  const patch: any = { status: newStatus };
+                  if ((newStatus === 'completed' || newStatus === 'revised') && !aep.signed_at) {
+                    patch.signed_at = new Date().toISOString();
+                  }
+                  const { error } = await supabase.from('aep_avaliacoes' as any).update(patch).eq('id', aep.id);
+                  if (error) throw error;
+                  toast.success(`Status alterado para "${AEP_STATUS_LABELS[newStatus]}"`);
+                  load();
+                } catch (e: any) {
+                  toast.error('Erro ao alterar status: ' + e.message);
+                }
+              }}
+            >
+              <SelectTrigger className="h-9 w-[170px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Rascunho</SelectItem>
+                <SelectItem value="in_progress">Em andamento</SelectItem>
+                <SelectItem value="in_review">Em revisão</SelectItem>
+                <SelectItem value="completed">Concluída</SelectItem>
+                <SelectItem value="revised">Revisada</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="sm" onClick={() => setNewVersionOpen(true)} className="gap-1">
               <GitBranch className="h-4 w-4" /> Nova versão
             </Button>
             <Button variant="outline" size="sm" onClick={exportPDF} className="gap-1">
               <Download className="h-4 w-4" /> Exportar PDF
             </Button>
-            <Button size="sm" onClick={() => setSendOpen(true)} className="gap-1">
+            <Button
+              size="sm"
+              onClick={() => setSendOpen(true)}
+              disabled={aep.status !== 'completed' && aep.status !== 'revised'}
+              title={aep.status !== 'completed' && aep.status !== 'revised' ? 'Aprove a AEP (Concluída ou Revisada) antes de enviar ao PGR' : ''}
+              className="gap-1"
+            >
               <Send className="h-4 w-4" /> Enviar ao inventário
             </Button>
           </div>

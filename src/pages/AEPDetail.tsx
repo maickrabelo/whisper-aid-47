@@ -236,6 +236,38 @@ const AEPDetail = () => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap items-center">
+            {(() => {
+              const STATUS_FLOW: Record<string, { next: string; label: string }> = {
+                draft: { next: 'in_progress', label: 'Em andamento' },
+                in_progress: { next: 'in_review', label: 'Em revisão' },
+                in_review: { next: 'completed', label: 'Concluída' },
+                completed: { next: 'revised', label: 'Revisada' },
+              };
+              const flow = STATUS_FLOW[aep.status];
+              if (!flow) return null;
+              return (
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      const patch: any = { status: flow.next };
+                      if ((flow.next === 'completed' || flow.next === 'revised') && !aep.signed_at) {
+                        patch.signed_at = new Date().toISOString();
+                      }
+                      const { error } = await supabase.from('aep_avaliacoes' as any).update(patch).eq('id', aep.id);
+                      if (error) throw error;
+                      toast.success(`Status alterado para "${flow.label}"`);
+                      load();
+                    } catch (e: any) {
+                      toast.error('Erro ao alterar status: ' + e.message);
+                    }
+                  }}
+                  className="gap-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
+                >
+                  <CheckCircle2 className="h-4 w-4" /> Avançar para: {flow.label}
+                </Button>
+              );
+            })()}
             <Select
               value={aep.status}
               onValueChange={async (newStatus) => {
@@ -271,6 +303,7 @@ const AEPDetail = () => {
               <Download className="h-4 w-4" /> Exportar PDF
             </Button>
             <Button
+              variant="outline"
               size="sm"
               onClick={() => setSendOpen(true)}
               disabled={aep.status !== 'completed' && aep.status !== 'revised'}

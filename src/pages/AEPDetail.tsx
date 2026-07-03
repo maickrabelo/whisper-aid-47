@@ -50,7 +50,13 @@ const AEPDetail = () => {
       const fats = (fatRes.data as any[]) || [];
       setFatores(fats);
       setParticipantes((parRes.data as any[]) || []);
-      setEvidencias((evRes.data as any[]) || []);
+      const evs = (evRes.data as any[]) || [];
+      // Generate signed URLs (1h) so we can preview images inline and embed in PDFs
+      const withUrls = await Promise.all(evs.map(async (e) => {
+        const { data } = await supabase.storage.from('aep-evidencias').createSignedUrl(e.file_path, 3600);
+        return { ...e, signed_url: data?.signedUrl || null };
+      }));
+      setEvidencias(withUrls);
 
       if (aepData?.company_id) {
         const { data: c } = await supabase.from('companies').select('name, cnpj, logo_url').eq('id', aepData.company_id).maybeSingle();
@@ -357,20 +363,33 @@ const AEPDetail = () => {
                 {evidencias.length === 0 ? (
                   <div className="text-center py-6 text-sm text-muted-foreground">Nenhuma evidência anexada</div>
                 ) : (
-                  <div className="space-y-2">
-                    {evidencias.map(ev => (
-                      <div key={ev.id} className="flex items-center justify-between p-2 border rounded">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Paperclip className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{ev.file_name}</span>
-                          {ev.mime_type && <Badge variant="outline" className="text-[10px]">{ev.mime_type.split('/')[1]}</Badge>}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {evidencias.map(ev => {
+                      const isImage = ev.mime_type?.startsWith('image/');
+                      return (
+                        <div key={ev.id} className="border rounded overflow-hidden bg-muted/30 flex flex-col">
+                          {isImage && ev.signed_url ? (
+                            <a href={ev.signed_url} target="_blank" rel="noreferrer" className="block bg-black/5">
+                              <img src={ev.signed_url} alt={ev.file_name} className="w-full h-40 object-cover" />
+                            </a>
+                          ) : (
+                            <div className="w-full h-40 flex items-center justify-center bg-muted">
+                              <Paperclip className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="p-2 flex items-center justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-medium truncate" title={ev.file_name}>{ev.file_name}</div>
+                              {ev.mime_type && <div className="text-[10px] text-muted-foreground">{ev.mime_type}</div>}
+                            </div>
+                            <div className="flex gap-0.5 shrink-0">
+                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => downloadEvidencia(ev)}><Download className="h-3.5 w-3.5" /></Button>
+                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => deleteEvidencia(ev)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" onClick={() => downloadEvidencia(ev)}><Download className="h-4 w-4" /></Button>
-                          <Button size="sm" variant="ghost" onClick={() => deleteEvidencia(ev)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>

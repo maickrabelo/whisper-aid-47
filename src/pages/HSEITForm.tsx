@@ -123,9 +123,9 @@ export default function HSEITForm() {
 
       const { data: assessment, error: assessmentError } = await supabase
         .from('hseit_assessments')
-        .select('*, companies(name, logo_url)')
+        .select('*')
         .eq('id', assessmentId)
-        .single();
+        .maybeSingle();
 
       if (assessmentError) throw assessmentError;
 
@@ -139,7 +139,13 @@ export default function HSEITForm() {
         return;
       }
 
-      setAssessment(assessment as unknown as Assessment);
+      const { data: companyData } = await supabase
+        .from('companies_public' as any)
+        .select('name, logo_url')
+        .eq('id', (assessment as any).company_id)
+        .maybeSingle();
+
+      setAssessment({ ...(assessment as any), companies: (companyData as any) ?? null } as unknown as Assessment);
 
       const { data: depts } = await supabase
         .from('hseit_departments')

@@ -187,6 +187,7 @@ const App = () => (
                 <Route path="/pgr" element={<PGRHub />} />
                 <Route path="/pgr/:companyId" element={<PGRDashboard />} />
                 <Route path="/pgr/:companyId/kanban" element={<PGRKanban />} />
+                <Route path="/aep" element={<AEPHub />} />
                 <Route path="/aep/:companyId" element={<AEPDashboard />} />
                 <Route path="/aep/:companyId/:aepId" element={<AEPDetail />} />
                 <Route path="/pulse-survey" element={<PulseSurveyDashboard />} />

@@ -51,14 +51,20 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
   const save = async () => {
     setSaving(true);
     try {
+      const rawHectares =
+        typeof form.rural_area_hectares === "string"
+          ? form.rural_area_hectares.trim().replace(",", ".")
+          : form.rural_area_hectares;
+      const parsedHectares =
+        rawHectares === "" || rawHectares === null || rawHectares === undefined
+          ? null
+          : Number(rawHectares);
       const payload: any = {
         ...form,
         validity_start: form.validity_start || null,
         validity_end: form.validity_end || null,
         rural_area_hectares:
-          form.rural_area_hectares === "" || form.rural_area_hectares === null
-            ? null
-            : Number(form.rural_area_hectares),
+          parsedHectares === null || Number.isNaN(parsedHectares) ? null : parsedHectares,
       };
       const { error } = await supabase
         .from("pgr_documents")

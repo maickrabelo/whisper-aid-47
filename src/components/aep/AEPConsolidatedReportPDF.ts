@@ -54,7 +54,7 @@ function line(doc: jsPDF, y: number, label: string, value: string): number {
   return y + Math.max(5, wrapped.length * 4.5);
 }
 
-function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participantes: any[], evidencias: any[], idx: number, total: number): void {
+async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participantes: any[], evidencias: any[], idx: number, total: number): Promise<void> {
   doc.addPage();
   let y = 20;
 

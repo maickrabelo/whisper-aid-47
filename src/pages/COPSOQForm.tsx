@@ -82,11 +82,12 @@ export default function COPSOQForm() {
   const fetchAssessment = async () => {
     try {
       setIsLoading(true); setError(null);
-      const { data: a, error: e } = await supabase.from('copsoq_assessments' as any).select('*, companies(name, logo_url)').eq('id', assessmentId).single();
+      const { data: a, error: e } = await supabase.from('copsoq_assessments' as any).select('*').eq('id', assessmentId).maybeSingle();
       if (e) throw e;
       if (!a) { setError('Avaliação não encontrada'); return; }
       if (!(a as any).is_active) { setError('Esta avaliação não está mais disponível'); return; }
-      setAssessment(a as unknown as Assessment);
+      const { data: companyData } = await supabase.from('companies_public' as any).select('name, logo_url').eq('id', (a as any).company_id).maybeSingle();
+      setAssessment({ ...(a as any), companies: (companyData as any) ?? null } as unknown as Assessment);
       const { data: depts } = await supabase.from('copsoq_departments' as any).select('id, name').eq('assessment_id', assessmentId).order('order_index');
       setDepartments((depts as any[]) || []);
     } catch (e) { console.error(e); setError('Erro ao carregar a avaliação'); }

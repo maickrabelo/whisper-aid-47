@@ -35,10 +35,15 @@ export default function PulseSurveyForm() {
       setLoading(true);
       const { data: s } = await supabase
         .from('pulse_surveys')
-        .select('*, companies(name)')
+        .select('*')
         .eq('id', surveyId).eq('status', 'active').maybeSingle();
       if (!s) { setLoading(false); return; }
-      setSurvey(s as any);
+      const { data: companyData } = await supabase
+        .from('companies_public' as any)
+        .select('name')
+        .eq('id', (s as any).company_id)
+        .maybeSingle();
+      setSurvey({ ...(s as any), companies: (companyData as any) ?? null } as any);
 
       const [{ data: qs }, { data: cy }, { data: deps }] = await Promise.all([
         supabase.from('pulse_survey_questions').select('*').eq('pulse_survey_id', surveyId).order('order_index'),

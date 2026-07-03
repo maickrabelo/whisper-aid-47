@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { renderReportLogos } from '@/lib/pdfLogos';
 import { classifyRisk, LEVEL_LABELS } from '@/lib/aepRiskLevel';
 import { AEP_CATEGORIAS } from '@/hooks/useAEPFatoresCatalog';
+import { renderEvidenceImages } from './aepPdfImage';
 
 interface AEPBundle {
   aep: any;

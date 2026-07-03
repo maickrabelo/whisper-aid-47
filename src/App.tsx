@@ -82,6 +82,7 @@ const BetaOuvidoriaTrack = React.lazy(() => import("./pages/BetaOuvidoriaTrack")
 const BetaOuvidoriaDashboard = React.lazy(() => import("./pages/BetaOuvidoriaDashboard"));
 const AEPDashboard = React.lazy(() => import("./pages/AEPDashboard"));
 const AEPDetail = React.lazy(() => import("./pages/AEPDetail"));
+const AEPHub = React.lazy(() => import("./pages/AEPHub"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -186,6 +187,7 @@ const App = () => (
                 <Route path="/pgr" element={<PGRHub />} />
                 <Route path="/pgr/:companyId" element={<PGRDashboard />} />
                 <Route path="/pgr/:companyId/kanban" element={<PGRKanban />} />
+                <Route path="/aep" element={<AEPHub />} />
                 <Route path="/aep/:companyId" element={<AEPDashboard />} />
                 <Route path="/aep/:companyId/:aepId" element={<AEPDetail />} />
                 <Route path="/pulse-survey" element={<PulseSurveyDashboard />} />

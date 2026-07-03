@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download, GraduationCap, Brain, Flame, ClipboardList, Activity } from "lucide-react";
+import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download, GraduationCap, Brain, Flame, ClipboardList, Activity, ClipboardCheck } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { useRealAuth } from "@/contexts/RealAuthContext";

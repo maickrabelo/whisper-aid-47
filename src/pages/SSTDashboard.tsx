@@ -510,6 +510,16 @@ const SSTDashboard = () => {
                     path: '/pgr',
                   }];
                 }
+                if (aepAllowed) {
+                  displayedTools = [...displayedTools, {
+                    id: 'tool-aep',
+                    icon: ClipboardCheck,
+                    title: 'AEP',
+                    description: 'Avaliação Ergonômica Preliminar (NR-17)',
+                    highlights: ['Avaliações', 'Importação', 'PGR'],
+                    path: '/aep',
+                  }];
+                }
                 return displayedTools;
               })().map((tool, idx) => (
                 <Card

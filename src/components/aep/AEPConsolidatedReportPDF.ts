@@ -242,9 +242,10 @@ export async function generateAEPConsolidatedReportPDF(input: Input): Promise<vo
   });
 
   // ===== SEÇÕES POR AEP =====
-  bundles.forEach((b, i) => {
-    renderAEPSection(doc, b.aep, b.fatores, b.participantes, b.evidencias, i + 1, bundles.length);
-  });
+  for (let i = 0; i < bundles.length; i++) {
+    const b = bundles[i];
+    await renderAEPSection(doc, b.aep, b.fatores, b.participantes, b.evidencias, i + 1, bundles.length);
+  }
 
   // ===== ANEXO: TABELA CONSOLIDADA =====
   doc.addPage();

@@ -314,6 +314,16 @@ const AEPDashboard = () => {
           onCreated={(id) => { load(); navigate(`/aep/${companyId}/${id}`); }}
         />
       )}
+
+      {companyId && (
+        <BulkSendToPGRDialog
+          open={bulkSendOpen}
+          onOpenChange={setBulkSendOpen}
+          companyId={companyId}
+          pgrDocumentId={pgrDocId}
+          onDone={load}
+        />
+      )}
     </div>
   );
 };

@@ -216,6 +216,9 @@ const AEPDashboard = () => {
               {generatingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
               AEP Consolidado (PDF)
             </Button>
+            <Button variant="secondary" onClick={() => setBulkSendOpen(true)} className="gap-2">
+              <Send className="h-4 w-4" /> Enviar todas ao PGR
+            </Button>
             <Button onClick={() => setWizardOpen(true)} className="gap-2">
               <Plus className="h-4 w-4" /> Nova AEP
             </Button>

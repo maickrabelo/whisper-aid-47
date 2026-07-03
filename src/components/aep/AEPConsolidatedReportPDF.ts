@@ -148,6 +148,8 @@ async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participan
       doc.text(`• ${e.file_name}${e.descricao ? ' — ' + e.descricao : ''}`, MARGIN, y); y += 4.5;
     });
     y += 3;
+    y = await renderEvidenceImages(doc, evidencias, { marginX: MARGIN, contentW: CONTENT_W, pageH: PAGE_H, startY: y });
+    y += 3;
   }
 
   // 6. Assinatura

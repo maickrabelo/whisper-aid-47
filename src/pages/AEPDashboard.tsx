@@ -7,12 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, ClipboardList, Loader2, Plus, AlertTriangle, TrendingUp, FileDown } from "lucide-react";
+import { ArrowLeft, ClipboardList, Loader2, Plus, AlertTriangle, TrendingUp, FileDown, Send } from "lucide-react";
 import { toast } from "sonner";
 import { AEPWizard } from "@/components/aep/AEPWizard";
 import { AEP_STATUS_LABELS, AEP_STATUS_STYLES } from "@/lib/aepRiskLevel";
 import { useAEPBetaAccess } from "@/hooks/useAEPBetaAccess";
 import { generateAEPConsolidatedReportPDF } from "@/components/aep/AEPConsolidatedReportPDF";
+import { BulkSendToPGRDialog } from "@/components/aep/BulkSendToPGRDialog";
 
 interface AEP {
   id: string;

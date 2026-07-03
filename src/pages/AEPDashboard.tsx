@@ -139,11 +139,17 @@ const AEPDashboard = () => {
         supabase.from('aep_evidencias' as any).select('*').in('aep_id', ids),
       ]);
 
+      // Gera signed URLs para as evidências (necessário p/ embutir imagens no PDF)
+      const evsWithUrls = await Promise.all(((evidencias as any[]) || []).map(async (e) => {
+        const { data } = await supabase.storage.from('aep-evidencias').createSignedUrl(e.file_path, 3600);
+        return { ...e, signed_url: data?.signedUrl || null };
+      }));
+
       const bundles = ((allAeps as any[]) || []).map(a => ({
         aep: a,
         fatores: ((fatores as any[]) || []).filter(f => f.aep_id === a.id),
         participantes: ((participantes as any[]) || []).filter(p => p.aep_id === a.id),
-        evidencias: ((evidencias as any[]) || []).filter(e => e.aep_id === a.id),
+        evidencias: evsWithUrls.filter(e => e.aep_id === a.id),
       }));
       // Ordena por setor / data
       bundles.sort((x, y) => (x.aep.setor_nome || '').localeCompare(y.aep.setor_nome || '') || (x.aep.assessment_date || '').localeCompare(y.aep.assessment_date || ''));

@@ -138,6 +138,9 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
       if (y > 275) { doc.addPage(); y = 20; }
       doc.text(`• ${e.file_name}${e.descricao ? ' — ' + e.descricao : ''}`, MARGIN, y); y += 4.5;
     });
+    y += 3;
+    // Embutir imagens
+    y = await renderEvidenceImages(doc, evidencias, { marginX: MARGIN, contentW: CONTENT_W, pageH: 297, startY: y });
     y += 4;
   }
 

@@ -74,29 +74,32 @@ export default function BurnoutForm() {
       
       const { data: assessmentData, error: assessmentError } = await supabase
         .from('burnout_assessments')
-        .select(`
-          id,
-          title,
-          description,
-          is_active,
-          companies (name, logo_url)
-        `)
+        .select('id, title, description, is_active, company_id')
         .eq('id', assessmentId)
-        .single();
-        
+        .maybeSingle();
+
       if (assessmentError) throw assessmentError;
-      
+
       if (!assessmentData) {
         setError('Avaliação não encontrada.');
         return;
       }
-      
+
       if (!assessmentData.is_active) {
         setError('Esta avaliação não está ativa no momento.');
         return;
       }
-      
-      setAssessment(assessmentData as Assessment);
+
+      const { data: companyData } = await supabase
+        .from('companies_public' as any)
+        .select('name, logo_url')
+        .eq('id', (assessmentData as any).company_id)
+        .maybeSingle();
+
+      setAssessment({
+        ...(assessmentData as any),
+        companies: (companyData as any) ?? null,
+      } as Assessment);
       
       // Fetch departments
       const { data: depts } = await supabase

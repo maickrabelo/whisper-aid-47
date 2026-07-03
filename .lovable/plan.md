@@ -1,112 +1,56 @@
-## Objetivo
+## O que será feito
 
-Duas capacidades novas no módulo AEP:
+### 1. Botão em destaque para avançar o status (AEPDetail)
+Fluxo de status a seguir (na ordem): **Rascunho → Em andamento → Em revisão → Concluída → Revisada**.
 
-1. **Relatório AEP Consolidado da Empresa** — um único PDF completo que reúne todas as AEPs de uma empresa (independente do PGR), servindo como o documento oficial de Avaliação Ergonômica Preliminar entregável para fiscalização/auditoria.
-2. **Importação de dados de HSE-IT e COPSOQ** — durante a criação/edição da AEP, permitir puxar automaticamente resultados dos módulos psicossociais existentes da mesma empresa como fatores AEP, mantendo rastreabilidade da origem.
+- Adicionar, ao lado do seletor de status atual, um botão primário destacado (cor de destaque, com ícone de seta) chamado, por exemplo:
+  - "Avançar para: Em andamento" (quando em Rascunho)
+  - "Avançar para: Em revisão" (quando em Em andamento)
+  - "Avançar para: Concluída" (quando em Em revisão)
+  - "Avançar para: Revisada" (quando em Concluída)
+- Ao clicar, atualiza o status para o próximo do fluxo (mantém `signed_at` sendo gravado quando entra em Concluída/Revisada, como já existe).
+- Se já estiver em **Revisada** o botão de avanço some (mostra apenas o seletor manual).
+- O seletor manual atual continua, para casos de correção pontual.
 
-## Como o usuário verá
+### 2. Envio em lote ao PGR (AEPDashboard)
+Adicionar botão **"Enviar todas ao PGR"** no cabeçalho da tela AEPDashboard, ao lado do "AEP Consolidado (PDF)".
 
-### 1. Relatório AEP Consolidado
+Ao clicar, abrir um popup **BulkSendToPGRDialog** com:
 
-- Na página `/aep/:companyId` (AEPDashboard), ao lado do botão "Nova AEP", adicionar um botão **"Baixar AEP Consolidado (PDF)"**.
-- O PDF gerado inclui:
-  - Capa com logo da gestora SST + logo da empresa + CNPJ + data de emissão + total de AEPs no documento.
-  - Sumário executivo: quantidade de setores avaliados, total de fatores por categoria (físico/organizacional/cognitivo/psicossocial), fatores em nível intolerável/substancial.
-  - Índice das AEPs incluídas (setor · função · data · versão · status).
-  - Para cada AEP concluída (status `completed` ou `revised`): as mesmas seções do PDF individual atual (identificação, metodologia, fatores, participantes, evidências, assinatura do responsável técnico), separadas por quebra de página e numeradas ("AEP 1 de N", "AEP 2 de N", ...).
-  - Anexo final: consolidação de todos os fatores em uma tabela única (setor · categoria · fator · severidade · probabilidade · nível), útil para leitura rápida por fiscal.
-  - Rodapé em todas as páginas: "Documento consolidado AEP — {empresa} — página X/Y".
-- AEPs em `draft` ou `in_progress` **não** entram no consolidado (avisar em toast se não houver nenhuma finalizada).
-- Filtro opcional antes de gerar: selecionar quais AEPs incluir (por padrão todas as finalizadas), com um `Dialog` de checkboxes.
+- **Verificação de PGR ativo**: se a empresa não tem documento PGR, mostra aviso com botão para criar/abrir o PGR (mesma lógica do `SendToInventoryDialog` atual).
+- **Lista com todas as AEPs da empresa**, agrupadas em duas seções:
+  - **Prontas para envio** (status `completed` ou `revised`): já marcadas por padrão, checkbox permite desmarcar.
+  - **Não concluídas** (status `draft`, `in_progress`, `in_review`): checkbox por AEP com o texto "Marcar como Concluída e enviar". Se marcada, ao confirmar o sistema promove a AEP para `completed` (gravando `signed_at`) e em seguida envia os fatores.
+- Cada linha mostra: setor, função, versão, status atual (badge), número de fatores.
+- Rodapé com contador: "X AEPs serão enviadas • Y fatores gerarão riscos no PGR".
+- Botão **Confirmar envio em lote** dispara, sequencialmente para cada AEP marcada:
+  1. Se necessário, `UPDATE aep_avaliacoes` para `status = 'completed'` + `signed_at = now()`.
+  2. Reaproveita a mesma lógica de `SendToInventoryDialog`: insere/atualiza registros em `pgr_risks` e cria vínculos em `aep_pgr_vinculo`, respeitando a política de "não duplicar fator já vinculado".
+- Barra de progresso durante o processamento; toast final com resumo (`N AEPs enviadas, M riscos criados/atualizados`).
 
-### 2. Importar HSE-IT / COPSOQ dentro do Wizard AEP
+### 3. Card AEP na home do Dashboard da empresa
+Em `src/pages/Dashboard.tsx`, dentro da grade "Suas Ferramentas" (mesma que já mostra Riscos Psicossociais, Burnout, Clima, Pulse, Ouvidoria Smart), adicionar um novo card:
 
-- No **Passo 3 (Fatores)** do `AEPWizard`, adicionar acima do formulário de fator dois botões:
-  - **"Importar do HSE-IT"**
-  - **"Importar do COPSOQ II"**
-- Cada botão abre um `Dialog` que:
-  1. Lista as avaliações HSE-IT/COPSOQ **da mesma empresa** com status finalizado (e opcionalmente filtrando por setor/departamento que bate com o `setor_nome` da AEP em criação).
-  2. Ao selecionar uma avaliação, mostra as dimensões/fatores calculados que ficaram em nível de **risco alto ou muito alto** (HSE-IT usa os thresholds já implementados; COPSOQ usa a normalização 0-100 com faixas do módulo).
-  3. Usuário marca quais dimensões deseja trazer como fatores AEP e clica "Importar N fatores".
-- Cada dimensão importada vira uma linha de fator AEP com:
-  - `categoria` = `psicossocial` (HSE-IT e COPSOQ são psicossociais)
-  - `fator_nome` = nome da dimensão (ex.: "Demandas — HSE-IT", "Exigências quantitativas — COPSOQ II")
-  - `fonte_causa` = "Importado de avaliação {tipo} de {data} — {n} respondentes"
-  - `evidencia_texto` = escore/percentil calculado + faixa de risco
-  - `severity` e `probability` pré-preenchidos a partir da faixa de risco da dimensão (mapa: baixo→1/1, moderado→2/2, alto→3/4, muito alto→5/4)
-  - Novos campos opcionais: `source_assessment_type` (`hseit` | `copsoq`), `source_assessment_id` — para rastreabilidade.
-- O usuário ainda pode editar os campos antes de salvar a AEP.
-- Badge visual no card do fator quando foi importado ("Importado do HSE-IT" / "Importado do COPSOQ").
+- **Título**: "AEP — Avaliação Ergonômica"
+- **Subtítulo**: "NR-17 · Alimenta o PGR"
+- **Ícone**: `ClipboardCheck` (ou similar) em destaque
+- **onClick**: `navigate(`/aep/${companyId}`)`
+- Visibilidade condicionada ao hook existente `useAEPBetaAccess` (mantém o gating atual: liberado apenas para o usuário de teste enquanto estiver em beta). Se depois o AEP virar geral, basta remover o gate.
 
-## Modelo de dados
+## Detalhes técnicos
 
-**Alteração em `aep_fatores_avaliados`** — adicionar duas colunas opcionais para rastrear origem:
+- Arquivos editados:
+  - `src/pages/AEPDetail.tsx` — botão de próximo status ao lado do seletor.
+  - `src/pages/AEPDashboard.tsx` — botão "Enviar todas ao PGR" e integração com o novo dialog.
+  - `src/pages/Dashboard.tsx` — novo card AEP na grade de ferramentas da empresa.
+- Arquivo novo:
+  - `src/components/aep/BulkSendToPGRDialog.tsx` — dialog em lote. Reaproveita as funções de mapeamento fator→risco já usadas em `SendToInventoryDialog.tsx` (extrair para helper compartilhado `src/components/aep/sendToInventory.ts` se necessário).
+- Sem alterações de schema. Nenhuma nova coluna, tabela ou RLS.
+- Fluxo de status permanece o mesmo já validado (draft/in_progress/in_review/completed/revised). O trigger `aep_fatores_clamp` e demais validações não são afetados.
 
-```sql
-ALTER TABLE public.aep_fatores_avaliados
-  ADD COLUMN source_assessment_type text
-    CHECK (source_assessment_type IN ('hseit','copsoq') OR source_assessment_type IS NULL),
-  ADD COLUMN source_assessment_id uuid;
-```
+## Fora do escopo (não farei nesta rodada)
 
-Sem FK dura (as tabelas de origem podem ser deletadas independente); a rastreabilidade fica no par tipo+id. Nenhum grant/RLS novo — herda das políticas atuais da tabela.
-
-Nenhuma outra tabela nova. O consolidado é gerado 100% no cliente.
-
-## Frontend
-
-**Novos arquivos:**
-- `src/components/aep/AEPConsolidatedReportPDF.ts` — geração do PDF consolidado. Reusa helpers de `AEPReportPDF.ts` (renderização de cabeçalho, lista de fatores, participantes, evidências) refatorados como funções puras `renderAEPSection(doc, y, aep, fatores, participantes, evidencias)` que retornam o novo `y`. Adiciona capa, sumário executivo e tabela final consolidada.
-- `src/components/aep/ImportAssessmentDialog.tsx` — dialog reutilizável com prop `type: 'hseit' | 'copsoq'`. Carrega avaliações da empresa, computa escores por dimensão (reusando lógica já existente em `HSEITResults.tsx` e `COPSOQResults.tsx`, extraída para libs — ver abaixo), oferece seleção e retorna os fatores importados via callback `onImport(fatores: PartialFator[])`.
-- `src/lib/hseitDimensionScoring.ts` — extrai da página `HSEITResults.tsx` a função que calcula os escores por dimensão + faixa de risco (baixo/moderado/alto/muito alto).
-- `src/lib/copsoqDimensionScoring.ts` — mesmo para COPSOQ (extraído de `COPSOQResults.tsx`).
-- `src/components/aep/ConsolidatedFilterDialog.tsx` — pequeno dialog opcional com checkboxes para o usuário escolher quais AEPs entram no consolidado antes de gerar o PDF.
-
-**Arquivos alterados:**
-- `src/pages/AEPDashboard.tsx`:
-  - Botão "Baixar AEP Consolidado" no header.
-  - Handler que abre o filtro, carrega em paralelo (Promise.all) os fatores/participantes/evidências de todas as AEPs elegíveis e chama `generateAEPConsolidatedReportPDF`.
-- `src/components/aep/AEPWizard.tsx` (StepFatores):
-  - Dois botões de importação no topo do passo de fatores.
-  - Estado local aceita a lista importada e mescla com fatores manuais.
-  - Ao salvar a AEP, persiste `source_assessment_type` e `source_assessment_id` em `aep_fatores_avaliados`.
-- `src/components/aep/AEPReportPDF.ts` — pequena refatoração para expor as funções de renderização de seção como exports nomeados, sem quebrar a chamada atual `generateAEPReportPDF`.
-- `src/integrations/supabase/types.ts` — adicionar as duas novas colunas em `aep_fatores_avaliados`.
-
-## Mapeamento faixa de risco → severity/probability
-
-Escala 1-5 (matriz padrão AEP):
-
-| Faixa da dimensão | severity | probability | Nível AEP resultante |
-| --- | --- | --- | --- |
-| Baixo               | 1 | 2 | tolerável |
-| Moderado            | 3 | 3 | moderado |
-| Alto                | 4 | 4 | substancial |
-| Muito alto / crítico| 5 | 5 | intolerável |
-
-Somente dimensões em **Alto** ou **Muito alto** aparecem por padrão marcadas no dialog (usuário pode desmarcar/marcar outras).
-
-## Fora do escopo
-
-- Auto-sync contínuo: se a HSE-IT/COPSOQ de origem for atualizada após a importação, o fator AEP **não** é reprocessado automaticamente (usuário precisa importar de novo). Só guardamos referência.
-- Importação de dados do Burnout ou Clima (fica para v2 se pedido).
-- Assinatura digital ICP-Brasil no consolidado (mantém hash simples como AEP individual).
-- Consolidado por período/data — nesta v1 é sempre "todas as AEPs finalizadas da empresa" (opcionalmente filtradas pelo dialog manual).
-
-## Resumo do fluxo
-
-```text
-Fluxo Consolidado:
-  AEPDashboard → [Baixar AEP Consolidado] → FilterDialog (opt-out por AEP)
-      → carrega fatores/participantes/evidências de N AEPs em paralelo
-      → generateAEPConsolidatedReportPDF → download PDF único
-
-Fluxo Importação:
-  AEPWizard passo 3 → [Importar HSE-IT | Importar COPSOQ]
-      → ImportAssessmentDialog lista avaliações finalizadas da empresa
-      → seleciona avaliação → mostra dimensões com faixa Alto/Muito alto
-      → marca dimensões → [Importar]
-      → fatores entram no estado do wizard já com severity/probability sugeridos
-      → salvar AEP grava source_assessment_type + source_assessment_id
-```
+- Notificação por e-mail ao concluir envio em lote.
+- Undo/rollback de envio em lote.
+- Aprovação com múltiplas assinaturas.
+- Auto-avanço de status por ações do sistema (permanece manual).

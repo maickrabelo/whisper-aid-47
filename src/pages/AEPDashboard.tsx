@@ -7,12 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, ClipboardList, Loader2, Plus, AlertTriangle, TrendingUp, FileDown } from "lucide-react";
+import { ArrowLeft, ClipboardList, Loader2, Plus, AlertTriangle, TrendingUp, FileDown, Send } from "lucide-react";
 import { toast } from "sonner";
 import { AEPWizard } from "@/components/aep/AEPWizard";
 import { AEP_STATUS_LABELS, AEP_STATUS_STYLES } from "@/lib/aepRiskLevel";
 import { useAEPBetaAccess } from "@/hooks/useAEPBetaAccess";
 import { generateAEPConsolidatedReportPDF } from "@/components/aep/AEPConsolidatedReportPDF";
+import { BulkSendToPGRDialog } from "@/components/aep/BulkSendToPGRDialog";
 
 interface AEP {
   id: string;
@@ -51,6 +52,7 @@ const AEPDashboard = () => {
   const [kpis, setKpis] = useState<KPIs>({ total: 0, concluidas: 0, vencidas: 0, rascunhos: 0, fatoresTotal: 0, fatoresVinculados: 0 });
   const [pgrDocId, setPgrDocId] = useState<string | null>(null);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [bulkSendOpen, setBulkSendOpen] = useState(false);
 
   const load = async () => {
     if (!companyId) return;
@@ -214,6 +216,9 @@ const AEPDashboard = () => {
               {generatingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
               AEP Consolidado (PDF)
             </Button>
+            <Button variant="secondary" onClick={() => setBulkSendOpen(true)} className="gap-2">
+              <Send className="h-4 w-4" /> Enviar todas ao PGR
+            </Button>
             <Button onClick={() => setWizardOpen(true)} className="gap-2">
               <Plus className="h-4 w-4" /> Nova AEP
             </Button>
@@ -307,6 +312,16 @@ const AEPDashboard = () => {
           companyId={companyId}
           pgrDocumentId={pgrDocId}
           onCreated={(id) => { load(); navigate(`/aep/${companyId}/${id}`); }}
+        />
+      )}
+
+      {companyId && (
+        <BulkSendToPGRDialog
+          open={bulkSendOpen}
+          onOpenChange={setBulkSendOpen}
+          companyId={companyId}
+          pgrDocumentId={pgrDocId}
+          onDone={load}
         />
       )}
     </div>

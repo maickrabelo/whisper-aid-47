@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download, GraduationCap, Brain, Flame, ClipboardList, Activity } from "lucide-react";
+import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download, GraduationCap, Brain, Flame, ClipboardList, Activity, ClipboardCheck } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { useRealAuth } from "@/contexts/RealAuthContext";
@@ -47,6 +47,7 @@ import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
 import { useCompanyHasSST } from '@/hooks/useCompanyHasSST';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { useAEPBetaAccess } from '@/hooks/useAEPBetaAccess';
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
@@ -76,6 +77,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const { features } = useCompanyFeatures(companyId);
   const { hasSST } = useCompanyHasSST(companyId);
   const { shouldShowTour, completeTour } = useOnboarding('company-dashboard');
+  const { allowed: aepAllowed } = useAEPBetaAccess();
 
   const companyTourSteps: TourStep[] = [
     { targetId: 'company-tour-anchor', title: 'Bem-vinda à SOIA! 🎉', description: 'Você tem 7 dias para testar a plataforma. Vamos te mostrar as principais ferramentas.', position: 'bottom' },
@@ -617,6 +619,23 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 </div>
               </CardContent>
             </Card>
+            {aepAllowed && companyId && (
+              <Card
+                id="company-tool-aep"
+                className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
+                onClick={() => navigate(`/aep/${companyId}`)}
+              >
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <ClipboardCheck className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">AEP — Avaliação Ergonômica</h3>
+                    <p className="text-sm text-muted-foreground">NR-17 · Alimenta o PGR</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             {features.ouvidoria_smart && (
               <Card
                 id="company-tool-ouvidoria-smart"

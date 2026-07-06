@@ -144,7 +144,15 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
                 <TableRow key={g.id}>
                   <TableCell className="font-medium">{g.name}</TableCell>
                   <TableCell>{g.sector || '-'}</TableCell>
-                  <TableCell>{g.role || '-'}</TableCell>
+                  <TableCell>
+                    {parseRoles(g.role).length === 0 ? '-' : (
+                      <div className="flex flex-wrap gap-1">
+                        {parseRoles(g.role).map(r => (
+                          <Badge key={r} variant="secondary" className="text-xs font-normal">{r}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">{g.worker_count}</TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button size="icon" variant="ghost" onClick={() => openEdit(g)}><Pencil className="h-4 w-4" /></Button>

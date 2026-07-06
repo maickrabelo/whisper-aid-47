@@ -535,9 +535,34 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
               )}
 
               <div className="space-y-2"><Label>EPC existentes</Label><Textarea rows={2} value={form.existing_epc} onChange={e => setForm({ ...form, existing_epc: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>EPI</Label><Input value={form.existing_epi} onChange={e => setForm({ ...form, existing_epi: e.target.value })} /></div>
-                <div className="space-y-2"><Label>CA do EPI</Label><Input value={form.epi_ca} onChange={e => setForm({ ...form, epi_ca: e.target.value })} /></div>
+              <div className="space-y-2">
+                <Label>EPIs</Label>
+                {epiList.length > 0 && (
+                  <div className="space-y-1">
+                    {epiList.map((e, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm bg-muted/50 rounded-md px-2 py-1">
+                        <span className="flex-1"><span className="font-medium">{e.name}</span>{e.ca ? <span className="text-muted-foreground"> — CA {e.ca}</span> : null}</span>
+                        <button type="button" onClick={() => removeEpi(i)} className="text-muted-foreground hover:text-destructive"><X className="h-3.5 w-3.5" /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="grid grid-cols-[1fr_140px_auto] gap-2">
+                  <Input
+                    value={epiDraft.name}
+                    onChange={e => setEpiDraft(d => ({ ...d, name: e.target.value }))}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addEpi(); } }}
+                    placeholder="Nome do EPI (ex.: Luva nitrílica)"
+                  />
+                  <Input
+                    value={epiDraft.ca}
+                    onChange={e => setEpiDraft(d => ({ ...d, ca: e.target.value }))}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addEpi(); } }}
+                    placeholder="CA"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={addEpi}>Adicionar</Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Adicione quantos EPIs forem necessários. O CA é opcional por item.</p>
               </div>
             </div>
             <DialogFooter>

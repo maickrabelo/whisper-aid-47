@@ -50,6 +50,49 @@ const AEPDetail = () => {
   const [partEditing, setPartEditing] = useState<any>(null);
   const [partForm, setPartForm] = useState<any>({ nome: '', funcao: '', tipo_participacao: 'entrevista', anonimizado: false });
 
+  // Excluir AEP
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteAep = async () => {
+    if (!aep) return;
+    setDeleting(true);
+    try {
+      // Coleta ids relacionados
+      const [{ data: fats }, { data: evs }] = await Promise.all([
+        supabase.from('aep_fatores_avaliados' as any).select('id').eq('aep_id', aep.id),
+        supabase.from('aep_evidencias' as any).select('id, file_path').eq('aep_id', aep.id),
+      ]);
+      const fatIds = ((fats as any[]) || []).map(f => f.id);
+
+      // Remove vínculos com PGR (risco no inventário permanece)
+      if (fatIds.length) {
+        await supabase.from('aep_pgr_vinculo' as any).delete().in('aep_fator_id', fatIds);
+      }
+      // Remove arquivos do storage
+      const paths = ((evs as any[]) || []).map(e => e.file_path).filter(Boolean);
+      if (paths.length) {
+        await supabase.storage.from('aep-evidencias').remove(paths);
+      }
+      // Remove filhos (caso não tenha ON DELETE CASCADE)
+      await Promise.all([
+        supabase.from('aep_evidencias' as any).delete().eq('aep_id', aep.id),
+        supabase.from('aep_participantes' as any).delete().eq('aep_id', aep.id),
+        supabase.from('aep_fatores_avaliados' as any).delete().eq('aep_id', aep.id),
+      ]);
+      // Remove a AEP
+      const { error } = await supabase.from('aep_avaliacoes' as any).delete().eq('id', aep.id);
+      if (error) throw error;
+      toast.success('AEP excluída');
+      navigate(`/aep/${companyId}`);
+    } catch (e: any) {
+      toast.error('Erro ao excluir: ' + e.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const load = async () => {
     if (!aepId) return;
     setLoading(true);

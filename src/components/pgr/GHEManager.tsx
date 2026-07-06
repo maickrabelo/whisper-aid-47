@@ -63,6 +63,7 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
   const openNew = () => {
     setEditing(null);
     setForm({ name: "", sector: "", role: "", activities_description: "", worker_count: 0, work_schedule: "" });
+    setRoleInput("");
     setOpen(true);
   };
   const openEdit = (g: GHE) => {
@@ -75,6 +76,7 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
       worker_count: g.worker_count || 0,
       work_schedule: g.work_schedule || "",
     });
+    setRoleInput("");
     setOpen(true);
   };
 

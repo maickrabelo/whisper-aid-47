@@ -860,6 +860,40 @@ const AEPDetail = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirmação para excluir AEP */}
+      <Dialog open={deleteOpen} onOpenChange={(v) => { setDeleteOpen(v); if (!v) setConfirmText(''); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="text-destructive flex items-center gap-2"><Trash2 className="h-5 w-5" /> Excluir AEP permanentemente?</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>Esta ação é <strong>irreversível</strong>. Serão apagados:</p>
+            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+              <li>A AEP <strong>v{aep.version}</strong> — {aep.setor_nome || 'setor não informado'}</li>
+              <li>Todos os fatores levantados ({fatores.length})</li>
+              <li>Todos os participantes registrados ({participantes.length})</li>
+              <li>Todas as evidências anexadas ({evidencias.length}) e seus arquivos</li>
+              <li>Os vínculos com o inventário do PGR</li>
+            </ul>
+            <p className="text-xs text-muted-foreground">Os riscos já enviados ao inventário do PGR <strong>permanecem lá</strong> — apenas os vínculos serão removidos.</p>
+            <div className="pt-2 space-y-1">
+              <Label className="text-xs">Digite <strong>EXCLUIR</strong> para confirmar:</Label>
+              <Input value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="EXCLUIR" autoFocus />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              onClick={deleteAep}
+              disabled={deleting || confirmText.trim().toUpperCase() !== 'EXCLUIR'}
+              className="gap-1"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Excluir definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

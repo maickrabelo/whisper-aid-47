@@ -1,34 +1,36 @@
-Três ajustes independentes nas telas de AEP, PGR PDF e GHE.
+## Bug identificado
 
-## 1) AEP — permitir editar e excluir informações
+A edge function `sst-reset-company-password` faz:
 
-Hoje, em `src/pages/AEPDetail.tsx`, as abas **Dados**, **Fatores** e **Participantes** só mostram as informações em modo leitura (o único delete existente é para evidências). Vou tornar todos esses conteúdos editáveis:
+```ts
+const { data: roleData } = await supabaseAdmin
+  .from('user_roles')
+  .select('role')
+  .eq('user_id', user.id)
+  .maybeSingle();
+```
 
-- **Aba Dados**: adicionar botão "Editar" que abre um diálogo com os campos principais da AEP (setor, função, situação avaliada, data, próxima revisão, metodologias, instrumento, detalhes, anonimato, responsável técnico, cargo, registro). Salva via `UPDATE aep_avaliacoes`.
-- **Aba Fatores**: em cada card de fator, adicionar botões **Editar** e **Excluir**.
-  - Editar: diálogo com categoria, nome, fonte/causa, grupos expostos, evidência textual, severidade, probabilidade e observações. Salva via `UPDATE aep_fatores_avaliados`.
-  - Excluir: confirmação + `DELETE aep_fatores_avaliados` (mais `DELETE aep_pgr_vinculo` do fator, se houver). Se o fator já gerou risco no PGR, avisar que o vínculo será removido mas o risco no inventário permanece (para não quebrar histórico).
-- **Aba Participantes**: adicionar botão "Adicionar" e ações de editar/excluir em cada linha.
-- Todas as ações só habilitam quando `aep.status` for `draft`, `in_progress` ou `in_review`. Nos status `completed`/`revised`, mostrar aviso "Crie uma nova versão para alterar" (mantém rastreabilidade das AEPs já assinadas).
+Só que na base **todo usuário SST tem 2 linhas em `user_roles`** (confirmado: 50+ usuários com múltiplas roles). O `.maybeSingle()` só aceita 0 ou 1 linha — com 2+ retorna erro e `roleData` fica `null`. Como o código ignora esse erro, `authorized` permanece `false` e a função responde **403** ("Acesso negado a esta empresa"), que o cliente exibe como o toast genérico "Erro ao resetar senha".
 
-## 2) PGR PDF — ordenar riscos por categoria
+## Correção
 
-Em `src/components/pgr/PGRReportPDF.ts`, dentro do loop por GHE (linha ~656), os riscos vêm sem ordenação, misturando "acidente / físico / químico / físico...". Vou ordenar `gheRisks` por `category` (ordem canônica: fisico, quimico, biologico, ergonomico, acidente, psicossocial) e depois por `agent_name`, para que na coluna **Cat.** os riscos apareçam agrupados. Nenhuma outra mudança no PDF.
+Em `supabase/functions/sst-reset-company-password/index.ts`, trocar o `.maybeSingle()` por uma consulta que retorna todas as roles:
 
-## 3) GHE — múltiplos cargos no mesmo setor
+```ts
+const { data: rolesData } = await supabaseAdmin
+  .from('user_roles')
+  .select('role')
+  .eq('user_id', user.id);
 
-Em `src/components/pgr/GHEManager.tsx`, o campo **Cargo** hoje é um único `<Input>`. Vou trocar por uma UI de múltiplos cargos:
+const roles = (rolesData || []).map(r => r.role);
+const isAdmin = roles.includes('admin');
+const isSst = roles.includes('sst');
+```
 
-- Input com botão "Adicionar" (e Enter) que empilha cada cargo como uma tag/badge removível.
-- Persistência sem migração de schema: armazenar como lista separada por vírgula na coluna `role` existente (ex.: `"Encanador, Auxiliar técnico, Eletricista"`). Ao editar, o valor é dividido de volta em tags.
-- Na tabela de listagem, exibir os cargos como badges empilhadas em vez de texto único.
-- No PDF do PGR (`Cargo/Função: ...`), continua funcionando normalmente pois já usa `ghe.role` como string.
+E ajustar o bloco de autorização abaixo para usar `isSst` em vez de `roleData?.role === 'sst'`.
 
-## Detalhes técnicos
+Nenhuma outra alteração — o fluxo restante (buscar profile do SST, verificar `company_sst_assignments`, gerar senha, enviar e-mail) continua igual.
 
-- Arquivos alterados:
-  - `src/pages/AEPDetail.tsx` — novos diálogos de edição + ações de excluir; guard por status.
-  - `src/components/pgr/PGRReportPDF.ts` — ordenação `gheRisks.sort(...)` antes de montar `rows`.
-  - `src/components/pgr/GHEManager.tsx` — componente de tags para o campo `role`; render como badges na tabela.
-- Sem alterações de schema, RLS ou migrations.
-- Sem mudanças em Edge Functions.
+## Arquivos alterados
+
+- `supabase/functions/sst-reset-company-password/index.ts` — corrigir consulta de roles.

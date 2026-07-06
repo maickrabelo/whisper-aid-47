@@ -659,7 +659,27 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
         continue;
       }
 
-      const rows = gheRisks.map(r => [
+      // Ordena por categoria (ordem canônica NR-01) e depois pelo agente
+      const CAT_ORDER: Record<string, number> = {
+        fisico: 1, físico: 1,
+        quimico: 2, químico: 2,
+        biologico: 3, biológico: 3,
+        ergonomico: 4, ergonômico: 4,
+        acidente: 5,
+        psicossocial: 6,
+      };
+      const normCat = (c?: string) => (c || '').toString().trim().toLowerCase();
+      const sortedRisks = [...gheRisks].sort((a, b) => {
+        const ca = normCat(a.category);
+        const cb = normCat(b.category);
+        const oa = CAT_ORDER[ca] ?? 99;
+        const ob = CAT_ORDER[cb] ?? 99;
+        if (oa !== ob) return oa - ob;
+        if (ca !== cb) return ca.localeCompare(cb);
+        return (a.agent_name || '').localeCompare(b.agent_name || '');
+      });
+
+      const rows = sortedRisks.map(r => [
         r.category || '—',
         `${r.agent_name}${r.esocial_agent_code ? ` (${r.esocial_agent_code})` : ''}`,
         r.source || '—',

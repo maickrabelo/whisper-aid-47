@@ -489,6 +489,16 @@ const AEPDetail = () => {
           <TabsContent value="dados" className="mt-4">
             <Card>
               <CardContent className="pt-6 space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">Informações da AEP</span>
+                  {isEditable ? (
+                    <Button size="sm" variant="outline" onClick={openEditDados} className="gap-1">
+                      <Pencil className="h-3.5 w-3.5" /> Editar
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1"><Lock className="h-3 w-3" /> Crie uma nova versão para alterar</span>
+                  )}
+                </div>
                 <Row label="Setor" value={aep.setor_nome} />
                 <Row label="Função/cargo" value={aep.funcao_nome} />
                 <Row label="Situação avaliada" value={aep.situacao_trabalho} />
@@ -510,6 +520,11 @@ const AEPDetail = () => {
 
           <TabsContent value="fatores" className="mt-4">
             <div className="space-y-3">
+              {!isEditable && fatores.length > 0 && (
+                <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
+                  <Lock className="h-3 w-3" /> Crie uma nova versão para alterar os fatores
+                </div>
+              )}
               {fatores.length === 0 && <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Nenhum fator levantado</CardContent></Card>}
               {fatores.map(f => {
                 const level = classifyRisk(5, f.severity, f.probability);
@@ -517,15 +532,23 @@ const AEPDetail = () => {
                 return (
                   <Card key={f.id}>
                     <CardContent className="pt-4 space-y-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold">{f.fator_nome}</span>
-                        <Badge variant="outline" className={AEP_CATEGORIA_COLORS[f.categoria as keyof typeof AEP_CATEGORIA_COLORS]}>
-                          {AEP_CATEGORIAS[f.categoria as keyof typeof AEP_CATEGORIAS]}
-                        </Badge>
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[level]}`}>
-                          {LEVEL_LABELS[level]}
-                        </span>
-                        <span className="text-xs text-muted-foreground">S={f.severity} P={f.probability}</span>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                          <span className="font-semibold">{f.fator_nome}</span>
+                          <Badge variant="outline" className={AEP_CATEGORIA_COLORS[f.categoria as keyof typeof AEP_CATEGORIA_COLORS]}>
+                            {AEP_CATEGORIAS[f.categoria as keyof typeof AEP_CATEGORIAS]}
+                          </Badge>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[level]}`}>
+                            {LEVEL_LABELS[level]}
+                          </span>
+                          <span className="text-xs text-muted-foreground">S={f.severity} P={f.probability}</span>
+                        </div>
+                        {isEditable && (
+                          <div className="flex gap-0.5 shrink-0">
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditFator(f)}><Pencil className="h-3.5 w-3.5" /></Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => deleteFator(f)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                          </div>
+                        )}
                       </div>
                       {f.fonte_causa && <div className="text-xs"><span className="text-muted-foreground">Fonte/causa: </span>{f.fonte_causa}</div>}
                       {f.grupos_expostos && <div className="text-xs"><span className="text-muted-foreground">Grupos expostos: </span>{f.grupos_expostos}</div>}
@@ -542,6 +565,8 @@ const AEPDetail = () => {
               })}
             </div>
           </TabsContent>
+
+
 
           <TabsContent value="evidencias" className="mt-4">
             <Card>

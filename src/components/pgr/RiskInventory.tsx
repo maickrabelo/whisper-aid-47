@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat } from "lucide-react";
+import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 import { AEPBadge } from "@/components/aep/AEPBadge";
@@ -112,6 +112,21 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [epiList, setEpiList] = useState<{ name: string; ca: string }[]>([]);
+  const [epiDraft, setEpiDraft] = useState<{ name: string; ca: string }>({ name: '', ca: '' });
+
+  const parseEpiPair = (names: string | null | undefined, cas: string | null | undefined) => {
+    const n = (names || '').split(',').map(s => s.trim()).filter(Boolean);
+    const c = (cas || '').split(',').map(s => s.trim());
+    return n.map((name, i) => ({ name, ca: (c[i] || '').trim() }));
+  };
+  const addEpi = () => {
+    const name = epiDraft.name.trim();
+    if (!name) return;
+    setEpiList(prev => [...prev, { name, ca: epiDraft.ca.trim() }]);
+    setEpiDraft({ name: '', ca: '' });
+  };
+  const removeEpi = (idx: number) => setEpiList(prev => prev.filter((_, i) => i !== idx));
 
   const load = async () => {
     setLoading(true);
@@ -145,7 +160,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
 
   useEffect(() => { load(); }, [pgrDocumentId, term.isRural]);
 
-  const openNew = () => { setEditing(null); setForm(emptyForm); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm(emptyForm); setEpiList([]); setEpiDraft({ name: '', ca: '' }); setOpen(true); };
   const openEdit = (r: any) => {
     setEditing(r);
     setForm({
@@ -167,6 +182,8 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       pesticide_required_epi: r.pesticide_required_epi || '',
       pesticide_reentry_period: r.pesticide_reentry_period || '',
     });
+    setEpiList(parseEpiPair(r.existing_epi, r.epi_ca));
+    setEpiDraft({ name: '', ca: '' });
     setOpen(true);
   };
 
@@ -183,7 +200,11 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
     if (!form.agent_name.trim()) { toast.error("Informe o agente/risco"); return; }
     setSaving(true);
     try {
-      const payload: any = { ...form, pgr_document_id: pgrDocumentId };
+      const finalList = [...epiList];
+      if (epiDraft.name.trim()) finalList.push({ name: epiDraft.name.trim(), ca: epiDraft.ca.trim() });
+      const existing_epi = finalList.map(e => e.name).join(', ');
+      const epi_ca = finalList.map(e => e.ca).join(', ');
+      const payload: any = { ...form, existing_epi, epi_ca, pgr_document_id: pgrDocumentId };
       if (!payload.ghe_id) payload.ghe_id = null;
       if (editing) {
         const { error } = await supabase.from('pgr_risks').update(payload).eq('id', editing.id);
@@ -514,9 +535,34 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
               )}
 
               <div className="space-y-2"><Label>EPC existentes</Label><Textarea rows={2} value={form.existing_epc} onChange={e => setForm({ ...form, existing_epc: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>EPI</Label><Input value={form.existing_epi} onChange={e => setForm({ ...form, existing_epi: e.target.value })} /></div>
-                <div className="space-y-2"><Label>CA do EPI</Label><Input value={form.epi_ca} onChange={e => setForm({ ...form, epi_ca: e.target.value })} /></div>
+              <div className="space-y-2">
+                <Label>EPIs</Label>
+                {epiList.length > 0 && (
+                  <div className="space-y-1">
+                    {epiList.map((e, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm bg-muted/50 rounded-md px-2 py-1">
+                        <span className="flex-1"><span className="font-medium">{e.name}</span>{e.ca ? <span className="text-muted-foreground"> — CA {e.ca}</span> : null}</span>
+                        <button type="button" onClick={() => removeEpi(i)} className="text-muted-foreground hover:text-destructive"><X className="h-3.5 w-3.5" /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="grid grid-cols-[1fr_140px_auto] gap-2">
+                  <Input
+                    value={epiDraft.name}
+                    onChange={e => setEpiDraft(d => ({ ...d, name: e.target.value }))}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addEpi(); } }}
+                    placeholder="Nome do EPI (ex.: Luva nitrílica)"
+                  />
+                  <Input
+                    value={epiDraft.ca}
+                    onChange={e => setEpiDraft(d => ({ ...d, ca: e.target.value }))}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addEpi(); } }}
+                    placeholder="CA"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={addEpi}>Adicionar</Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Adicione quantos EPIs forem necessários. O CA é opcional por item.</p>
               </div>
             </div>
             <DialogFooter>

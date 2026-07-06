@@ -238,9 +238,16 @@ export default function COPSOQDashboardContent() {
                       <TableCell className="font-medium">{a.title}</TableCell>
                       <TableCell><div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-muted-foreground" />{a.companies?.name}</div></TableCell>
                       <TableCell>
-                        {a.start_date && a.end_date ? (
-                          <span className="text-sm">{format(new Date(a.start_date), 'dd/MM/yy', { locale: ptBR })} - {format(new Date(a.end_date), 'dd/MM/yy', { locale: ptBR })}</span>
-                        ) : <span className="text-muted-foreground text-sm">Sem período</span>}
+                        {(() => {
+                          const s = a.start_date ? new Date(a.start_date) : null;
+                          const e = a.end_date ? new Date(a.end_date) : null;
+                          const sOk = s && !isNaN(s.getTime());
+                          const eOk = e && !isNaN(e.getTime());
+                          if (sOk && eOk) {
+                            return <span className="text-sm">{format(s!, 'dd/MM/yy', { locale: ptBR })} - {format(e!, 'dd/MM/yy', { locale: ptBR })}</span>;
+                          }
+                          return <span className="text-muted-foreground text-sm">Sem período</span>;
+                        })()}
                       </TableCell>
                       <TableCell><Badge variant="secondary">{a.response_count || 0} respostas</Badge></TableCell>
                       <TableCell><Badge variant={a.is_active ? 'default' : 'outline'}>{a.is_active ? 'Ativa' : 'Inativa'}</Badge></TableCell>

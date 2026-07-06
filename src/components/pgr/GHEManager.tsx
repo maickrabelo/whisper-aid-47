@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Pencil, Loader2, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, Pencil, Loader2, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 
@@ -29,6 +30,21 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
   const [editing, setEditing] = useState<GHE | null>(null);
   const [form, setForm] = useState({ name: "", sector: "", role: "", activities_description: "", worker_count: 0, work_schedule: "" });
   const [saving, setSaving] = useState(false);
+  const [roleInput, setRoleInput] = useState("");
+
+  const parseRoles = (s: string | null | undefined): string[] =>
+    (s || "").split(",").map(r => r.trim()).filter(Boolean);
+  const rolesArr = parseRoles(form.role);
+  const addRole = () => {
+    const v = roleInput.trim();
+    if (!v) return;
+    if (rolesArr.some(r => r.toLowerCase() === v.toLowerCase())) { setRoleInput(""); return; }
+    setForm({ ...form, role: [...rolesArr, v].join(", ") });
+    setRoleInput("");
+  };
+  const removeRole = (r: string) => {
+    setForm({ ...form, role: rolesArr.filter(x => x !== r).join(", ") });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -47,6 +63,7 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
   const openNew = () => {
     setEditing(null);
     setForm({ name: "", sector: "", role: "", activities_description: "", worker_count: 0, work_schedule: "" });
+    setRoleInput("");
     setOpen(true);
   };
   const openEdit = (g: GHE) => {
@@ -59,6 +76,7 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
       worker_count: g.worker_count || 0,
       work_schedule: g.work_schedule || "",
     });
+    setRoleInput("");
     setOpen(true);
   };
 
@@ -116,7 +134,7 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Setor</TableHead>
-                <TableHead>Cargo</TableHead>
+                <TableHead>Cargo(s)</TableHead>
                 <TableHead className="text-right">Trabalhadores</TableHead>
                 <TableHead className="w-24"></TableHead>
               </TableRow>
@@ -126,7 +144,15 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
                 <TableRow key={g.id}>
                   <TableCell className="font-medium">{g.name}</TableCell>
                   <TableCell>{g.sector || '-'}</TableCell>
-                  <TableCell>{g.role || '-'}</TableCell>
+                  <TableCell>
+                    {parseRoles(g.role).length === 0 ? '-' : (
+                      <div className="flex flex-wrap gap-1">
+                        {parseRoles(g.role).map(r => (
+                          <Badge key={r} variant="secondary" className="text-xs font-normal">{r}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">{g.worker_count}</TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button size="icon" variant="ghost" onClick={() => openEdit(g)}><Pencil className="h-4 w-4" /></Button>
@@ -145,7 +171,29 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
               <div className="space-y-2"><Label>Nome do {term.gheLabel} *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={term.isRural ? "Ex: Aplicadores de defensivos — talhão A" : "Ex: Operadores de máquina linha 1"} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>{term.isRural ? 'Talhão / Área' : 'Setor'}</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
-                <div className="space-y-2"><Label>{term.isRural ? 'Função rural' : 'Cargo'}</Label><Input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder={term.isRural ? 'Ex: Tratorista, colhedor, aplicador' : ''} /></div>
+                <div className="space-y-2">
+                  <Label>{term.isRural ? 'Função(ões) rural(is)' : 'Cargo(s)'}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={roleInput}
+                      onChange={e => setRoleInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addRole(); } }}
+                      placeholder={term.isRural ? 'Ex: Tratorista' : 'Ex: Encanador'}
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={addRole}>Adicionar</Button>
+                  </div>
+                  {rolesArr.length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {rolesArr.map(r => (
+                        <Badge key={r} variant="secondary" className="text-xs font-normal gap-1 pr-1">
+                          {r}
+                          <button type="button" onClick={() => removeRole(r)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-[10px] text-muted-foreground">Adicione vários cargos no mesmo GHE (ex.: Encanador, Auxiliar técnico, Eletricista).</p>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>Nº trabalhadores</Label><Input type="number" min={0} value={form.worker_count} onChange={e => setForm({ ...form, worker_count: parseInt(e.target.value) || 0 })} /></div>

@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Loader2, Download, Send, GitBranch, Upload, Trash2, FileText, ClipboardList, Users, Paperclip, History, Link2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Send, GitBranch, Upload, Trash2, FileText, ClipboardList, Users, Paperclip, History, Link2, CheckCircle2, Pencil, Plus, Lock } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { SendToInventoryDialog } from "@/components/aep/SendToInventoryDialog";
 import { generateAEPReportPDF } from "@/components/aep/AEPReportPDF";
@@ -34,6 +35,20 @@ const AEPDetail = () => {
   const [sendOpen, setSendOpen] = useState(false);
   const [newVersionOpen, setNewVersionOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  // Edição — Dados
+  const [editDadosOpen, setEditDadosOpen] = useState(false);
+  const [dadosForm, setDadosForm] = useState<any>({});
+
+  // Edição — Fator
+  const [editFatorOpen, setEditFatorOpen] = useState(false);
+  const [fatorEditing, setFatorEditing] = useState<any>(null);
+  const [fatorForm, setFatorForm] = useState<any>({});
+
+  // Edição — Participante
+  const [editPartOpen, setEditPartOpen] = useState(false);
+  const [partEditing, setPartEditing] = useState<any>(null);
+  const [partForm, setPartForm] = useState<any>({ nome: '', funcao: '', tipo_participacao: 'entrevista', anonimizado: false });
 
   const load = async () => {
     if (!aepId) return;
@@ -202,6 +217,151 @@ const AEPDetail = () => {
     }
   };
 
+  // ─── Edição ────────────────────────────────────────────────
+  const isEditable = aep && ['draft', 'in_progress', 'in_review'].includes(aep.status);
+
+  const openEditDados = () => {
+    if (!aep) return;
+    setDadosForm({
+      setor_nome: aep.setor_nome || '',
+      funcao_nome: aep.funcao_nome || '',
+      situacao_trabalho: aep.situacao_trabalho || '',
+      assessment_date: aep.assessment_date || '',
+      next_review_date: aep.next_review_date || '',
+      methodologies: (aep.methodologies || []).join(', '),
+      instrument_name: aep.instrument_name || '',
+      methodology_details: aep.methodology_details || '',
+      anonymity_ensured: !!aep.anonymity_ensured,
+      responsible_name: aep.responsible_name || '',
+      responsible_role: aep.responsible_role || '',
+      responsible_registration: aep.responsible_registration || '',
+    });
+    setEditDadosOpen(true);
+  };
+  const saveDados = async () => {
+    try {
+      const patch: any = {
+        setor_nome: dadosForm.setor_nome || null,
+        funcao_nome: dadosForm.funcao_nome || null,
+        situacao_trabalho: dadosForm.situacao_trabalho || null,
+        assessment_date: dadosForm.assessment_date || null,
+        next_review_date: dadosForm.next_review_date || null,
+        methodologies: (dadosForm.methodologies || '').split(',').map((s: string) => s.trim()).filter(Boolean),
+        instrument_name: dadosForm.instrument_name || null,
+        methodology_details: dadosForm.methodology_details || null,
+        anonymity_ensured: !!dadosForm.anonymity_ensured,
+        responsible_name: dadosForm.responsible_name || null,
+        responsible_role: dadosForm.responsible_role || null,
+        responsible_registration: dadosForm.responsible_registration || null,
+      };
+      const { error } = await supabase.from('aep_avaliacoes' as any).update(patch).eq('id', aep.id);
+      if (error) throw error;
+      toast.success('Dados atualizados');
+      setEditDadosOpen(false);
+      load();
+    } catch (e: any) {
+      toast.error('Erro ao salvar: ' + e.message);
+    }
+  };
+
+  const openEditFator = (f: any) => {
+    setFatorEditing(f);
+    setFatorForm({
+      categoria: f.categoria,
+      fator_nome: f.fator_nome || '',
+      fonte_causa: f.fonte_causa || '',
+      grupos_expostos: f.grupos_expostos || '',
+      evidencia_texto: f.evidencia_texto || '',
+      severity: f.severity || 3,
+      probability: f.probability || 3,
+      observacoes: f.observacoes || '',
+    });
+    setEditFatorOpen(true);
+  };
+  const saveFator = async () => {
+    if (!fatorEditing) return;
+    try {
+      const patch: any = {
+        categoria: fatorForm.categoria,
+        fator_nome: fatorForm.fator_nome || null,
+        fonte_causa: fatorForm.fonte_causa || null,
+        grupos_expostos: fatorForm.grupos_expostos || null,
+        evidencia_texto: fatorForm.evidencia_texto || null,
+        severity: Number(fatorForm.severity) || 1,
+        probability: Number(fatorForm.probability) || 1,
+        observacoes: fatorForm.observacoes || null,
+      };
+      const { error } = await supabase.from('aep_fatores_avaliados' as any).update(patch).eq('id', fatorEditing.id);
+      if (error) throw error;
+      toast.success('Fator atualizado');
+      setEditFatorOpen(false);
+      load();
+    } catch (e: any) {
+      toast.error('Erro ao salvar: ' + e.message);
+    }
+  };
+  const deleteFator = async (f: any) => {
+    const linked = linkedByFator.get(f.id) || [];
+    const warn = linked.length > 0
+      ? `Este fator está vinculado a ${linked.length} risco(s) do PGR. O vínculo será removido (os riscos no inventário do PGR permanecem). Excluir?`
+      : `Excluir o fator "${f.fator_nome}"?`;
+    if (!confirm(warn)) return;
+    try {
+      await supabase.from('aep_pgr_vinculo' as any).delete().eq('aep_fator_id', f.id);
+      const { error } = await supabase.from('aep_fatores_avaliados' as any).delete().eq('id', f.id);
+      if (error) throw error;
+      toast.success('Fator excluído');
+      load();
+    } catch (e: any) {
+      toast.error('Erro ao excluir: ' + e.message);
+    }
+  };
+
+  const openNewPart = () => {
+    setPartEditing(null);
+    setPartForm({ nome: '', funcao: '', tipo_participacao: 'entrevista', anonimizado: false });
+    setEditPartOpen(true);
+  };
+  const openEditPart = (p: any) => {
+    setPartEditing(p);
+    setPartForm({
+      nome: p.nome || '',
+      funcao: p.funcao || '',
+      tipo_participacao: p.tipo_participacao || 'entrevista',
+      anonimizado: !!p.anonimizado,
+    });
+    setEditPartOpen(true);
+  };
+  const savePart = async () => {
+    try {
+      const payload: any = {
+        nome: partForm.nome || null,
+        funcao: partForm.funcao || null,
+        tipo_participacao: partForm.tipo_participacao,
+        anonimizado: !!partForm.anonimizado,
+      };
+      if (partEditing) {
+        const { error } = await supabase.from('aep_participantes' as any).update(payload).eq('id', partEditing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('aep_participantes' as any).insert({ ...payload, aep_id: aep.id } as any);
+        if (error) throw error;
+      }
+      toast.success('Participante salvo');
+      setEditPartOpen(false);
+      load();
+    } catch (e: any) {
+      toast.error('Erro ao salvar: ' + e.message);
+    }
+  };
+  const deletePart = async (p: any) => {
+    if (!confirm('Excluir este participante?')) return;
+    const { error } = await supabase.from('aep_participantes' as any).delete().eq('id', p.id);
+    if (error) { toast.error('Erro: ' + error.message); return; }
+    toast.success('Participante excluído');
+    load();
+  };
+
   if (authLoading || loading || !aep) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -329,6 +489,16 @@ const AEPDetail = () => {
           <TabsContent value="dados" className="mt-4">
             <Card>
               <CardContent className="pt-6 space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">Informações da AEP</span>
+                  {isEditable ? (
+                    <Button size="sm" variant="outline" onClick={openEditDados} className="gap-1">
+                      <Pencil className="h-3.5 w-3.5" /> Editar
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1"><Lock className="h-3 w-3" /> Crie uma nova versão para alterar</span>
+                  )}
+                </div>
                 <Row label="Setor" value={aep.setor_nome} />
                 <Row label="Função/cargo" value={aep.funcao_nome} />
                 <Row label="Situação avaliada" value={aep.situacao_trabalho} />
@@ -350,6 +520,11 @@ const AEPDetail = () => {
 
           <TabsContent value="fatores" className="mt-4">
             <div className="space-y-3">
+              {!isEditable && fatores.length > 0 && (
+                <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
+                  <Lock className="h-3 w-3" /> Crie uma nova versão para alterar os fatores
+                </div>
+              )}
               {fatores.length === 0 && <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Nenhum fator levantado</CardContent></Card>}
               {fatores.map(f => {
                 const level = classifyRisk(5, f.severity, f.probability);
@@ -357,15 +532,23 @@ const AEPDetail = () => {
                 return (
                   <Card key={f.id}>
                     <CardContent className="pt-4 space-y-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold">{f.fator_nome}</span>
-                        <Badge variant="outline" className={AEP_CATEGORIA_COLORS[f.categoria as keyof typeof AEP_CATEGORIA_COLORS]}>
-                          {AEP_CATEGORIAS[f.categoria as keyof typeof AEP_CATEGORIAS]}
-                        </Badge>
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[level]}`}>
-                          {LEVEL_LABELS[level]}
-                        </span>
-                        <span className="text-xs text-muted-foreground">S={f.severity} P={f.probability}</span>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                          <span className="font-semibold">{f.fator_nome}</span>
+                          <Badge variant="outline" className={AEP_CATEGORIA_COLORS[f.categoria as keyof typeof AEP_CATEGORIA_COLORS]}>
+                            {AEP_CATEGORIAS[f.categoria as keyof typeof AEP_CATEGORIAS]}
+                          </Badge>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[level]}`}>
+                            {LEVEL_LABELS[level]}
+                          </span>
+                          <span className="text-xs text-muted-foreground">S={f.severity} P={f.probability}</span>
+                        </div>
+                        {isEditable && (
+                          <div className="flex gap-0.5 shrink-0">
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditFator(f)}><Pencil className="h-3.5 w-3.5" /></Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => deleteFator(f)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                          </div>
+                        )}
                       </div>
                       {f.fonte_causa && <div className="text-xs"><span className="text-muted-foreground">Fonte/causa: </span>{f.fonte_causa}</div>}
                       {f.grupos_expostos && <div className="text-xs"><span className="text-muted-foreground">Grupos expostos: </span>{f.grupos_expostos}</div>}
@@ -382,6 +565,8 @@ const AEPDetail = () => {
               })}
             </div>
           </TabsContent>
+
+
 
           <TabsContent value="evidencias" className="mt-4">
             <Card>
@@ -432,20 +617,37 @@ const AEPDetail = () => {
           <TabsContent value="participantes" className="mt-4">
             <Card>
               <CardContent className="pt-6 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">Participantes ouvidos</span>
+                  {isEditable ? (
+                    <Button size="sm" variant="outline" onClick={openNewPart} className="gap-1">
+                      <Plus className="h-3.5 w-3.5" /> Adicionar
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1"><Lock className="h-3 w-3" /> Crie uma nova versão para alterar</span>
+                  )}
+                </div>
                 {participantes.length === 0 ? (
                   <div className="text-center py-6 text-sm text-muted-foreground">Nenhum participante registrado</div>
                 ) : participantes.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-2 border rounded text-sm">
-                    <div>
+                  <div key={p.id} className="flex items-center justify-between p-2 border rounded text-sm gap-2">
+                    <div className="flex-1 min-w-0">
                       <span className="font-medium">{p.anonimizado ? '(Anonimizado)' : (p.nome || '—')}</span>
                       {p.funcao && <span className="text-muted-foreground"> — {p.funcao}</span>}
                     </div>
                     <Badge variant="outline" className="text-[10px]">{p.tipo_participacao}</Badge>
+                    {isEditable && (
+                      <div className="flex gap-0.5 shrink-0">
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditPart(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => deletePart(p)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </CardContent>
             </Card>
           </TabsContent>
+
 
           <TabsContent value="versoes" className="mt-4">
             <Card>
@@ -492,6 +694,118 @@ const AEPDetail = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewVersionOpen(false)}>Cancelar</Button>
             <Button onClick={createNewVersion}>Criar versão</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editar dados da AEP */}
+      <Dialog open={editDadosOpen} onOpenChange={setEditDadosOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Editar dados da AEP</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1"><Label>Setor</Label><Input value={dadosForm.setor_nome || ''} onChange={e => setDadosForm({ ...dadosForm, setor_nome: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Função/cargo</Label><Input value={dadosForm.funcao_nome || ''} onChange={e => setDadosForm({ ...dadosForm, funcao_nome: e.target.value })} /></div>
+            </div>
+            <div className="space-y-1"><Label>Situação avaliada</Label><Textarea rows={2} value={dadosForm.situacao_trabalho || ''} onChange={e => setDadosForm({ ...dadosForm, situacao_trabalho: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1"><Label>Data da avaliação</Label><Input type="date" value={dadosForm.assessment_date || ''} onChange={e => setDadosForm({ ...dadosForm, assessment_date: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Próxima revisão</Label><Input type="date" value={dadosForm.next_review_date || ''} onChange={e => setDadosForm({ ...dadosForm, next_review_date: e.target.value })} /></div>
+            </div>
+            <div className="space-y-1"><Label>Metodologias (separe por vírgula)</Label><Input value={dadosForm.methodologies || ''} onChange={e => setDadosForm({ ...dadosForm, methodologies: e.target.value })} placeholder="observacao, entrevista, checklist" /></div>
+            <div className="space-y-1"><Label>Instrumento</Label><Input value={dadosForm.instrument_name || ''} onChange={e => setDadosForm({ ...dadosForm, instrument_name: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Detalhes da metodologia</Label><Textarea rows={2} value={dadosForm.methodology_details || ''} onChange={e => setDadosForm({ ...dadosForm, methodology_details: e.target.value })} /></div>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox checked={!!dadosForm.anonymity_ensured} onCheckedChange={v => setDadosForm({ ...dadosForm, anonymity_ensured: !!v })} />
+              Anonimato garantido
+            </label>
+            <div className="border-t pt-3 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>Responsável técnico</Label><Input value={dadosForm.responsible_name || ''} onChange={e => setDadosForm({ ...dadosForm, responsible_name: e.target.value })} /></div>
+                <div className="space-y-1"><Label>Cargo/formação</Label><Input value={dadosForm.responsible_role || ''} onChange={e => setDadosForm({ ...dadosForm, responsible_role: e.target.value })} /></div>
+              </div>
+              <div className="space-y-1"><Label>Registro (CREA/MTE)</Label><Input value={dadosForm.responsible_registration || ''} onChange={e => setDadosForm({ ...dadosForm, responsible_registration: e.target.value })} /></div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDadosOpen(false)}>Cancelar</Button>
+            <Button onClick={saveDados}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editar fator */}
+      <Dialog open={editFatorOpen} onOpenChange={setEditFatorOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Editar fator</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="space-y-1">
+              <Label>Categoria</Label>
+              <Select value={fatorForm.categoria} onValueChange={v => setFatorForm({ ...fatorForm, categoria: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(AEP_CATEGORIAS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1"><Label>Nome do fator</Label><Input value={fatorForm.fator_nome || ''} onChange={e => setFatorForm({ ...fatorForm, fator_nome: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Fonte/causa</Label><Textarea rows={2} value={fatorForm.fonte_causa || ''} onChange={e => setFatorForm({ ...fatorForm, fonte_causa: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Grupos expostos</Label><Input value={fatorForm.grupos_expostos || ''} onChange={e => setFatorForm({ ...fatorForm, grupos_expostos: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Evidência (texto)</Label><Textarea rows={2} value={fatorForm.evidencia_texto || ''} onChange={e => setFatorForm({ ...fatorForm, evidencia_texto: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Severidade (1-5)</Label>
+                <Select value={String(fatorForm.severity || 3)} onValueChange={v => setFatorForm({ ...fatorForm, severity: Number(v) })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Probabilidade (1-5)</Label>
+                <Select value={String(fatorForm.probability || 3)} onValueChange={v => setFatorForm({ ...fatorForm, probability: Number(v) })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1"><Label>Observações</Label><Textarea rows={2} value={fatorForm.observacoes || ''} onChange={e => setFatorForm({ ...fatorForm, observacoes: e.target.value })} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditFatorOpen(false)}>Cancelar</Button>
+            <Button onClick={saveFator}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editar/Adicionar participante */}
+      <Dialog open={editPartOpen} onOpenChange={setEditPartOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{partEditing ? 'Editar' : 'Adicionar'} participante</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="space-y-1"><Label>Nome</Label><Input value={partForm.nome} onChange={e => setPartForm({ ...partForm, nome: e.target.value })} disabled={partForm.anonimizado} placeholder={partForm.anonimizado ? '(anônimo)' : ''} /></div>
+            <div className="space-y-1"><Label>Função</Label><Input value={partForm.funcao} onChange={e => setPartForm({ ...partForm, funcao: e.target.value })} /></div>
+            <div className="space-y-1">
+              <Label>Tipo de participação</Label>
+              <Select value={partForm.tipo_participacao} onValueChange={v => setPartForm({ ...partForm, tipo_participacao: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="entrevista">Entrevista</SelectItem>
+                  <SelectItem value="observacao">Observação</SelectItem>
+                  <SelectItem value="questionario">Questionário</SelectItem>
+                  <SelectItem value="grupo_focal">Grupo focal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <label className="flex items-center gap-2">
+              <Checkbox checked={!!partForm.anonimizado} onCheckedChange={v => setPartForm({ ...partForm, anonimizado: !!v })} />
+              Anonimizado
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPartOpen(false)}>Cancelar</Button>
+            <Button onClick={savePart}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

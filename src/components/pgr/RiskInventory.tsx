@@ -200,7 +200,11 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
     if (!form.agent_name.trim()) { toast.error("Informe o agente/risco"); return; }
     setSaving(true);
     try {
-      const payload: any = { ...form, pgr_document_id: pgrDocumentId };
+      const finalList = [...epiList];
+      if (epiDraft.name.trim()) finalList.push({ name: epiDraft.name.trim(), ca: epiDraft.ca.trim() });
+      const existing_epi = finalList.map(e => e.name).join(', ');
+      const epi_ca = finalList.map(e => e.ca).join(', ');
+      const payload: any = { ...form, existing_epi, epi_ca, pgr_document_id: pgrDocumentId };
       if (!payload.ghe_id) payload.ghe_id = null;
       if (editing) {
         const { error } = await supabase.from('pgr_risks').update(payload).eq('id', editing.id);

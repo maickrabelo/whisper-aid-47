@@ -134,7 +134,7 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Setor</TableHead>
-                <TableHead>Cargo</TableHead>
+                <TableHead>Cargo(s)</TableHead>
                 <TableHead className="text-right">Trabalhadores</TableHead>
                 <TableHead className="w-24"></TableHead>
               </TableRow>

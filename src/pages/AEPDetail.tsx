@@ -617,20 +617,37 @@ const AEPDetail = () => {
           <TabsContent value="participantes" className="mt-4">
             <Card>
               <CardContent className="pt-6 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">Participantes ouvidos</span>
+                  {isEditable ? (
+                    <Button size="sm" variant="outline" onClick={openNewPart} className="gap-1">
+                      <Plus className="h-3.5 w-3.5" /> Adicionar
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1"><Lock className="h-3 w-3" /> Crie uma nova versão para alterar</span>
+                  )}
+                </div>
                 {participantes.length === 0 ? (
                   <div className="text-center py-6 text-sm text-muted-foreground">Nenhum participante registrado</div>
                 ) : participantes.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-2 border rounded text-sm">
-                    <div>
+                  <div key={p.id} className="flex items-center justify-between p-2 border rounded text-sm gap-2">
+                    <div className="flex-1 min-w-0">
                       <span className="font-medium">{p.anonimizado ? '(Anonimizado)' : (p.nome || '—')}</span>
                       {p.funcao && <span className="text-muted-foreground"> — {p.funcao}</span>}
                     </div>
                     <Badge variant="outline" className="text-[10px]">{p.tipo_participacao}</Badge>
+                    {isEditable && (
+                      <div className="flex gap-0.5 shrink-0">
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditPart(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => deletePart(p)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </CardContent>
             </Card>
           </TabsContent>
+
 
           <TabsContent value="versoes" className="mt-4">
             <Card>

@@ -171,10 +171,6 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
               <div className="space-y-2"><Label>Nome do {term.gheLabel} *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={term.isRural ? "Ex: Aplicadores de defensivos — talhão A" : "Ex: Operadores de máquina linha 1"} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>{term.isRural ? 'Talhão / Área' : 'Setor'}</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
-                <div className="space-y-2"><Label>{term.isRural ? 'Função rural' : 'Cargo'}</Label><Input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder={term.isRural ? 'Ex: Tratorista, colhedor, aplicador' : ''} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>{term.isRural ? 'Talhão / Área' : 'Setor'}</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
                 <div className="space-y-2">
                   <Label>{term.isRural ? 'Função(ões) rural(is)' : 'Cargo(s)'}</Label>
                   <div className="flex gap-2">
@@ -196,8 +192,12 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
                       ))}
                     </div>
                   )}
-                  <p className="text-[10px] text-muted-foreground">Adicione vários cargos que compartilham o mesmo GHE (ex.: Encanador, Auxiliar técnico, Eletricista).</p>
+                  <p className="text-[10px] text-muted-foreground">Adicione vários cargos no mesmo GHE (ex.: Encanador, Auxiliar técnico, Eletricista).</p>
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2"><Label>Nº trabalhadores</Label><Input type="number" min={0} value={form.worker_count} onChange={e => setForm({ ...form, worker_count: parseInt(e.target.value) || 0 })} /></div>
+                <div className="space-y-2"><Label>Jornada</Label><Input value={form.work_schedule} onChange={e => setForm({ ...form, work_schedule: e.target.value })} placeholder="Ex: 8h/dia 5x2" /></div>
               </div>
               <div className="space-y-2"><Label>Descrição das atividades</Label><Textarea rows={3} value={form.activities_description} onChange={e => setForm({ ...form, activities_description: e.target.value })} /></div>
             </div>

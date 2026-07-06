@@ -160,7 +160,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
 
   useEffect(() => { load(); }, [pgrDocumentId, term.isRural]);
 
-  const openNew = () => { setEditing(null); setForm(emptyForm); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm(emptyForm); setEpiList([]); setEpiDraft({ name: '', ca: '' }); setOpen(true); };
   const openEdit = (r: any) => {
     setEditing(r);
     setForm({

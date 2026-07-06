@@ -697,6 +697,118 @@ const AEPDetail = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Editar dados da AEP */}
+      <Dialog open={editDadosOpen} onOpenChange={setEditDadosOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Editar dados da AEP</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1"><Label>Setor</Label><Input value={dadosForm.setor_nome || ''} onChange={e => setDadosForm({ ...dadosForm, setor_nome: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Função/cargo</Label><Input value={dadosForm.funcao_nome || ''} onChange={e => setDadosForm({ ...dadosForm, funcao_nome: e.target.value })} /></div>
+            </div>
+            <div className="space-y-1"><Label>Situação avaliada</Label><Textarea rows={2} value={dadosForm.situacao_trabalho || ''} onChange={e => setDadosForm({ ...dadosForm, situacao_trabalho: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1"><Label>Data da avaliação</Label><Input type="date" value={dadosForm.assessment_date || ''} onChange={e => setDadosForm({ ...dadosForm, assessment_date: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Próxima revisão</Label><Input type="date" value={dadosForm.next_review_date || ''} onChange={e => setDadosForm({ ...dadosForm, next_review_date: e.target.value })} /></div>
+            </div>
+            <div className="space-y-1"><Label>Metodologias (separe por vírgula)</Label><Input value={dadosForm.methodologies || ''} onChange={e => setDadosForm({ ...dadosForm, methodologies: e.target.value })} placeholder="observacao, entrevista, checklist" /></div>
+            <div className="space-y-1"><Label>Instrumento</Label><Input value={dadosForm.instrument_name || ''} onChange={e => setDadosForm({ ...dadosForm, instrument_name: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Detalhes da metodologia</Label><Textarea rows={2} value={dadosForm.methodology_details || ''} onChange={e => setDadosForm({ ...dadosForm, methodology_details: e.target.value })} /></div>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox checked={!!dadosForm.anonymity_ensured} onCheckedChange={v => setDadosForm({ ...dadosForm, anonymity_ensured: !!v })} />
+              Anonimato garantido
+            </label>
+            <div className="border-t pt-3 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>Responsável técnico</Label><Input value={dadosForm.responsible_name || ''} onChange={e => setDadosForm({ ...dadosForm, responsible_name: e.target.value })} /></div>
+                <div className="space-y-1"><Label>Cargo/formação</Label><Input value={dadosForm.responsible_role || ''} onChange={e => setDadosForm({ ...dadosForm, responsible_role: e.target.value })} /></div>
+              </div>
+              <div className="space-y-1"><Label>Registro (CREA/MTE)</Label><Input value={dadosForm.responsible_registration || ''} onChange={e => setDadosForm({ ...dadosForm, responsible_registration: e.target.value })} /></div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDadosOpen(false)}>Cancelar</Button>
+            <Button onClick={saveDados}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editar fator */}
+      <Dialog open={editFatorOpen} onOpenChange={setEditFatorOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Editar fator</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="space-y-1">
+              <Label>Categoria</Label>
+              <Select value={fatorForm.categoria} onValueChange={v => setFatorForm({ ...fatorForm, categoria: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(AEP_CATEGORIAS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1"><Label>Nome do fator</Label><Input value={fatorForm.fator_nome || ''} onChange={e => setFatorForm({ ...fatorForm, fator_nome: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Fonte/causa</Label><Textarea rows={2} value={fatorForm.fonte_causa || ''} onChange={e => setFatorForm({ ...fatorForm, fonte_causa: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Grupos expostos</Label><Input value={fatorForm.grupos_expostos || ''} onChange={e => setFatorForm({ ...fatorForm, grupos_expostos: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Evidência (texto)</Label><Textarea rows={2} value={fatorForm.evidencia_texto || ''} onChange={e => setFatorForm({ ...fatorForm, evidencia_texto: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Severidade (1-5)</Label>
+                <Select value={String(fatorForm.severity || 3)} onValueChange={v => setFatorForm({ ...fatorForm, severity: Number(v) })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Probabilidade (1-5)</Label>
+                <Select value={String(fatorForm.probability || 3)} onValueChange={v => setFatorForm({ ...fatorForm, probability: Number(v) })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1"><Label>Observações</Label><Textarea rows={2} value={fatorForm.observacoes || ''} onChange={e => setFatorForm({ ...fatorForm, observacoes: e.target.value })} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditFatorOpen(false)}>Cancelar</Button>
+            <Button onClick={saveFator}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editar/Adicionar participante */}
+      <Dialog open={editPartOpen} onOpenChange={setEditPartOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{partEditing ? 'Editar' : 'Adicionar'} participante</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="space-y-1"><Label>Nome</Label><Input value={partForm.nome} onChange={e => setPartForm({ ...partForm, nome: e.target.value })} disabled={partForm.anonimizado} placeholder={partForm.anonimizado ? '(anônimo)' : ''} /></div>
+            <div className="space-y-1"><Label>Função</Label><Input value={partForm.funcao} onChange={e => setPartForm({ ...partForm, funcao: e.target.value })} /></div>
+            <div className="space-y-1">
+              <Label>Tipo de participação</Label>
+              <Select value={partForm.tipo_participacao} onValueChange={v => setPartForm({ ...partForm, tipo_participacao: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="entrevista">Entrevista</SelectItem>
+                  <SelectItem value="observacao">Observação</SelectItem>
+                  <SelectItem value="questionario">Questionário</SelectItem>
+                  <SelectItem value="grupo_focal">Grupo focal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <label className="flex items-center gap-2">
+              <Checkbox checked={!!partForm.anonimizado} onCheckedChange={v => setPartForm({ ...partForm, anonimizado: !!v })} />
+              Anonimizado
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPartOpen(false)}>Cancelar</Button>
+            <Button onClick={savePart}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

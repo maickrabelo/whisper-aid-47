@@ -112,6 +112,21 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [epiList, setEpiList] = useState<{ name: string; ca: string }[]>([]);
+  const [epiDraft, setEpiDraft] = useState<{ name: string; ca: string }>({ name: '', ca: '' });
+
+  const parseEpiPair = (names: string | null | undefined, cas: string | null | undefined) => {
+    const n = (names || '').split(',').map(s => s.trim()).filter(Boolean);
+    const c = (cas || '').split(',').map(s => s.trim());
+    return n.map((name, i) => ({ name, ca: (c[i] || '').trim() }));
+  };
+  const addEpi = () => {
+    const name = epiDraft.name.trim();
+    if (!name) return;
+    setEpiList(prev => [...prev, { name, ca: epiDraft.ca.trim() }]);
+    setEpiDraft({ name: '', ca: '' });
+  };
+  const removeEpi = (idx: number) => setEpiList(prev => prev.filter((_, i) => i !== idx));
 
   const load = async () => {
     setLoading(true);

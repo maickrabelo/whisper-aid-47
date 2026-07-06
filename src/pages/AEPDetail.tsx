@@ -50,6 +50,49 @@ const AEPDetail = () => {
   const [partEditing, setPartEditing] = useState<any>(null);
   const [partForm, setPartForm] = useState<any>({ nome: '', funcao: '', tipo_participacao: 'entrevista', anonimizado: false });
 
+  // Excluir AEP
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteAep = async () => {
+    if (!aep) return;
+    setDeleting(true);
+    try {
+      // Coleta ids relacionados
+      const [{ data: fats }, { data: evs }] = await Promise.all([
+        supabase.from('aep_fatores_avaliados' as any).select('id').eq('aep_id', aep.id),
+        supabase.from('aep_evidencias' as any).select('id, file_path').eq('aep_id', aep.id),
+      ]);
+      const fatIds = ((fats as any[]) || []).map(f => f.id);
+
+      // Remove vínculos com PGR (risco no inventário permanece)
+      if (fatIds.length) {
+        await supabase.from('aep_pgr_vinculo' as any).delete().in('aep_fator_id', fatIds);
+      }
+      // Remove arquivos do storage
+      const paths = ((evs as any[]) || []).map(e => e.file_path).filter(Boolean);
+      if (paths.length) {
+        await supabase.storage.from('aep-evidencias').remove(paths);
+      }
+      // Remove filhos (caso não tenha ON DELETE CASCADE)
+      await Promise.all([
+        supabase.from('aep_evidencias' as any).delete().eq('aep_id', aep.id),
+        supabase.from('aep_participantes' as any).delete().eq('aep_id', aep.id),
+        supabase.from('aep_fatores_avaliados' as any).delete().eq('aep_id', aep.id),
+      ]);
+      // Remove a AEP
+      const { error } = await supabase.from('aep_avaliacoes' as any).delete().eq('id', aep.id);
+      if (error) throw error;
+      toast.success('AEP excluída');
+      navigate(`/aep/${companyId}`);
+    } catch (e: any) {
+      toast.error('Erro ao excluir: ' + e.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const load = async () => {
     if (!aepId) return;
     setLoading(true);
@@ -472,6 +515,14 @@ const AEPDetail = () => {
             >
               <Send className="h-4 w-4" /> Enviar ao inventário
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setConfirmText(''); setDeleteOpen(true); }}
+              className="gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" /> Excluir AEP
+            </Button>
           </div>
         </div>
       </div>
@@ -806,6 +857,40 @@ const AEPDetail = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditPartOpen(false)}>Cancelar</Button>
             <Button onClick={savePart}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmação para excluir AEP */}
+      <Dialog open={deleteOpen} onOpenChange={(v) => { setDeleteOpen(v); if (!v) setConfirmText(''); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="text-destructive flex items-center gap-2"><Trash2 className="h-5 w-5" /> Excluir AEP permanentemente?</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>Esta ação é <strong>irreversível</strong>. Serão apagados:</p>
+            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+              <li>A AEP <strong>v{aep.version}</strong> — {aep.setor_nome || 'setor não informado'}</li>
+              <li>Todos os fatores levantados ({fatores.length})</li>
+              <li>Todos os participantes registrados ({participantes.length})</li>
+              <li>Todas as evidências anexadas ({evidencias.length}) e seus arquivos</li>
+              <li>Os vínculos com o inventário do PGR</li>
+            </ul>
+            <p className="text-xs text-muted-foreground">Os riscos já enviados ao inventário do PGR <strong>permanecem lá</strong> — apenas os vínculos serão removidos.</p>
+            <div className="pt-2 space-y-1">
+              <Label className="text-xs">Digite <strong>EXCLUIR</strong> para confirmar:</Label>
+              <Input value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="EXCLUIR" autoFocus />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              onClick={deleteAep}
+              disabled={deleting || confirmText.trim().toUpperCase() !== 'EXCLUIR'}
+              className="gap-1"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Excluir definitivamente
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

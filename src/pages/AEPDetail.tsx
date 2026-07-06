@@ -36,6 +36,20 @@ const AEPDetail = () => {
   const [newVersionOpen, setNewVersionOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Edição — Dados
+  const [editDadosOpen, setEditDadosOpen] = useState(false);
+  const [dadosForm, setDadosForm] = useState<any>({});
+
+  // Edição — Fator
+  const [editFatorOpen, setEditFatorOpen] = useState(false);
+  const [fatorEditing, setFatorEditing] = useState<any>(null);
+  const [fatorForm, setFatorForm] = useState<any>({});
+
+  // Edição — Participante
+  const [editPartOpen, setEditPartOpen] = useState(false);
+  const [partEditing, setPartEditing] = useState<any>(null);
+  const [partForm, setPartForm] = useState<any>({ nome: '', funcao: '', tipo_participacao: 'entrevista', anonimizado: false });
+
   const load = async () => {
     if (!aepId) return;
     setLoading(true);

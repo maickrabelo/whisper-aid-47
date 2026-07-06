@@ -217,6 +217,151 @@ const AEPDetail = () => {
     }
   };
 
+  // ─── Edição ────────────────────────────────────────────────
+  const isEditable = aep && ['draft', 'in_progress', 'in_review'].includes(aep.status);
+
+  const openEditDados = () => {
+    if (!aep) return;
+    setDadosForm({
+      setor_nome: aep.setor_nome || '',
+      funcao_nome: aep.funcao_nome || '',
+      situacao_trabalho: aep.situacao_trabalho || '',
+      assessment_date: aep.assessment_date || '',
+      next_review_date: aep.next_review_date || '',
+      methodologies: (aep.methodologies || []).join(', '),
+      instrument_name: aep.instrument_name || '',
+      methodology_details: aep.methodology_details || '',
+      anonymity_ensured: !!aep.anonymity_ensured,
+      responsible_name: aep.responsible_name || '',
+      responsible_role: aep.responsible_role || '',
+      responsible_registration: aep.responsible_registration || '',
+    });
+    setEditDadosOpen(true);
+  };
+  const saveDados = async () => {
+    try {
+      const patch: any = {
+        setor_nome: dadosForm.setor_nome || null,
+        funcao_nome: dadosForm.funcao_nome || null,
+        situacao_trabalho: dadosForm.situacao_trabalho || null,
+        assessment_date: dadosForm.assessment_date || null,
+        next_review_date: dadosForm.next_review_date || null,
+        methodologies: (dadosForm.methodologies || '').split(',').map((s: string) => s.trim()).filter(Boolean),
+        instrument_name: dadosForm.instrument_name || null,
+        methodology_details: dadosForm.methodology_details || null,
+        anonymity_ensured: !!dadosForm.anonymity_ensured,
+        responsible_name: dadosForm.responsible_name || null,
+        responsible_role: dadosForm.responsible_role || null,
+        responsible_registration: dadosForm.responsible_registration || null,
+      };
+      const { error } = await supabase.from('aep_avaliacoes' as any).update(patch).eq('id', aep.id);
+      if (error) throw error;
+      toast.success('Dados atualizados');
+      setEditDadosOpen(false);
+      load();
+    } catch (e: any) {
+      toast.error('Erro ao salvar: ' + e.message);
+    }
+  };
+
+  const openEditFator = (f: any) => {
+    setFatorEditing(f);
+    setFatorForm({
+      categoria: f.categoria,
+      fator_nome: f.fator_nome || '',
+      fonte_causa: f.fonte_causa || '',
+      grupos_expostos: f.grupos_expostos || '',
+      evidencia_texto: f.evidencia_texto || '',
+      severity: f.severity || 3,
+      probability: f.probability || 3,
+      observacoes: f.observacoes || '',
+    });
+    setEditFatorOpen(true);
+  };
+  const saveFator = async () => {
+    if (!fatorEditing) return;
+    try {
+      const patch: any = {
+        categoria: fatorForm.categoria,
+        fator_nome: fatorForm.fator_nome || null,
+        fonte_causa: fatorForm.fonte_causa || null,
+        grupos_expostos: fatorForm.grupos_expostos || null,
+        evidencia_texto: fatorForm.evidencia_texto || null,
+        severity: Number(fatorForm.severity) || 1,
+        probability: Number(fatorForm.probability) || 1,
+        observacoes: fatorForm.observacoes || null,
+      };
+      const { error } = await supabase.from('aep_fatores_avaliados' as any).update(patch).eq('id', fatorEditing.id);
+      if (error) throw error;
+      toast.success('Fator atualizado');
+      setEditFatorOpen(false);
+      load();
+    } catch (e: any) {
+      toast.error('Erro ao salvar: ' + e.message);
+    }
+  };
+  const deleteFator = async (f: any) => {
+    const linked = linkedByFator.get(f.id) || [];
+    const warn = linked.length > 0
+      ? `Este fator está vinculado a ${linked.length} risco(s) do PGR. O vínculo será removido (os riscos no inventário do PGR permanecem). Excluir?`
+      : `Excluir o fator "${f.fator_nome}"?`;
+    if (!confirm(warn)) return;
+    try {
+      await supabase.from('aep_pgr_vinculo' as any).delete().eq('aep_fator_id', f.id);
+      const { error } = await supabase.from('aep_fatores_avaliados' as any).delete().eq('id', f.id);
+      if (error) throw error;
+      toast.success('Fator excluído');
+      load();
+    } catch (e: any) {
+      toast.error('Erro ao excluir: ' + e.message);
+    }
+  };
+
+  const openNewPart = () => {
+    setPartEditing(null);
+    setPartForm({ nome: '', funcao: '', tipo_participacao: 'entrevista', anonimizado: false });
+    setEditPartOpen(true);
+  };
+  const openEditPart = (p: any) => {
+    setPartEditing(p);
+    setPartForm({
+      nome: p.nome || '',
+      funcao: p.funcao || '',
+      tipo_participacao: p.tipo_participacao || 'entrevista',
+      anonimizado: !!p.anonimizado,
+    });
+    setEditPartOpen(true);
+  };
+  const savePart = async () => {
+    try {
+      const payload: any = {
+        nome: partForm.nome || null,
+        funcao: partForm.funcao || null,
+        tipo_participacao: partForm.tipo_participacao,
+        anonimizado: !!partForm.anonimizado,
+      };
+      if (partEditing) {
+        const { error } = await supabase.from('aep_participantes' as any).update(payload).eq('id', partEditing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('aep_participantes' as any).insert({ ...payload, aep_id: aep.id } as any);
+        if (error) throw error;
+      }
+      toast.success('Participante salvo');
+      setEditPartOpen(false);
+      load();
+    } catch (e: any) {
+      toast.error('Erro ao salvar: ' + e.message);
+    }
+  };
+  const deletePart = async (p: any) => {
+    if (!confirm('Excluir este participante?')) return;
+    const { error } = await supabase.from('aep_participantes' as any).delete().eq('id', p.id);
+    if (error) { toast.error('Erro: ' + error.message); return; }
+    toast.success('Participante excluído');
+    load();
+  };
+
   if (authLoading || loading || !aep) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }

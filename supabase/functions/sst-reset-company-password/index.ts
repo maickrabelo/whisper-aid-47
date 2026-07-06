@@ -57,16 +57,17 @@ serve(async (req) => {
     }
 
     // Authorize: caller must be admin OR the SST manager assigned to this company
-    const { data: roleData } = await supabaseAdmin
+    const { data: rolesData } = await supabaseAdmin
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
-      .maybeSingle();
+      .eq('user_id', user.id);
 
-    const isAdmin = roleData?.role === 'admin';
+    const roles = (rolesData || []).map((r: any) => r.role);
+    const isAdmin = roles.includes('admin');
+    const isSst = roles.includes('sst');
 
     let authorized = isAdmin;
-    if (!authorized && roleData?.role === 'sst') {
+    if (!authorized && isSst) {
       // Find SST manager id for this user
       const { data: profile } = await supabaseAdmin
         .from('profiles')

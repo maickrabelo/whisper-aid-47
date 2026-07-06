@@ -30,6 +30,21 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
   const [editing, setEditing] = useState<GHE | null>(null);
   const [form, setForm] = useState({ name: "", sector: "", role: "", activities_description: "", worker_count: 0, work_schedule: "" });
   const [saving, setSaving] = useState(false);
+  const [roleInput, setRoleInput] = useState("");
+
+  const parseRoles = (s: string | null | undefined): string[] =>
+    (s || "").split(",").map(r => r.trim()).filter(Boolean);
+  const rolesArr = parseRoles(form.role);
+  const addRole = () => {
+    const v = roleInput.trim();
+    if (!v) return;
+    if (rolesArr.some(r => r.toLowerCase() === v.toLowerCase())) { setRoleInput(""); return; }
+    setForm({ ...form, role: [...rolesArr, v].join(", ") });
+    setRoleInput("");
+  };
+  const removeRole = (r: string) => {
+    setForm({ ...form, role: rolesArr.filter(x => x !== r).join(", ") });
+  };
 
   const load = async () => {
     setLoading(true);

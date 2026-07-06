@@ -182,6 +182,8 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       pesticide_required_epi: r.pesticide_required_epi || '',
       pesticide_reentry_period: r.pesticide_reentry_period || '',
     });
+    setEpiList(parseEpiPair(r.existing_epi, r.epi_ca));
+    setEpiDraft({ name: '', ca: '' });
     setOpen(true);
   };
 

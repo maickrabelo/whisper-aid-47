@@ -515,6 +515,14 @@ const AEPDetail = () => {
             >
               <Send className="h-4 w-4" /> Enviar ao inventário
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setConfirmText(''); setDeleteOpen(true); }}
+              className="gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" /> Excluir AEP
+            </Button>
           </div>
         </div>
       </div>

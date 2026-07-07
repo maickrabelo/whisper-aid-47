@@ -2,6 +2,7 @@ import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface AffiliateDashboardHeaderProps {
   affiliate: {
@@ -13,7 +14,7 @@ interface AffiliateDashboardHeaderProps {
 export const AffiliateDashboardHeader = ({ affiliate }: AffiliateDashboardHeaderProps) => {
   const [copied, setCopied] = useState(false);
 
-  const referralLink = `${window.location.origin}/checkout?ref=${affiliate.referral_code}`;
+  const referralLink = `${PUBLIC_BASE_URL}/checkout?ref=${affiliate.referral_code}`;
 
   const copyToClipboard = async () => {
     try {

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { PartnerInfo } from "@/pages/PartnerDashboard";
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface PartnerOverviewProps {
   partnerInfo: PartnerInfo;
@@ -27,7 +28,7 @@ const PartnerOverview = ({ partnerInfo }: PartnerOverviewProps) => {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const referralLink = `${window.location.origin}/contratar?ref=${partnerInfo.referralCode}`;
+  const referralLink = `${PUBLIC_BASE_URL}/contratar?ref=${partnerInfo.referralCode}`;
 
   useEffect(() => {
     fetchStats();

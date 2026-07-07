@@ -59,6 +59,15 @@ interface ParticipanteForm {
   anonimizado: boolean;
 }
 
+interface EscopoItem {
+  tempId: string;
+  setor: string;
+  funcao: string;
+  cbo: string;
+  worker_count: number;
+  ghe_id?: string;
+}
+
 export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCreated }: Props) {
   const { data: catalog } = useAEPFatoresCatalog();
   const [step, setStep] = useState(1);
@@ -66,9 +75,8 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
   const [ghes, setGhes] = useState<{ id: string; name: string }[]>([]);
 
   // Step 1
-  const [setorNome, setSetorNome] = useState('');
-  const [funcaoNome, setFuncaoNome] = useState('');
-  const [gheId, setGheId] = useState<string>('');
+  const [escopo, setEscopo] = useState<EscopoItem[]>([]);
+  const [escopoDraft, setEscopoDraft] = useState<EscopoItem>({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: '' });
   const [situacaoTrabalho, setSituacaoTrabalho] = useState('');
   const [assessmentDate, setAssessmentDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [nextReviewDate, setNextReviewDate] = useState<string>('');

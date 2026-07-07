@@ -134,6 +134,7 @@ export type Database = {
           company_id: string
           created_at: string
           created_by: string | null
+          escopo_json: Json
           funcao_nome: string | null
           ghe_id: string | null
           id: string
@@ -160,6 +161,7 @@ export type Database = {
           company_id: string
           created_at?: string
           created_by?: string | null
+          escopo_json?: Json
           funcao_nome?: string | null
           ghe_id?: string | null
           id?: string
@@ -186,6 +188,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           created_by?: string | null
+          escopo_json?: Json
           funcao_nome?: string | null
           ghe_id?: string | null
           id?: string
@@ -2063,6 +2066,7 @@ export type Database = {
           name: string
           pgr_document_id: string
           role: string | null
+          roles_meta: Json
           sector: string | null
           updated_at: string
           work_schedule: string | null
@@ -2075,6 +2079,7 @@ export type Database = {
           name: string
           pgr_document_id: string
           role?: string | null
+          roles_meta?: Json
           sector?: string | null
           updated_at?: string
           work_schedule?: string | null
@@ -2087,6 +2092,7 @@ export type Database = {
           name?: string
           pgr_document_id?: string
           role?: string | null
+          roles_meta?: Json
           sector?: string | null
           updated_at?: string
           work_schedule?: string | null

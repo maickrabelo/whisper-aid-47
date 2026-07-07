@@ -1,0 +1,2 @@
+ALTER TABLE public.pgr_ghe ADD COLUMN IF NOT EXISTS roles_meta jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE public.aep_avaliacoes ADD COLUMN IF NOT EXISTS escopo_json jsonb NOT NULL DEFAULT '[]'::jsonb;

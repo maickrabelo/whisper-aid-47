@@ -46,10 +46,11 @@ const ChangePassword: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (newPassword.length < 8) {
+    if (!isStrongPassword(newPassword)) {
       toast({
-        title: 'Senha muito curta',
-        description: 'A nova senha deve ter pelo menos 8 caracteres.',
+        title: 'Senha fraca',
+        description:
+          'Sua senha precisa atender todos os requisitos de segurança listados abaixo do campo.',
         variant: 'destructive',
       });
       return;

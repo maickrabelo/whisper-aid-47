@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import srSmsLogo from "@/assets/sr-sms-logo.png.asset.json";
 
-
 const ResetPassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();

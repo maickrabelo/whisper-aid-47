@@ -413,7 +413,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Traz automaticamente as dimensões em risco como fatores psicossociais desta AEP, com rastreabilidade da origem.
+                Traz as dimensões em risco como fatores psicossociais desta AEP, com rastreabilidade da origem. Os dados representam a percepção coletiva dos respondentes da avaliação (agregados), não de um único colaborador — é o esperado pela NR-17.
               </p>
             </Card>
 

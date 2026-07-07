@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import srSmsLogo from "@/assets/sr-sms-logo.png.asset.json";
+import PasswordStrengthHints, { isStrongPassword } from "@/components/PasswordStrengthHints";
 
 const ResetPassword = () => {
   const navigate = useNavigate();

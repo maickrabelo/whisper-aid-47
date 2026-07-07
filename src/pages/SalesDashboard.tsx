@@ -323,7 +323,7 @@ const SalesDashboard = () => {
                                 <div className="flex items-center gap-2">
                                   <a href={`${PUBLIC_BASE_URL}/report/${company.slug}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate">
                                     <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                                    <span className="truncate">{window.location.origin}/report/{company.slug}</span>
+                                    <span className="truncate">{PUBLIC_BASE_URL}/report/{company.slug}</span>
                                   </a>
                                   <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${PUBLIC_BASE_URL}/report/${company.slug}`, e)} className="h-6 px-2">
                                     <Copy className="h-3 w-3" />

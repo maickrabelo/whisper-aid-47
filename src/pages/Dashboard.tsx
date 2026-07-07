@@ -522,7 +522,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                   className="text-sm text-primary hover:underline flex items-center gap-1 flex-1 truncate"
                 >
                   <ExternalLink className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{window.location.origin}/report/{companySlug}</span>
+                  <span className="truncate">{PUBLIC_BASE_URL}/report/{companySlug}</span>
                 </a>
                 <Button
                   variant="ghost"

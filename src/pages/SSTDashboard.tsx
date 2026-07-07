@@ -566,7 +566,7 @@ const SSTDashboard = () => {
                   rel="noopener noreferrer"
                   className="text-sm text-primary hover:underline truncate block"
                 >
-                  {window.location.origin}/sst/{sstSlug}
+                  {PUBLIC_BASE_URL}/sst/{sstSlug}
                 </a>
               </div>
               <Button variant="outline" size="sm" onClick={(e) => copyToClipboard(`${PUBLIC_BASE_URL}/sst/${sstSlug}`, e)} className="gap-1.5">
@@ -741,7 +741,7 @@ const SSTDashboard = () => {
                                   className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
                                 >
                                   <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate">{window.location.origin}/ouvidoria-beta/{company.id.substring(0,8)}…</span>
+                                  <span className="truncate">{PUBLIC_BASE_URL}/ouvidoria-beta/{company.id.substring(0,8)}…</span>
                                 </a>
                                 <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${PUBLIC_BASE_URL}/ouvidoria-beta/${company.id}`, e)} className="h-6 px-2">
                                   <Copy className="h-3 w-3" />
@@ -764,7 +764,7 @@ const SSTDashboard = () => {
                                   className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
                                 >
                                   <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate">{window.location.origin}/report/{company.slug}</span>
+                                  <span className="truncate">{PUBLIC_BASE_URL}/report/{company.slug}</span>
                                 </a>
                                 <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${PUBLIC_BASE_URL}/report/${company.slug}`, e)} className="h-6 px-2">
                                   <Copy className="h-3 w-3" />

@@ -188,27 +188,33 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>{term.isRural ? 'Talhão / Área' : 'Setor'}</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
                 <div className="space-y-2">
-                  <Label>{term.isRural ? 'Função(ões) rural(is)' : 'Cargo(s)'}</Label>
-                  <div className="flex gap-2">
+                  <Label>{term.isRural ? 'Função(ões) rural(is)' : 'Cargo(s)'} + CBO</Label>
+                  <div className="grid grid-cols-[1fr_120px_auto] gap-2">
                     <Input
                       value={roleInput}
                       onChange={e => setRoleInput(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addRole(); } }}
                       placeholder={term.isRural ? 'Ex: Tratorista' : 'Ex: Encanador'}
                     />
+                    <Input
+                      value={cboInput}
+                      onChange={e => setCboInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addRole(); } }}
+                      placeholder="CBO (opc.)"
+                    />
                     <Button type="button" variant="outline" size="sm" onClick={addRole}>Adicionar</Button>
                   </div>
                   {rolesArr.length > 0 && (
                     <div className="flex flex-wrap gap-1 pt-1">
                       {rolesArr.map(r => (
-                        <Badge key={r} variant="secondary" className="text-xs font-normal gap-1 pr-1">
-                          {r}
-                          <button type="button" onClick={() => removeRole(r)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
+                        <Badge key={r.role} variant="secondary" className="text-xs font-normal gap-1 pr-1">
+                          {r.role}{r.cbo ? ` · CBO ${r.cbo}` : ''}
+                          <button type="button" onClick={() => removeRole(r.role)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
                         </Badge>
                       ))}
                     </div>
                   )}
-                  <p className="text-[10px] text-muted-foreground">Adicione vários cargos no mesmo GHE (ex.: Encanador, Auxiliar técnico, Eletricista).</p>
+                  <p className="text-[10px] text-muted-foreground">Adicione vários cargos, cada um com seu CBO (ex.: Encanador · CBO 7241-10).</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">

@@ -282,26 +282,66 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
         {/* Step 1 */}
         {step === 1 && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Setor *</Label>
-                <Input value={setorNome} onChange={e => setSetorNome(e.target.value)} placeholder="Ex: Produção, Administrativo" />
+            <Card className="p-3 bg-primary/5 border-primary/20 space-y-3">
+              <div>
+                <Label className="text-sm font-semibold">Escopo da AEP *</Label>
+                <p className="text-xs text-muted-foreground">
+                  Cadastre todos os setores, cargos e funções cobertos por esta AEP. Uma única AEP pode cobrir vários setores e cargos.
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label>Função / cargo</Label>
-                <Input value={funcaoNome} onChange={e => setFuncaoNome(e.target.value)} placeholder="Ex: Operador de máquina" />
+              <div className="grid grid-cols-[1fr_1fr_110px_90px_auto] gap-2 items-end">
+                <div>
+                  <Label className="text-xs">Setor</Label>
+                  <Input value={escopoDraft.setor} onChange={e => setEscopoDraft({ ...escopoDraft, setor: e.target.value })} placeholder="Ex: Produção" />
+                </div>
+                <div>
+                  <Label className="text-xs">Função / cargo</Label>
+                  <Input value={escopoDraft.funcao} onChange={e => setEscopoDraft({ ...escopoDraft, funcao: e.target.value })} placeholder="Ex: Operador" />
+                </div>
+                <div>
+                  <Label className="text-xs">CBO</Label>
+                  <Input value={escopoDraft.cbo} onChange={e => setEscopoDraft({ ...escopoDraft, cbo: e.target.value })} placeholder="Opcional" />
+                </div>
+                <div>
+                  <Label className="text-xs">Nº trab.</Label>
+                  <Input type="number" min={1} value={escopoDraft.worker_count}
+                    onChange={e => setEscopoDraft({ ...escopoDraft, worker_count: parseInt(e.target.value) || 1 })} />
+                </div>
+                <Button size="sm" onClick={addEscopoItem} className="mb-[1px]">
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
-            {ghes.length > 0 && (
-              <div className="space-y-2">
-                <Label>GHE (opcional — vincula ao PGR)</Label>
-                <select className="w-full h-10 rounded-md border border-input bg-background px-3"
-                  value={gheId} onChange={e => setGheId(e.target.value)}>
-                  <option value="">— Nenhum —</option>
-                  {ghes.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                </select>
-              </div>
-            )}
+              {ghes.length > 0 && (
+                <div className="space-y-1">
+                  <Label className="text-xs">GHE do PGR (opcional)</Label>
+                  <select className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    value={escopoDraft.ghe_id || ''} onChange={e => setEscopoDraft({ ...escopoDraft, ghe_id: e.target.value })}>
+                    <option value="">— Nenhum —</option>
+                    {ghes.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  </select>
+                </div>
+              )}
+              {escopo.length === 0 ? (
+                <div className="text-xs text-muted-foreground text-center py-2">Nenhum item de escopo adicionado ainda.</div>
+              ) : (
+                <div className="space-y-1">
+                  {escopo.map(it => (
+                    <div key={it.tempId} className="flex items-center justify-between gap-2 p-2 rounded bg-background border text-sm">
+                      <div className="flex-1">
+                        <span className="font-medium">{it.setor}</span>
+                        <span className="text-muted-foreground"> — {it.funcao}</span>
+                        {it.cbo && <Badge variant="outline" className="ml-2 text-[10px]">CBO {it.cbo}</Badge>}
+                        <Badge variant="secondary" className="ml-2 text-[10px]">{it.worker_count} trab.</Badge>
+                        {it.ghe_id && <Badge variant="outline" className="ml-2 text-[10px]">GHE vinculado</Badge>}
+                      </div>
+                      <Button size="icon" variant="ghost" onClick={() => removeEscopoItem(it.tempId)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
             <div className="space-y-2">
               <Label>Situação de trabalho avaliada *</Label>
               <Textarea rows={4} value={situacaoTrabalho} onChange={e => setSituacaoTrabalho(e.target.value)}

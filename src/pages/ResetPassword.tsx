@@ -193,7 +193,7 @@ const ResetPassword = () => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Definir nova senha</CardTitle>
           <CardDescription className="text-center">
-            Digite sua nova senha abaixo. Use pelo menos 6 caracteres.
+            Crie uma senha forte seguindo as orientações abaixo.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -159,10 +159,12 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
                   <TableCell className="font-medium">{g.name}</TableCell>
                   <TableCell>{g.sector || '-'}</TableCell>
                   <TableCell>
-                    {parseRoles(g.role).length === 0 ? '-' : (
+                    {parseRolesMeta(g).length === 0 ? '-' : (
                       <div className="flex flex-wrap gap-1">
-                        {parseRoles(g.role).map(r => (
-                          <Badge key={r} variant="secondary" className="text-xs font-normal">{r}</Badge>
+                        {parseRolesMeta(g).map(r => (
+                          <Badge key={r.role} variant="secondary" className="text-xs font-normal">
+                            {r.role}{r.cbo ? ` · CBO ${r.cbo}` : ''}
+                          </Badge>
                         ))}
                       </div>
                     )}

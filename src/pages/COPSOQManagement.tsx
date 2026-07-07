@@ -17,6 +17,7 @@ import { toast } from '@/hooks/use-toast';
 import { DepartmentManager, SurveyDepartment, DepartmentManagerHandle, UnallocatedEmployeesDialog } from '@/components/climate-survey/DepartmentManager';
 import { QRCodePreview } from '@/components/climate-survey/QRCodePreview';
 import { useCompanyEmployeeCount } from '@/hooks/useCompanyEmployeeCount';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface Company { id: string; name: string; slug: string; }
 
@@ -170,7 +171,7 @@ export default function COPSOQManagement() {
   const getFormUrl = () => {
     const company = companies.find(c => c.id === selectedCompany);
     if (!company || !id) return '';
-    return `${window.location.origin}/copsoq/${company.slug}/${id}`;
+    return `${PUBLIC_BASE_URL}/copsoq/${company.slug}/${id}`;
   };
 
   if (authLoading || isLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;

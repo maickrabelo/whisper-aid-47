@@ -4,6 +4,7 @@ import { Building2, DollarSign, Link, Copy, Check, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface AffiliateOverviewProps {
   affiliateId: string;
@@ -21,7 +22,7 @@ export const AffiliateOverview = ({ affiliateId, referralCode }: AffiliateOvervi
   const [stats, setStats] = useState<Stats>({ totalCompanies: 0, activeCompanies: 0, totalCommissions: 0, totalLeads: 0 });
   const [copied, setCopied] = useState(false);
 
-  const referralLink = `${window.location.origin}/i/${referralCode}`;
+  const referralLink = `${PUBLIC_BASE_URL}/i/${referralCode}`;
 
   useEffect(() => {
     const fetchStats = async () => {

@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import AddCompanyDialog from '@/components/AddCompanyDialog';
 import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 import { Link } from 'react-router-dom';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface CompanyData {
   id: string;
@@ -148,7 +149,7 @@ const CompanyProfile = () => {
   };
 
   const reportUrl = company?.slug
-    ? `${window.location.origin}/report/${company.slug}`
+    ? `${PUBLIC_BASE_URL}/report/${company.slug}`
     : '';
 
   const isCorporate = company?.trial_plan_slug === 'corporate';

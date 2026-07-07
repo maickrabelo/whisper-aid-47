@@ -32,6 +32,7 @@ import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
 import { useSmartOnlyPlan } from '@/hooks/useSmartOnlyPlan';
 import { usePgrShortcutPlan } from '@/hooks/usePgrShortcutPlan';
 import { useSmsPlan } from '@/hooks/useSmsPlan';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 const sstDashboardSteps: TourStep[] = [
   {
@@ -560,15 +561,15 @@ const SSTDashboard = () => {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground">Sua página pública</p>
                 <a
-                  href={`${window.location.origin}/sst/${sstSlug}`}
+                  href={`${PUBLIC_BASE_URL}/sst/${sstSlug}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-primary hover:underline truncate block"
                 >
-                  {window.location.origin}/sst/{sstSlug}
+                  {PUBLIC_BASE_URL}/sst/{sstSlug}
                 </a>
               </div>
-              <Button variant="outline" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/sst/${sstSlug}`, e)} className="gap-1.5">
+              <Button variant="outline" size="sm" onClick={(e) => copyToClipboard(`${PUBLIC_BASE_URL}/sst/${sstSlug}`, e)} className="gap-1.5">
                 <Copy className="h-4 w-4" /> Copiar
               </Button>
             </div>
@@ -733,20 +734,20 @@ const SSTDashboard = () => {
                               <p className="text-xs text-muted-foreground font-medium">Ouvidoria Smart</p>
                               <div className="flex items-center gap-2">
                                 <a
-                                  href={`${window.location.origin}/ouvidoria-beta/${company.id}`}
+                                  href={`${PUBLIC_BASE_URL}/ouvidoria-beta/${company.id}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
                                   className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
                                 >
                                   <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate">{window.location.origin}/ouvidoria-beta/{company.id.substring(0,8)}…</span>
+                                  <span className="truncate">{PUBLIC_BASE_URL}/ouvidoria-beta/{company.id.substring(0,8)}…</span>
                                 </a>
-                                <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/ouvidoria-beta/${company.id}`, e)} className="h-6 px-2">
+                                <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${PUBLIC_BASE_URL}/ouvidoria-beta/${company.id}`, e)} className="h-6 px-2">
                                   <Copy className="h-3 w-3" />
                                 </Button>
                               </div>
-                              <QRCodeDownloader url={`${window.location.origin}/ouvidoria-beta/${company.id}`} filename={`qrcode-ouvidoria-${company.slug}.png`} size="sm" className="w-full" />
+                              <QRCodeDownloader url={`${PUBLIC_BASE_URL}/ouvidoria-beta/${company.id}`} filename={`qrcode-ouvidoria-${company.slug}.png`} size="sm" className="w-full" />
                               <Button variant="outline" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); navigate(`/ouvidoria-beta/painel?company=${company.id}`); }}>
                                 Abrir painel da empresa
                               </Button>
@@ -756,20 +757,20 @@ const SSTDashboard = () => {
                               <p className="text-xs text-muted-foreground font-medium">Canal de Denúncias:</p>
                               <div className="flex items-center gap-2">
                                 <a
-                                  href={`${window.location.origin}/report/${company.slug}`}
+                                  href={`${PUBLIC_BASE_URL}/report/${company.slug}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
                                   className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
                                 >
                                   <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate">{window.location.origin}/report/{company.slug}</span>
+                                  <span className="truncate">{PUBLIC_BASE_URL}/report/{company.slug}</span>
                                 </a>
-                                <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)} className="h-6 px-2">
+                                <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${PUBLIC_BASE_URL}/report/${company.slug}`, e)} className="h-6 px-2">
                                   <Copy className="h-3 w-3" />
                                 </Button>
                               </div>
-                              <QRCodeDownloader url={`${window.location.origin}/report/${company.slug}`} filename={`qrcode-${company.slug}.png`} size="sm" className="w-full" />
+                              <QRCodeDownloader url={`${PUBLIC_BASE_URL}/report/${company.slug}`} filename={`qrcode-${company.slug}.png`} size="sm" className="w-full" />
                             </>
                           )}
                         </div>

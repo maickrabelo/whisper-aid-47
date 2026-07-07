@@ -20,6 +20,7 @@ import SoniaChat from "@/components/SoniaChat";
 import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 import PrintQuestionnaireButton from "@/components/PrintQuestionnaireButton";
 import { Loader2 } from "lucide-react";
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 const burnoutSteps: TourStep[] = [
   { targetId: 'burnout-new-btn', title: '➕ Nova Avaliação', description: 'Crie uma nova avaliação de Burnout para monitorar o risco de esgotamento dos colaboradores.', position: 'bottom' },
@@ -260,7 +261,7 @@ export default function BurnoutDashboard() {
                   </TableHeader>
                   <TableBody>
                     {filteredAssessments.map(a => {
-                      const formUrl = a.company_slug ? `${window.location.origin}/burnout/${a.company_slug}/${a.id}` : null;
+                      const formUrl = a.company_slug ? `${PUBLIC_BASE_URL}/burnout/${a.company_slug}/${a.id}` : null;
                       return (
                         <TableRow key={a.id} className="group">
                           <TableCell className="font-medium">{a.title}</TableCell>

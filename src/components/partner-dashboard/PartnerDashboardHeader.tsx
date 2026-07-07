@@ -4,6 +4,7 @@ import { Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { PartnerInfo } from "@/pages/PartnerDashboard";
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface PartnerDashboardHeaderProps {
   partnerInfo: PartnerInfo;
@@ -12,7 +13,7 @@ interface PartnerDashboardHeaderProps {
 const PartnerDashboardHeader = ({ partnerInfo }: PartnerDashboardHeaderProps) => {
   const [copied, setCopied] = useState(false);
 
-  const referralLink = `${window.location.origin}/contratar?ref=${partnerInfo.referralCode}`;
+  const referralLink = `${PUBLIC_BASE_URL}/contratar?ref=${partnerInfo.referralCode}`;
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(referralLink);

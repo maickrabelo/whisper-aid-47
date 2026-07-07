@@ -13,6 +13,7 @@ import { Loader2, Plus, Search, Activity, Building2, ArrowLeft, Copy, ExternalLi
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface PulseSurvey {
   id: string;
@@ -81,7 +82,7 @@ export default function PulseSurveyDashboard() {
   };
 
   const copyLink = (id: string) => {
-    const url = `${window.location.origin}/pulse/${id}`;
+    const url = `${PUBLIC_BASE_URL}/pulse/${id}`;
     navigator.clipboard.writeText(url);
     toast({ title: 'Link copiado!' });
   };

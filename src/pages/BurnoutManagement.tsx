@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
   Select,
   SelectContent,
   SelectItem,
@@ -287,7 +288,7 @@ export default function BurnoutManagement() {
   const getFormUrl = () => {
     const company = companies.find(c => c.id === companyId);
     if (company?.slug && id) {
-      return `${window.location.origin}/burnout/${company.slug}/${id}`;
+      return `${PUBLIC_BASE_URL}/burnout/${company.slug}/${id}`;
     }
     return null;
   };

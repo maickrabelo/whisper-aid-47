@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from './PeriodFilter';
 import PrintQuestionnaireButton from '@/components/PrintQuestionnaireButton';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface COPSOQAssessment {
   id: string;
@@ -232,7 +233,7 @@ export default function COPSOQDashboardContent() {
               </TableHeader>
               <TableBody>
                 {filteredAssessments.map(a => {
-                  const formUrl = `${window.location.origin}/copsoq/${a.companies?.slug}/${a.id}`;
+                  const formUrl = `${PUBLIC_BASE_URL}/copsoq/${a.companies?.slug}/${a.id}`;
                   return (
                     <TableRow key={a.id} className="group">
                       <TableCell className="font-medium">{a.title}</TableCell>

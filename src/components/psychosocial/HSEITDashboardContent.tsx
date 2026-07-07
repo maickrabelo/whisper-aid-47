@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from './PeriodFilter';
 import PrintQuestionnaireButton from '@/components/PrintQuestionnaireButton';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface HSEITAssessment {
   id: string;
@@ -231,7 +232,7 @@ export default function HSEITDashboardContent() {
               </TableHeader>
               <TableBody>
                 {filteredAssessments.map(a => {
-                  const formUrl = `${window.location.origin}/hseit/${a.companies?.slug}/${a.id}`;
+                  const formUrl = `${PUBLIC_BASE_URL}/hseit/${a.companies?.slug}/${a.id}`;
                   return (
                     <TableRow key={a.id} className="group">
                       <TableCell className="font-medium">{a.title}</TableCell>

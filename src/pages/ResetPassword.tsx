@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import srSmsLogo from "@/assets/sr-sms-logo.png.asset.json";
+import PasswordStrengthHints, { isStrongPassword } from "@/components/PasswordStrengthHints";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -81,10 +82,11 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
+    if (!isStrongPassword(password)) {
       toast({
-        title: "Senha muito curta",
-        description: "A senha precisa ter pelo menos 6 caracteres.",
+        title: "Senha fraca",
+        description:
+          "Sua senha precisa atender todos os requisitos de segurança listados abaixo do campo.",
         variant: "destructive",
       });
       return;
@@ -191,7 +193,7 @@ const ResetPassword = () => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Definir nova senha</CardTitle>
           <CardDescription className="text-center">
-            Digite sua nova senha abaixo. Use pelo menos 6 caracteres.
+            Crie uma senha forte seguindo as orientações abaixo.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -205,10 +207,11 @@ const ResetPassword = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 disabled={submitting}
                 autoFocus
               />
+              <PasswordStrengthHints password={password} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-password">Confirmar nova senha</Label>
@@ -219,7 +222,7 @@ const ResetPassword = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 disabled={submitting}
               />
             </div>

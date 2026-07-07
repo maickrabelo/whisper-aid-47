@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { needsHotmartProfileCompletion } from '@/lib/profileCompletion';
 import { useSmsPlan } from '@/hooks/useSmsPlan';
 import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
+import PasswordStrengthHints, { isStrongPassword } from '@/components/PasswordStrengthHints';
 
 const ChangePassword: React.FC = () => {
   const { user, profile, role, isLoading, refreshRole } = useRealAuth();
@@ -45,10 +46,11 @@ const ChangePassword: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (newPassword.length < 8) {
+    if (!isStrongPassword(newPassword)) {
       toast({
-        title: 'Senha muito curta',
-        description: 'A nova senha deve ter pelo menos 8 caracteres.',
+        title: 'Senha fraca',
+        description:
+          'Sua senha precisa atender todos os requisitos de segurança listados abaixo do campo.',
         variant: 'destructive',
       });
       return;
@@ -164,6 +166,7 @@ const ChangePassword: React.FC = () => {
                   required
                 />
               </div>
+              <PasswordStrengthHints password={newPassword} />
             </div>
 
             <div className="space-y-2">

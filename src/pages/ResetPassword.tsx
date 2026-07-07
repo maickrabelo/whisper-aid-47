@@ -82,10 +82,11 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
+    if (!isStrongPassword(password)) {
       toast({
-        title: "Senha muito curta",
-        description: "A senha precisa ter pelo menos 6 caracteres.",
+        title: "Senha fraca",
+        description:
+          "Sua senha precisa atender todos os requisitos de segurança listados abaixo do campo.",
         variant: "destructive",
       });
       return;

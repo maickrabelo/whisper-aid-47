@@ -12,11 +12,13 @@ import { Plus, Trash2, Pencil, Loader2, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 
+interface RoleMeta { role: string; cbo?: string }
 interface GHE {
   id: string;
   name: string;
   sector: string | null;
   role: string | null;
+  roles_meta?: RoleMeta[] | null;
   activities_description: string | null;
   worker_count: number;
   work_schedule: string | null;
@@ -28,22 +30,25 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<GHE | null>(null);
-  const [form, setForm] = useState({ name: "", sector: "", role: "", activities_description: "", worker_count: 0, work_schedule: "" });
+  const [form, setForm] = useState({ name: "", sector: "", roles_meta: [] as RoleMeta[], activities_description: "", worker_count: 0, work_schedule: "" });
   const [saving, setSaving] = useState(false);
   const [roleInput, setRoleInput] = useState("");
+  const [cboInput, setCboInput] = useState("");
 
-  const parseRoles = (s: string | null | undefined): string[] =>
-    (s || "").split(",").map(r => r.trim()).filter(Boolean);
-  const rolesArr = parseRoles(form.role);
+  const rolesArr = form.roles_meta;
   const addRole = () => {
     const v = roleInput.trim();
     if (!v) return;
-    if (rolesArr.some(r => r.toLowerCase() === v.toLowerCase())) { setRoleInput(""); return; }
-    setForm({ ...form, role: [...rolesArr, v].join(", ") });
-    setRoleInput("");
+    if (rolesArr.some(r => r.role.toLowerCase() === v.toLowerCase())) { setRoleInput(""); setCboInput(""); return; }
+    setForm({ ...form, roles_meta: [...rolesArr, { role: v, cbo: cboInput.trim() || undefined }] });
+    setRoleInput(""); setCboInput("");
   };
   const removeRole = (r: string) => {
-    setForm({ ...form, role: rolesArr.filter(x => x !== r).join(", ") });
+    setForm({ ...form, roles_meta: rolesArr.filter(x => x.role !== r) });
+  };
+  const parseRolesMeta = (g: GHE): RoleMeta[] => {
+    if (Array.isArray(g.roles_meta) && g.roles_meta.length) return g.roles_meta;
+    return (g.role || "").split(",").map(r => r.trim()).filter(Boolean).map(r => ({ role: r }));
   };
 
   const load = async () => {
@@ -62,8 +67,8 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", sector: "", role: "", activities_description: "", worker_count: 0, work_schedule: "" });
-    setRoleInput("");
+    setForm({ name: "", sector: "", roles_meta: [], activities_description: "", worker_count: 0, work_schedule: "" });
+    setRoleInput(""); setCboInput("");
     setOpen(true);
   };
   const openEdit = (g: GHE) => {
@@ -71,12 +76,12 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
     setForm({
       name: g.name,
       sector: g.sector || "",
-      role: g.role || "",
+      roles_meta: parseRolesMeta(g),
       activities_description: g.activities_description || "",
       worker_count: g.worker_count || 0,
       work_schedule: g.work_schedule || "",
     });
-    setRoleInput("");
+    setRoleInput(""); setCboInput("");
     setOpen(true);
   };
 
@@ -84,11 +89,20 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
     setSaving(true);
     try {
+      const payload: any = {
+        name: form.name,
+        sector: form.sector,
+        role: form.roles_meta.map(r => r.role).join(", "),
+        roles_meta: form.roles_meta,
+        activities_description: form.activities_description,
+        worker_count: form.worker_count,
+        work_schedule: form.work_schedule,
+      };
       if (editing) {
-        const { error } = await supabase.from("pgr_ghe").update(form as any).eq("id", editing.id);
+        const { error } = await supabase.from("pgr_ghe").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("pgr_ghe").insert({ ...form, pgr_document_id: pgrDocumentId } as any);
+        const { error } = await supabase.from("pgr_ghe").insert({ ...payload, pgr_document_id: pgrDocumentId });
         if (error) throw error;
       }
       toast.success("GHE salvo");
@@ -145,10 +159,12 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
                   <TableCell className="font-medium">{g.name}</TableCell>
                   <TableCell>{g.sector || '-'}</TableCell>
                   <TableCell>
-                    {parseRoles(g.role).length === 0 ? '-' : (
+                    {parseRolesMeta(g).length === 0 ? '-' : (
                       <div className="flex flex-wrap gap-1">
-                        {parseRoles(g.role).map(r => (
-                          <Badge key={r} variant="secondary" className="text-xs font-normal">{r}</Badge>
+                        {parseRolesMeta(g).map(r => (
+                          <Badge key={r.role} variant="secondary" className="text-xs font-normal">
+                            {r.role}{r.cbo ? ` · CBO ${r.cbo}` : ''}
+                          </Badge>
                         ))}
                       </div>
                     )}
@@ -172,27 +188,33 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>{term.isRural ? 'Talhão / Área' : 'Setor'}</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
                 <div className="space-y-2">
-                  <Label>{term.isRural ? 'Função(ões) rural(is)' : 'Cargo(s)'}</Label>
-                  <div className="flex gap-2">
+                  <Label>{term.isRural ? 'Função(ões) rural(is)' : 'Cargo(s)'} + CBO</Label>
+                  <div className="grid grid-cols-[1fr_120px_auto] gap-2">
                     <Input
                       value={roleInput}
                       onChange={e => setRoleInput(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addRole(); } }}
                       placeholder={term.isRural ? 'Ex: Tratorista' : 'Ex: Encanador'}
                     />
+                    <Input
+                      value={cboInput}
+                      onChange={e => setCboInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addRole(); } }}
+                      placeholder="CBO (opc.)"
+                    />
                     <Button type="button" variant="outline" size="sm" onClick={addRole}>Adicionar</Button>
                   </div>
                   {rolesArr.length > 0 && (
                     <div className="flex flex-wrap gap-1 pt-1">
                       {rolesArr.map(r => (
-                        <Badge key={r} variant="secondary" className="text-xs font-normal gap-1 pr-1">
-                          {r}
-                          <button type="button" onClick={() => removeRole(r)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
+                        <Badge key={r.role} variant="secondary" className="text-xs font-normal gap-1 pr-1">
+                          {r.role}{r.cbo ? ` · CBO ${r.cbo}` : ''}
+                          <button type="button" onClick={() => removeRole(r.role)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
                         </Badge>
                       ))}
                     </div>
                   )}
-                  <p className="text-[10px] text-muted-foreground">Adicione vários cargos no mesmo GHE (ex.: Encanador, Auxiliar técnico, Eletricista).</p>
+                  <p className="text-[10px] text-muted-foreground">Adicione vários cargos, cada um com seu CBO (ex.: Encanador · CBO 7241-10).</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">

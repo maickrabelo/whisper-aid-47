@@ -59,6 +59,15 @@ interface ParticipanteForm {
   anonimizado: boolean;
 }
 
+interface EscopoItem {
+  tempId: string;
+  setor: string;
+  funcao: string;
+  cbo: string;
+  worker_count: number;
+  ghe_id?: string;
+}
+
 export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCreated }: Props) {
   const { data: catalog } = useAEPFatoresCatalog();
   const [step, setStep] = useState(1);
@@ -66,9 +75,8 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
   const [ghes, setGhes] = useState<{ id: string; name: string }[]>([]);
 
   // Step 1
-  const [setorNome, setSetorNome] = useState('');
-  const [funcaoNome, setFuncaoNome] = useState('');
-  const [gheId, setGheId] = useState<string>('');
+  const [escopo, setEscopo] = useState<EscopoItem[]>([]);
+  const [escopoDraft, setEscopoDraft] = useState<EscopoItem>({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: '' });
   const [situacaoTrabalho, setSituacaoTrabalho] = useState('');
   const [assessmentDate, setAssessmentDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [nextReviewDate, setNextReviewDate] = useState<string>('');
@@ -105,13 +113,23 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
 
   const reset = () => {
     setStep(1);
-    setSetorNome(''); setFuncaoNome(''); setGheId(''); setSituacaoTrabalho('');
+    setEscopo([]); setEscopoDraft({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: '' });
+    setSituacaoTrabalho('');
     setAssessmentDate(new Date().toISOString().split('T')[0]); setNextReviewDate('');
     setMethodologies([]); setMethodologyDetails(''); setInstrumentName(''); setAnonymityEnsured(false);
     setFatores([]); setFatorSelecionado('');
     setParticipantes([]);
     setRespName(''); setRespRole(''); setRespRegistration(''); setSignConfirm(false);
   };
+
+  const addEscopoItem = () => {
+    if (!escopoDraft.setor.trim() || !escopoDraft.funcao.trim()) {
+      toast.error('Informe setor e função'); return;
+    }
+    setEscopo(prev => [...prev, { ...escopoDraft, tempId: crypto.randomUUID(), worker_count: escopoDraft.worker_count || 1 }]);
+    setEscopoDraft({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: escopoDraft.ghe_id });
+  };
+  const removeEscopoItem = (id: string) => setEscopo(prev => prev.filter(i => i.tempId !== id));
 
   const addFator = (custom?: Partial<FatorForm>) => {
     const fromCatalog = fatorSelecionado && !custom ? catalog.find(c => c.id === fatorSelecionado) : null;
@@ -149,13 +167,17 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
   const removeParticipante = (id: string) => setParticipantes(prev => prev.filter(p => p.tempId !== id));
 
   const canNext = () => {
-    if (step === 1) return situacaoTrabalho.trim().length > 0 && setorNome.trim().length > 0;
+    if (step === 1) return situacaoTrabalho.trim().length > 0 && escopo.length > 0;
     if (step === 2) return methodologies.length > 0;
     if (step === 3) return fatores.length > 0;
     if (step === 4) return participantes.length > 0;
     if (step === 5) return respName.trim() && respRole.trim() && signConfirm;
     return true;
   };
+
+  const escopoSummarySetor = escopo.map(e => e.setor).filter((v, i, a) => a.indexOf(v) === i).join(' / ');
+  const escopoSummaryFuncao = escopo.map(e => e.cbo ? `${e.funcao} (CBO ${e.cbo})` : e.funcao).join(', ');
+  const primaryGheId = escopo.find(e => e.ghe_id)?.ghe_id || null;
 
   const submit = async () => {
     setSaving(true);
@@ -169,9 +191,10 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
         .insert({
           company_id: companyId,
           pgr_document_id: pgrDocumentId || null,
-          ghe_id: gheId || null,
-          setor_nome: setorNome,
-          funcao_nome: funcaoNome,
+          ghe_id: primaryGheId,
+          setor_nome: escopoSummarySetor,
+          funcao_nome: escopoSummaryFuncao,
+          escopo_json: escopo.map(e => ({ setor: e.setor, funcao: e.funcao, cbo: e.cbo || null, worker_count: e.worker_count, ghe_id: e.ghe_id || null })),
           situacao_trabalho: situacaoTrabalho,
           assessment_date: assessmentDate,
           next_review_date: nextReviewDate || null,
@@ -259,26 +282,66 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
         {/* Step 1 */}
         {step === 1 && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Setor *</Label>
-                <Input value={setorNome} onChange={e => setSetorNome(e.target.value)} placeholder="Ex: Produção, Administrativo" />
+            <Card className="p-3 bg-primary/5 border-primary/20 space-y-3">
+              <div>
+                <Label className="text-sm font-semibold">Escopo da AEP *</Label>
+                <p className="text-xs text-muted-foreground">
+                  Cadastre todos os setores, cargos e funções cobertos por esta AEP. Uma única AEP pode cobrir vários setores e cargos.
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label>Função / cargo</Label>
-                <Input value={funcaoNome} onChange={e => setFuncaoNome(e.target.value)} placeholder="Ex: Operador de máquina" />
+              <div className="grid grid-cols-[1fr_1fr_110px_90px_auto] gap-2 items-end">
+                <div>
+                  <Label className="text-xs">Setor</Label>
+                  <Input value={escopoDraft.setor} onChange={e => setEscopoDraft({ ...escopoDraft, setor: e.target.value })} placeholder="Ex: Produção" />
+                </div>
+                <div>
+                  <Label className="text-xs">Função / cargo</Label>
+                  <Input value={escopoDraft.funcao} onChange={e => setEscopoDraft({ ...escopoDraft, funcao: e.target.value })} placeholder="Ex: Operador" />
+                </div>
+                <div>
+                  <Label className="text-xs">CBO</Label>
+                  <Input value={escopoDraft.cbo} onChange={e => setEscopoDraft({ ...escopoDraft, cbo: e.target.value })} placeholder="Opcional" />
+                </div>
+                <div>
+                  <Label className="text-xs">Nº trab.</Label>
+                  <Input type="number" min={1} value={escopoDraft.worker_count}
+                    onChange={e => setEscopoDraft({ ...escopoDraft, worker_count: parseInt(e.target.value) || 1 })} />
+                </div>
+                <Button size="sm" onClick={addEscopoItem} className="mb-[1px]">
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
-            {ghes.length > 0 && (
-              <div className="space-y-2">
-                <Label>GHE (opcional — vincula ao PGR)</Label>
-                <select className="w-full h-10 rounded-md border border-input bg-background px-3"
-                  value={gheId} onChange={e => setGheId(e.target.value)}>
-                  <option value="">— Nenhum —</option>
-                  {ghes.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                </select>
-              </div>
-            )}
+              {ghes.length > 0 && (
+                <div className="space-y-1">
+                  <Label className="text-xs">GHE do PGR (opcional)</Label>
+                  <select className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    value={escopoDraft.ghe_id || ''} onChange={e => setEscopoDraft({ ...escopoDraft, ghe_id: e.target.value })}>
+                    <option value="">— Nenhum —</option>
+                    {ghes.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  </select>
+                </div>
+              )}
+              {escopo.length === 0 ? (
+                <div className="text-xs text-muted-foreground text-center py-2">Nenhum item de escopo adicionado ainda.</div>
+              ) : (
+                <div className="space-y-1">
+                  {escopo.map(it => (
+                    <div key={it.tempId} className="flex items-center justify-between gap-2 p-2 rounded bg-background border text-sm">
+                      <div className="flex-1">
+                        <span className="font-medium">{it.setor}</span>
+                        <span className="text-muted-foreground"> — {it.funcao}</span>
+                        {it.cbo && <Badge variant="outline" className="ml-2 text-[10px]">CBO {it.cbo}</Badge>}
+                        <Badge variant="secondary" className="ml-2 text-[10px]">{it.worker_count} trab.</Badge>
+                        {it.ghe_id && <Badge variant="outline" className="ml-2 text-[10px]">GHE vinculado</Badge>}
+                      </div>
+                      <Button size="icon" variant="ghost" onClick={() => removeEscopoItem(it.tempId)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
             <div className="space-y-2">
               <Label>Situação de trabalho avaliada *</Label>
               <Textarea rows={4} value={situacaoTrabalho} onChange={e => setSituacaoTrabalho(e.target.value)}
@@ -350,7 +413,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Traz automaticamente as dimensões em risco como fatores psicossociais desta AEP, com rastreabilidade da origem.
+                Traz as dimensões em risco como fatores psicossociais desta AEP, com rastreabilidade da origem. Os dados representam a percepção coletiva dos respondentes da avaliação (agregados), não de um único colaborador — é o esperado pela NR-17.
               </p>
             </Card>
 
@@ -524,7 +587,8 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
 
             <Card className="p-3 space-y-1 text-sm">
               <div className="font-semibold">Resumo</div>
-              <div>Setor: <span className="text-muted-foreground">{setorNome || '—'}</span></div>
+              <div>Escopo: <span className="text-muted-foreground">{escopo.length} item(ns) — {escopoSummarySetor || '—'}</span></div>
+              <div>Total trabalhadores cobertos: <span className="text-muted-foreground">{escopo.reduce((s, i) => s + (i.worker_count || 0), 0)}</span></div>
               <div>Fatores levantados: <span className="text-muted-foreground">{fatores.length}</span></div>
               <div>Participantes: <span className="text-muted-foreground">{participantes.length}</span></div>
               <div>Metodologias: <span className="text-muted-foreground">{methodologies.length}</span></div>

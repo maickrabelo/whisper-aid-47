@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
   BarChart,
   Bar,
   XAxis,
@@ -394,7 +395,7 @@ export default function ClimateSurveyDashboard() {
 
   const getSurveyUrl = (survey: Survey) => {
     if (!survey.companies?.slug) return '';
-    return `${window.location.origin}/pesquisa/${survey.companies.slug}/${survey.id}`;
+    return `${PUBLIC_BASE_URL}/pesquisa/${survey.companies.slug}/${survey.id}`;
   };
 
   const copyToClipboard = (text: string) => {

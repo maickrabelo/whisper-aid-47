@@ -15,6 +15,7 @@ import { useRealAuth } from "@/contexts/RealAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { Progress } from '@/components/ui/progress';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface Company {
   id: string;
@@ -320,15 +321,15 @@ const SalesDashboard = () => {
                               <div className="pt-2 border-t border-border space-y-2">
                                 <p className="text-xs text-muted-foreground font-medium">Canal de Denúncias:</p>
                                 <div className="flex items-center gap-2">
-                                  <a href={`${window.location.origin}/report/${company.slug}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate">
+                                  <a href={`${PUBLIC_BASE_URL}/report/${company.slug}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate">
                                     <ExternalLink className="h-3 w-3 flex-shrink-0" />
                                     <span className="truncate">{window.location.origin}/report/{company.slug}</span>
                                   </a>
-                                  <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)} className="h-6 px-2">
+                                  <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${PUBLIC_BASE_URL}/report/${company.slug}`, e)} className="h-6 px-2">
                                     <Copy className="h-3 w-3" />
                                   </Button>
                                 </div>
-                                <QRCodeDownloader url={`${window.location.origin}/report/${company.slug}`} filename={`qrcode-${company.slug}.png`} size="sm" className="w-full" />
+                                <QRCodeDownloader url={`${PUBLIC_BASE_URL}/report/${company.slug}`} filename={`qrcode-${company.slug}.png`} size="sm" className="w-full" />
                               </div>
                             </CardContent>
                             <CardFooter className="pt-0">

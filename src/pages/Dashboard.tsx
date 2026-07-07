@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import {
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
   Card,
   CardContent,
   CardDescription,
@@ -515,7 +516,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               <p className="text-sm font-medium text-muted-foreground">Canal de Denúncias:</p>
               <div className="flex items-center gap-2">
                 <a 
-                  href={`${window.location.origin}/report/${companySlug}`}
+                  href={`${PUBLIC_BASE_URL}/report/${companySlug}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-primary hover:underline flex items-center gap-1 flex-1 truncate"
@@ -526,14 +527,14 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => copyToClipboard(`${window.location.origin}/report/${companySlug}`)}
+                  onClick={() => copyToClipboard(`${PUBLIC_BASE_URL}/report/${companySlug}`)}
                   className="h-8 px-2"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
               <QRCodeDownloader
-                url={`${window.location.origin}/report/${companySlug}`}
+                url={`${PUBLIC_BASE_URL}/report/${companySlug}`}
                 filename={`qrcode-${companySlug}.png`}
                 size="sm"
               />

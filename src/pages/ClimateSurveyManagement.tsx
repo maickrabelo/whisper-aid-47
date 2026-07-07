@@ -20,6 +20,7 @@ import { QRCodePreview } from "@/components/climate-survey/QRCodePreview";
 import { QuestionManager, SurveyQuestion } from "@/components/climate-survey/QuestionManager";
 import { DepartmentManager, SurveyDepartment, DepartmentManagerHandle, UnallocatedEmployeesDialog } from "@/components/climate-survey/DepartmentManager";
 import { useCompanyEmployeeCount } from "@/hooks/useCompanyEmployeeCount";
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface Company {
   id: string;
@@ -452,7 +453,7 @@ export default function ClimateSurveyManagement() {
   const getSurveyUrl = () => {
     const company = companies.find(c => c.id === formData.company_id);
     if (!company) return '';
-    return `${window.location.origin}/pesquisa/${company.slug}`;
+    return `${PUBLIC_BASE_URL}/pesquisa/${company.slug}`;
   };
 
   const copyToClipboard = (text: string) => {

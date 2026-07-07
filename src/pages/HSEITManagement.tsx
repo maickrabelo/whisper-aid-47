@@ -18,6 +18,7 @@ import { toast } from '@/hooks/use-toast';
 import { DepartmentManager, SurveyDepartment, DepartmentManagerHandle, UnallocatedEmployeesDialog } from '@/components/climate-survey/DepartmentManager';
 import { QRCodePreview } from '@/components/climate-survey/QRCodePreview';
 import { useCompanyEmployeeCount } from '@/hooks/useCompanyEmployeeCount';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface Company {
   id: string;
@@ -276,7 +277,7 @@ export default function HSEITManagement() {
   const getFormUrl = () => {
     const company = companies.find(c => c.id === selectedCompany);
     if (!company || !id) return '';
-    return `${window.location.origin}/hseit/${company.slug}/${id}`;
+    return `${PUBLIC_BASE_URL}/hseit/${company.slug}/${id}`;
   };
 
   if (authLoading || isLoading) {

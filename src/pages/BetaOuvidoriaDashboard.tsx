@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -91,7 +92,7 @@ const BetaOuvidoriaDashboard = () => {
   const [allowed, setAllowed] = useState<boolean>(false);
 
   const publicLink = useMemo(
-    () => companyId ? `${window.location.origin}/ouvidoria-beta/${companyId}` : '',
+    () => companyId ? `${PUBLIC_BASE_URL}/ouvidoria-beta/${companyId}` : '',
     [companyId]
   );
 

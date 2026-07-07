@@ -17,6 +17,7 @@ import { ptBR } from 'date-fns/locale';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import PrintQuestionnaireButton from '@/components/PrintQuestionnaireButton';
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 const hseitSteps: TourStep[] = [
   {
@@ -391,7 +392,7 @@ export default function HSEITDashboard() {
                 </TableHeader>
                 <TableBody>
                   {filteredAssessments.map((assessment) => {
-                    const formUrl = `${window.location.origin}/hseit/${assessment.companies?.slug}/${assessment.id}`;
+                    const formUrl = `${PUBLIC_BASE_URL}/hseit/${assessment.companies?.slug}/${assessment.id}`;
                     
                     return (
                       <TableRow key={assessment.id}>

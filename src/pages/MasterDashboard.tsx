@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 type Company = {
   id: string;
@@ -817,7 +818,7 @@ const MasterDashboard = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const url = `${window.location.origin}/report/${selectedCompany.slug}`;
+                            const url = `${PUBLIC_BASE_URL}/report/${selectedCompany.slug}`;
                             navigator.clipboard.writeText(url);
                             toast({
                               title: "URL copiada",
@@ -962,7 +963,7 @@ const MasterDashboard = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const url = `${window.location.origin}/sst/${selectedSST.slug}`;
+                            const url = `${PUBLIC_BASE_URL}/sst/${selectedSST.slug}`;
                             navigator.clipboard.writeText(url);
                             toast({
                               title: "URL copiada",
@@ -1784,7 +1785,7 @@ const MasterDashboard = () => {
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => {
-                                        const url = `${window.location.origin}/report/${company.slug}`;
+                                        const url = `${PUBLIC_BASE_URL}/report/${company.slug}`;
                                         navigator.clipboard.writeText(url);
                                         toast({
                                           title: "URL copiada",

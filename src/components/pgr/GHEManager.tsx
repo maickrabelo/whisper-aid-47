@@ -67,8 +67,8 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", sector: "", role: "", activities_description: "", worker_count: 0, work_schedule: "" });
-    setRoleInput("");
+    setForm({ name: "", sector: "", roles_meta: [], activities_description: "", worker_count: 0, work_schedule: "" });
+    setRoleInput(""); setCboInput("");
     setOpen(true);
   };
   const openEdit = (g: GHE) => {
@@ -76,12 +76,12 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
     setForm({
       name: g.name,
       sector: g.sector || "",
-      role: g.role || "",
+      roles_meta: parseRolesMeta(g),
       activities_description: g.activities_description || "",
       worker_count: g.worker_count || 0,
       work_schedule: g.work_schedule || "",
     });
-    setRoleInput("");
+    setRoleInput(""); setCboInput("");
     setOpen(true);
   };
 
@@ -89,11 +89,20 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
     setSaving(true);
     try {
+      const payload: any = {
+        name: form.name,
+        sector: form.sector,
+        role: form.roles_meta.map(r => r.role).join(", "),
+        roles_meta: form.roles_meta,
+        activities_description: form.activities_description,
+        worker_count: form.worker_count,
+        work_schedule: form.work_schedule,
+      };
       if (editing) {
-        const { error } = await supabase.from("pgr_ghe").update(form as any).eq("id", editing.id);
+        const { error } = await supabase.from("pgr_ghe").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("pgr_ghe").insert({ ...form, pgr_document_id: pgrDocumentId } as any);
+        const { error } = await supabase.from("pgr_ghe").insert({ ...payload, pgr_document_id: pgrDocumentId });
         if (error) throw error;
       }
       toast.success("GHE salvo");

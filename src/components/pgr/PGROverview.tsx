@@ -28,6 +28,29 @@ const statusLabel: Record<string, { label: string; variant: "default" | "seconda
 export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props) => {
   const term = usePgrTerminology(pgr.document_type);
   const [saving, setSaving] = useState(false);
+  const [ghesSummary, setGhesSummary] = useState<{ count: number; workers: number; roles: { role: string; cbo?: string }[] }>({ count: 0, workers: 0, roles: [] });
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from('pgr_ghe').select('worker_count, role, roles_meta').eq('pgr_document_id', pgr.id);
+      const rows = (data as any[]) || [];
+      const rolesMap = new Map<string, string | undefined>();
+      let workers = 0;
+      for (const g of rows) {
+        workers += g.worker_count || 0;
+        const meta: any[] = Array.isArray(g.roles_meta) && g.roles_meta.length
+          ? g.roles_meta
+          : (g.role || '').split(',').map((r: string) => ({ role: r.trim() })).filter((r: any) => r.role);
+        for (const m of meta) {
+          const key = m.role.toLowerCase();
+          if (!rolesMap.has(key)) rolesMap.set(key, m.cbo);
+        }
+      }
+      const roles = Array.from(rolesMap.entries()).map(([role, cbo]) => ({ role, cbo }));
+      setGhesSummary({ count: rows.length, workers, roles });
+    })();
+  }, [pgr.id]);
+
   const [form, setForm] = useState({
     title: pgr.title,
     status: pgr.status,

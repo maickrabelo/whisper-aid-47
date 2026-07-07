@@ -68,8 +68,24 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
   doc.setFontSize(12); doc.setFont('helvetica', 'bold');
   doc.text('1. Identificação', MARGIN, y); y += 6;
   doc.setFontSize(9);
-  line('Setor:', aep.setor_nome || '—');
-  line('Função/cargo:', aep.funcao_nome || '—');
+
+  const escopo: any[] = Array.isArray(aep.escopo_json) ? aep.escopo_json : [];
+  if (escopo.length > 0) {
+    doc.setFont('helvetica', 'bold'); doc.text('Escopo avaliado:', MARGIN, y); y += 5;
+    doc.setFont('helvetica', 'normal');
+    escopo.forEach((it: any, idx: number) => {
+      if (y > 275) { doc.addPage(); y = 20; }
+      const t = `${idx + 1}. ${it.setor || '—'} — ${it.funcao || '—'}${it.cbo ? ` (CBO ${it.cbo})` : ''} · ${it.worker_count || 1} trab.`;
+      doc.text(t, MARGIN + 3, y); y += 4.5;
+    });
+    const total = escopo.reduce((s: number, i: any) => s + (i.worker_count || 0), 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total coberto: ${total} trabalhador(es)`, MARGIN, y); y += 5;
+    doc.setFont('helvetica', 'normal');
+  } else {
+    line('Setor:', aep.setor_nome || '—');
+    line('Função/cargo:', aep.funcao_nome || '—');
+  }
   line('Data da avaliação:', new Date(aep.assessment_date).toLocaleDateString('pt-BR'));
   if (aep.next_review_date) line('Próxima revisão:', new Date(aep.next_review_date).toLocaleDateString('pt-BR'));
   line('Situação avaliada:', aep.situacao_trabalho || '—');

@@ -1,9 +1,9 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import {
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
   Card,
   CardContent,
   CardDescription,

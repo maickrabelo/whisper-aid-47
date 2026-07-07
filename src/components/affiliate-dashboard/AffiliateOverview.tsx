@@ -1,10 +1,10 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, DollarSign, Link, Copy, Check, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface AffiliateOverviewProps {
   affiliateId: string;

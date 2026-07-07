@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +21,6 @@ import SoniaChat from "@/components/SoniaChat";
 import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 import PrintQuestionnaireButton from "@/components/PrintQuestionnaireButton";
 import { Loader2 } from "lucide-react";
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 const burnoutSteps: TourStep[] = [
   { targetId: 'burnout-new-btn', title: '➕ Nova Avaliação', description: 'Crie uma nova avaliação de Burnout para monitorar o risco de esgotamento dos colaboradores.', position: 'bottom' },

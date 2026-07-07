@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -32,7 +33,6 @@ import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
 import { useSmartOnlyPlan } from '@/hooks/useSmartOnlyPlan';
 import { usePgrShortcutPlan } from '@/hooks/usePgrShortcutPlan';
 import { useSmsPlan } from '@/hooks/useSmsPlan';
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 const sstDashboardSteps: TourStep[] = [
   {

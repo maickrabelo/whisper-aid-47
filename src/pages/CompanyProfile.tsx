@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -14,7 +15,6 @@ import { supabase } from '@/integrations/supabase/client';
 import AddCompanyDialog from '@/components/AddCompanyDialog';
 import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 import { Link } from 'react-router-dom';
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface CompanyData {
   id: string;

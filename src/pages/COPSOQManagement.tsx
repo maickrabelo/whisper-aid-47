@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +18,6 @@ import { toast } from '@/hooks/use-toast';
 import { DepartmentManager, SurveyDepartment, DepartmentManagerHandle, UnallocatedEmployeesDialog } from '@/components/climate-survey/DepartmentManager';
 import { QRCodePreview } from '@/components/climate-survey/QRCodePreview';
 import { useCompanyEmployeeCount } from '@/hooks/useCompanyEmployeeCount';
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface Company { id: string; name: string; slug: string; }
 

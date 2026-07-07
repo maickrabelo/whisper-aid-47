@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +15,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from './PeriodFilter';
 import PrintQuestionnaireButton from '@/components/PrintQuestionnaireButton';
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface COPSOQAssessment {
   id: string;

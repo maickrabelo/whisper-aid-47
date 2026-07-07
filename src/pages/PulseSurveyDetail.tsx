@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +12,6 @@ import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface Survey { id: string; title: string; frequency: string; use_emojis: boolean; status: string; manager_email: string; companies?: { name: string } | null }
 interface Cycle { id: string; cycle_number: number; started_at: string; ended_at: string; closed_at: string | null; total_responses: number; summary_email_sent_at: string | null }

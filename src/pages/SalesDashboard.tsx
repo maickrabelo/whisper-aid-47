@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -15,7 +16,6 @@ import { useRealAuth } from "@/contexts/RealAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { Progress } from '@/components/ui/progress';
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface Company {
   id: string;

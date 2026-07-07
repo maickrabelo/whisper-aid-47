@@ -107,6 +107,39 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
 
   return (
     <div className="space-y-4">
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" /> Resumo do escopo
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <div className="text-xs text-muted-foreground">Total de trabalhadores cobertos</div>
+            <div className="text-2xl font-semibold">{ghesSummary.workers}</div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground">{term.gheLabel}s cadastrados</div>
+            <div className="text-2xl font-semibold">{ghesSummary.count}</div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground mb-1">Cargos cobertos {ghesSummary.roles.length > 0 && `(${ghesSummary.roles.length})`}</div>
+            {ghesSummary.roles.length === 0 ? (
+              <div className="text-xs text-muted-foreground italic">Cadastre {term.gheLabel}s para preencher automaticamente.</div>
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {ghesSummary.roles.slice(0, 12).map(r => (
+                  <Badge key={r.role} variant="secondary" className="text-[10px] font-normal">
+                    {r.role}{r.cbo ? ` · CBO ${r.cbo}` : ''}
+                  </Badge>
+                ))}
+                {ghesSummary.roles.length > 12 && <Badge variant="outline" className="text-[10px]">+{ghesSummary.roles.length - 12}</Badge>}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">

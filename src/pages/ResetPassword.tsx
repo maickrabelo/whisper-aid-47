@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import srSmsLogo from "@/assets/sr-sms-logo.png.asset.json";
+
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -126,7 +128,7 @@ const ResetPassword = () => {
 
   const Logo = () => (
     <a href="/" className="mb-6">
-      <img src="/lovable-uploads/Logo_SOIA.png" alt="SOIA" className="h-14 object-contain" />
+      <img src={srSmsLogo.url} alt="SR SMS" className="h-14 object-contain" />
     </a>
   );
 

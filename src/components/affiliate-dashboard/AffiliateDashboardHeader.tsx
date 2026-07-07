@@ -1,8 +1,8 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface AffiliateDashboardHeaderProps {
   affiliate: {

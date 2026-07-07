@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, DollarSign, TrendingUp, Copy, Check } from "lucide-react";
@@ -5,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { PartnerInfo } from "@/pages/PartnerDashboard";
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface PartnerOverviewProps {
   partnerInfo: PartnerInfo;

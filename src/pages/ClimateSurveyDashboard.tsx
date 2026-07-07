@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AssessmentExportButton } from '@/components/assessments/AssessmentExportButton';
@@ -10,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
   BarChart,
   Bar,
   XAxis,

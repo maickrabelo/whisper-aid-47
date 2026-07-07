@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +18,6 @@ import { ptBR } from 'date-fns/locale';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import PrintQuestionnaireButton from '@/components/PrintQuestionnaireButton';
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 const hseitSteps: TourStep[] = [
   {

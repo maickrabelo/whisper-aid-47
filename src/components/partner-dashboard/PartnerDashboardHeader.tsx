@@ -1,10 +1,10 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { PartnerInfo } from "@/pages/PartnerDashboard";
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface PartnerDashboardHeaderProps {
   partnerInfo: PartnerInfo;

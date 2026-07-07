@@ -1,3 +1,4 @@
+import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +14,6 @@ import { Loader2, Plus, Search, Activity, Building2, ArrowLeft, Copy, ExternalLi
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
 
 interface PulseSurvey {
   id: string;

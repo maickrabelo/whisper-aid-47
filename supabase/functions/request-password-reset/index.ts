@@ -45,8 +45,7 @@ Deno.serve(async (req) => {
     const normalizedEmail = email.trim().toLowerCase();
     log("Reset requested", { email: normalizedEmail });
 
-    const origin = req.headers.get("origin") || "https://srsms.com.br";
-    const redirectTo = `${origin}/reset-password`;
+    const redirectTo = "https://srsms.com.br/reset-password";
 
     // Generate recovery link via admin API
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({

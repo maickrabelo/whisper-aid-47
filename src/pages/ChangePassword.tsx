@@ -166,6 +166,7 @@ const ChangePassword: React.FC = () => {
                   required
                 />
               </div>
+              <PasswordStrengthHints password={newPassword} />
             </div>
 
             <div className="space-y-2">

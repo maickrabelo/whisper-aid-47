@@ -167,13 +167,17 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
   const removeParticipante = (id: string) => setParticipantes(prev => prev.filter(p => p.tempId !== id));
 
   const canNext = () => {
-    if (step === 1) return situacaoTrabalho.trim().length > 0 && setorNome.trim().length > 0;
+    if (step === 1) return situacaoTrabalho.trim().length > 0 && escopo.length > 0;
     if (step === 2) return methodologies.length > 0;
     if (step === 3) return fatores.length > 0;
     if (step === 4) return participantes.length > 0;
     if (step === 5) return respName.trim() && respRole.trim() && signConfirm;
     return true;
   };
+
+  const escopoSummarySetor = escopo.map(e => e.setor).filter((v, i, a) => a.indexOf(v) === i).join(' / ');
+  const escopoSummaryFuncao = escopo.map(e => e.cbo ? `${e.funcao} (CBO ${e.cbo})` : e.funcao).join(', ');
+  const primaryGheId = escopo.find(e => e.ghe_id)?.ghe_id || null;
 
   const submit = async () => {
     setSaving(true);
@@ -187,9 +191,10 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
         .insert({
           company_id: companyId,
           pgr_document_id: pgrDocumentId || null,
-          ghe_id: gheId || null,
-          setor_nome: setorNome,
-          funcao_nome: funcaoNome,
+          ghe_id: primaryGheId,
+          setor_nome: escopoSummarySetor,
+          funcao_nome: escopoSummaryFuncao,
+          escopo_json: escopo.map(e => ({ setor: e.setor, funcao: e.funcao, cbo: e.cbo || null, worker_count: e.worker_count, ghe_id: e.ghe_id || null })),
           situacao_trabalho: situacaoTrabalho,
           assessment_date: assessmentDate,
           next_review_date: nextReviewDate || null,

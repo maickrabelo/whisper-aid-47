@@ -12,11 +12,13 @@ import { Plus, Trash2, Pencil, Loader2, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 
+interface RoleMeta { role: string; cbo?: string }
 interface GHE {
   id: string;
   name: string;
   sector: string | null;
   role: string | null;
+  roles_meta?: RoleMeta[] | null;
   activities_description: string | null;
   worker_count: number;
   work_schedule: string | null;
@@ -28,22 +30,25 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<GHE | null>(null);
-  const [form, setForm] = useState({ name: "", sector: "", role: "", activities_description: "", worker_count: 0, work_schedule: "" });
+  const [form, setForm] = useState({ name: "", sector: "", roles_meta: [] as RoleMeta[], activities_description: "", worker_count: 0, work_schedule: "" });
   const [saving, setSaving] = useState(false);
   const [roleInput, setRoleInput] = useState("");
+  const [cboInput, setCboInput] = useState("");
 
-  const parseRoles = (s: string | null | undefined): string[] =>
-    (s || "").split(",").map(r => r.trim()).filter(Boolean);
-  const rolesArr = parseRoles(form.role);
+  const rolesArr = form.roles_meta;
   const addRole = () => {
     const v = roleInput.trim();
     if (!v) return;
-    if (rolesArr.some(r => r.toLowerCase() === v.toLowerCase())) { setRoleInput(""); return; }
-    setForm({ ...form, role: [...rolesArr, v].join(", ") });
-    setRoleInput("");
+    if (rolesArr.some(r => r.role.toLowerCase() === v.toLowerCase())) { setRoleInput(""); setCboInput(""); return; }
+    setForm({ ...form, roles_meta: [...rolesArr, { role: v, cbo: cboInput.trim() || undefined }] });
+    setRoleInput(""); setCboInput("");
   };
   const removeRole = (r: string) => {
-    setForm({ ...form, role: rolesArr.filter(x => x !== r).join(", ") });
+    setForm({ ...form, roles_meta: rolesArr.filter(x => x.role !== r) });
+  };
+  const parseRolesMeta = (g: GHE): RoleMeta[] => {
+    if (Array.isArray(g.roles_meta) && g.roles_meta.length) return g.roles_meta;
+    return (g.role || "").split(",").map(r => r.trim()).filter(Boolean).map(r => ({ role: r }));
   };
 
   const load = async () => {

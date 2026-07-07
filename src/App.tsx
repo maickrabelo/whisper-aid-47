@@ -10,6 +10,7 @@ import { useAccessLogger } from "./hooks/useAccessLogger";
 import React, { Suspense } from "react";
 import { MetaPixelRouteTracker } from "./components/MetaPixelRouteTracker";
 import BackToHomeButton from "./components/BackToHomeButton";
+import TrialGate from "./components/TrialGate";
 
 // Eagerly load critical/frequently accessed pages
 import Index from "./pages/Index";

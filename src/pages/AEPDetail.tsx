@@ -550,8 +550,26 @@ const AEPDetail = () => {
                     <span className="text-xs text-muted-foreground flex items-center gap-1"><Lock className="h-3 w-3" /> Crie uma nova versão para alterar</span>
                   )}
                 </div>
-                <Row label="Setor" value={aep.setor_nome} />
-                <Row label="Função/cargo" value={aep.funcao_nome} />
+                {Array.isArray(aep.escopo_json) && aep.escopo_json.length > 0 ? (
+                  <div className="space-y-1">
+                    <div className="text-xs font-semibold text-muted-foreground">Escopo da AEP ({aep.escopo_json.length} item{aep.escopo_json.length > 1 ? 's' : ''})</div>
+                    <div className="flex flex-wrap gap-1">
+                      {aep.escopo_json.map((it: any, i: number) => (
+                        <Badge key={i} variant="secondary" className="text-xs font-normal">
+                          {it.setor} — {it.funcao}{it.cbo ? ` · CBO ${it.cbo}` : ''} · {it.worker_count || 1} trab.
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground pt-1">
+                      Total coberto: <strong>{aep.escopo_json.reduce((s: number, i: any) => s + (i.worker_count || 0), 0)}</strong> trabalhador(es)
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <Row label="Setor" value={aep.setor_nome} />
+                    <Row label="Função/cargo" value={aep.funcao_nome} />
+                  </>
+                )}
                 <Row label="Situação avaliada" value={aep.situacao_trabalho} />
                 <Row label="Data da avaliação" value={new Date(aep.assessment_date).toLocaleDateString('pt-BR')} />
                 {aep.next_review_date && <Row label="Próxima revisão" value={new Date(aep.next_review_date).toLocaleDateString('pt-BR')} />}

@@ -60,8 +60,19 @@ export default function COPSOQResults() {
       const responseIds = (rd as any[])?.map((r: any) => r.id) || [];
       let allAnswers: any[] = [];
       if (responseIds.length > 0) {
-        const { data: ans } = await supabase.from('copsoq_answers' as any).select('response_id, question_number, answer_value').in('response_id', responseIds);
-        allAnswers = (ans as any[]) || [];
+        // Fetch in chunks to avoid PostgREST default 1000-row cap
+        // (each response has ~41 answers, so >24 responses would truncate).
+        const chunkSize = 20;
+        for (let i = 0; i < responseIds.length; i += chunkSize) {
+          const chunk = responseIds.slice(i, i + chunkSize);
+          const { data: ans, error: anErr } = await supabase
+            .from('copsoq_answers' as any)
+            .select('response_id, question_number, answer_value')
+            .in('response_id', chunk)
+            .range(0, 99999);
+          if (anErr) throw anErr;
+          if (ans) allAnswers = allAnswers.concat(ans as any[]);
+        }
       }
       const mapped: Response[] = ((rd as any[]) || []).map((r: any) => {
         const deptList: string[] = Array.isArray(r.departments) && r.departments.length > 0 ? r.departments : (r.department ? [r.department] : []);

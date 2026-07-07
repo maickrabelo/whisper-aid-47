@@ -189,12 +189,19 @@ export default function HSEITResults() {
       let allAnswers: { response_id: string; question_number: number; answer_value: number }[] = [];
 
       if (responseIds.length > 0) {
-        const { data: answersData } = await supabase
-          .from('hseit_answers')
-          .select('response_id, question_number, answer_value')
-          .in('response_id', responseIds);
-
-        allAnswers = answersData || [];
+        // Fetch answers in chunks to avoid PostgREST default 1000-row cap
+        // (each HSE-IT response has 35 answers, so >28 responses would truncate).
+        const chunkSize = 20;
+        for (let i = 0; i < responseIds.length; i += chunkSize) {
+          const chunk = responseIds.slice(i, i + chunkSize);
+          const { data: answersData, error: aErr } = await supabase
+            .from('hseit_answers')
+            .select('response_id, question_number, answer_value')
+            .in('response_id', chunk)
+            .range(0, 99999);
+          if (aErr) throw aErr;
+          if (answersData) allAnswers = allAnswers.concat(answersData);
+        }
       }
 
       // Map responses with their answers

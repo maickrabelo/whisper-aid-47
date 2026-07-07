@@ -121,6 +121,7 @@ const App = () => (
             <AppContent />
             <MetaPixelRouteTracker />
             <BackToHomeButton />
+            <TrialGate />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />

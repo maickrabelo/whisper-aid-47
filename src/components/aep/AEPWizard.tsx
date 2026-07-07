@@ -587,7 +587,8 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
 
             <Card className="p-3 space-y-1 text-sm">
               <div className="font-semibold">Resumo</div>
-              <div>Setor: <span className="text-muted-foreground">{setorNome || '—'}</span></div>
+              <div>Escopo: <span className="text-muted-foreground">{escopo.length} item(ns) — {escopoSummarySetor || '—'}</span></div>
+              <div>Total trabalhadores cobertos: <span className="text-muted-foreground">{escopo.reduce((s, i) => s + (i.worker_count || 0), 0)}</span></div>
               <div>Fatores levantados: <span className="text-muted-foreground">{fatores.length}</span></div>
               <div>Participantes: <span className="text-muted-foreground">{participantes.length}</span></div>
               <div>Metodologias: <span className="text-muted-foreground">{methodologies.length}</span></div>

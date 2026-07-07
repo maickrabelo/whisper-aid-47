@@ -113,13 +113,23 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
 
   const reset = () => {
     setStep(1);
-    setSetorNome(''); setFuncaoNome(''); setGheId(''); setSituacaoTrabalho('');
+    setEscopo([]); setEscopoDraft({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: '' });
+    setSituacaoTrabalho('');
     setAssessmentDate(new Date().toISOString().split('T')[0]); setNextReviewDate('');
     setMethodologies([]); setMethodologyDetails(''); setInstrumentName(''); setAnonymityEnsured(false);
     setFatores([]); setFatorSelecionado('');
     setParticipantes([]);
     setRespName(''); setRespRole(''); setRespRegistration(''); setSignConfirm(false);
   };
+
+  const addEscopoItem = () => {
+    if (!escopoDraft.setor.trim() || !escopoDraft.funcao.trim()) {
+      toast.error('Informe setor e função'); return;
+    }
+    setEscopo(prev => [...prev, { ...escopoDraft, tempId: crypto.randomUUID(), worker_count: escopoDraft.worker_count || 1 }]);
+    setEscopoDraft({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: escopoDraft.ghe_id });
+  };
+  const removeEscopoItem = (id: string) => setEscopo(prev => prev.filter(i => i.tempId !== id));
 
   const addFator = (custom?: Partial<FatorForm>) => {
     const fromCatalog = fatorSelecionado && !custom ? catalog.find(c => c.id === fatorSelecionado) : null;

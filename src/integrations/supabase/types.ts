@@ -2202,10 +2202,12 @@ export type Database = {
           esocial_agent_code: string | null
           existing_epc: string | null
           existing_epi: string | null
+          exposed_workers: number | null
           exposure_description: string | null
           exposure_limit: number | null
           ghe_id: string | null
           id: string
+          magnitude: number
           matrix_size: number
           measurement_unit: string | null
           measurement_value: number | null
@@ -2233,10 +2235,12 @@ export type Database = {
           esocial_agent_code?: string | null
           existing_epc?: string | null
           existing_epi?: string | null
+          exposed_workers?: number | null
           exposure_description?: string | null
           exposure_limit?: number | null
           ghe_id?: string | null
           id?: string
+          magnitude?: number
           matrix_size?: number
           measurement_unit?: string | null
           measurement_value?: number | null
@@ -2264,10 +2268,12 @@ export type Database = {
           esocial_agent_code?: string | null
           existing_epc?: string | null
           existing_epi?: string | null
+          exposed_workers?: number | null
           exposure_description?: string | null
           exposure_limit?: number | null
           ghe_id?: string | null
           id?: string
+          magnitude?: number
           matrix_size?: number
           measurement_unit?: string | null
           measurement_value?: number | null

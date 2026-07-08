@@ -609,9 +609,51 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                   </select>
                 </div>
               </div>
+
+              <div className="space-y-2 p-3 rounded-md border border-border bg-muted/30">
+                <Label className="text-sm font-semibold">Magnitude — trabalhadores atingidos</Label>
+                <p className="text-xs text-muted-foreground">
+                  NR-1 · 1.5.5.2.1.1 — o número de trabalhadores possivelmente atingidos eleva a probabilidade do risco.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Nº de trabalhadores expostos</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={form.exposed_workers as any}
+                      onChange={e => {
+                        const val = e.target.value;
+                        const gheTotal = ghes.find(g => g.id === form.ghe_id)?.worker_count;
+                        const suggested = val === '' ? form.magnitude : suggestMagnitude(Number(val), gheTotal);
+                        setForm(f => ({ ...f, exposed_workers: val, magnitude: suggested }));
+                      }}
+                      placeholder={ghes.find(g => g.id === form.ghe_id)?.worker_count ? `Total do GHE: ${ghes.find(g => g.id === form.ghe_id)?.worker_count}` : 'Ex: 12'}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Nível de magnitude</Label>
+                    <select
+                      className="w-full h-10 rounded-md border border-input bg-background px-3"
+                      value={form.magnitude}
+                      onChange={e => setForm({ ...form, magnitude: parseInt(e.target.value) })}
+                    >
+                      {[1, 2, 3, 4, 5].map(n => (
+                        <option key={n} value={n}>{n} — {MAGNITUDE_LABELS[n]}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {magnitudeBump(form.magnitude) > 0 && (
+                  <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                    ⚠ Probabilidade elevada de <b>{form.probability}</b> para <b>{Math.min(form.probability + magnitudeBump(form.magnitude), form.matrix_size)}</b> por magnitude (NR-1 1.5.5.2.1.1).
+                  </div>
+                )}
+              </div>
+
               <div className="text-xs text-muted-foreground">
-                Nível previsto: <span className={`px-2 py-0.5 rounded font-medium ${LEVEL_STYLES[classifyRisk(form.matrix_size, form.severity, form.probability)]}`}>
-                  {LEVEL_LABELS[classifyRisk(form.matrix_size, form.severity, form.probability)]}
+                Nível previsto: <span className={`px-2 py-0.5 rounded font-medium ${LEVEL_STYLES[classifyRisk(form.matrix_size, form.severity, Math.min(form.probability + magnitudeBump(form.magnitude), form.matrix_size))]}`}>
+                  {LEVEL_LABELS[classifyRisk(form.matrix_size, form.severity, Math.min(form.probability + magnitudeBump(form.magnitude), form.matrix_size))]}
                 </span>
               </div>
 

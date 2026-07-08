@@ -219,6 +219,8 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       matrix_size: (r.matrix_size || 5) as MatrixSize,
       severity: r.severity,
       probability: r.probability,
+      magnitude: r.magnitude ?? 1,
+      exposed_workers: r.exposed_workers ?? '',
       existing_epc: r.existing_epc || '',
       existing_epi: r.existing_epi || '',
       epi_ca: r.epi_ca || '',

@@ -69,7 +69,7 @@ const CYCLE_LABEL: Record<string, string> = {
 export default function Financeiro() {
   const navigate = useNavigate();
   const { user, role, profile, isLoading: authLoading } = useRealAuth();
-  const { hasSST: companyHasSST, loading: sstLoading } = useCompanyHasSST((profile as any)?.company_id ?? null);
+  const { hasSST: companyHasSST, isLoading: sstLoading } = useCompanyHasSST((profile as any)?.company_id ?? null);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [smsDialogOpen, setSmsDialogOpen] = useState(false);

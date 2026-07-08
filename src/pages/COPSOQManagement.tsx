@@ -135,7 +135,7 @@ export default function COPSOQManagement() {
   const persistAssessment = async () => {
     try {
       setIsSaving(true);
-      const data: any = { company_id: selectedCompany, title, description: description || null, start_date: startDate || null, end_date: endDate || null, is_active: isActive, created_by: user?.id, collection_mode: collectionMode, multi_sector_enabled: multiSectorEnabled };
+      const data: any = { company_id: selectedCompany, title, description: description || null, start_date: startDate || null, end_date: endDate || null, is_active: isActive, created_by: user?.id, collection_mode: 'form', multi_sector_enabled: multiSectorEnabled };
       let assessmentId = id;
 
       if (isEditing) {

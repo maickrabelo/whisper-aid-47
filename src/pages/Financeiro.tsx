@@ -67,7 +67,8 @@ const CYCLE_LABEL: Record<string, string> = {
 
 export default function Financeiro() {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading } = useRealAuth();
+  const { user, role, profile, isLoading: authLoading } = useRealAuth();
+  const { hasSST: companyHasSST, loading: sstLoading } = useCompanyHasSST((profile as any)?.company_id ?? null);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [smsDialogOpen, setSmsDialogOpen] = useState(false);
@@ -76,7 +77,12 @@ export default function Financeiro() {
     if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [authLoading, user, navigate]);
+    // Bloqueia cliente final gerido por gestora SST — quem paga é a gestora
+    if (!authLoading && !sstLoading && user && role === 'company' && companyHasSST) {
+      toast.error('O painel financeiro é gerenciado pela sua consultoria SST.');
+      navigate('/dashboard');
+    }
+  }, [authLoading, sstLoading, user, role, companyHasSST, navigate]);
 
   useEffect(() => {
     const load = async () => {

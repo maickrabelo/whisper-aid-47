@@ -247,7 +247,7 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
                     <DropdownMenuItem asChild>
                       <Link to="/profile">Perfil</Link>
                     </DropdownMenuItem>
-                    {(role === 'company' || role === 'sst') && (
+                    {canSeeFinanceiro && (
                       <DropdownMenuItem asChild>
                         <Link to="/financeiro">Financeiro</Link>
                       </DropdownMenuItem>

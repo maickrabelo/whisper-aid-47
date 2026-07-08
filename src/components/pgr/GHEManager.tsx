@@ -185,37 +185,38 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
             <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Novo'} {term.gheLabel}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2"><Label>Nome do {term.gheLabel} *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={term.isRural ? "Ex: Aplicadores de defensivos — talhão A" : "Ex: Operadores de máquina linha 1"} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>{term.isRural ? 'Talhão / Área' : 'Setor'}</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
-                <div className="space-y-2">
-                  <Label>{term.isRural ? 'Função(ões) rural(is)' : 'Cargo(s)'} + CBO</Label>
-                  <div className="grid grid-cols-[1fr_120px_auto] gap-2">
-                    <Input
-                      value={roleInput}
-                      onChange={e => setRoleInput(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addRole(); } }}
-                      placeholder={term.isRural ? 'Ex: Tratorista' : 'Ex: Encanador'}
-                    />
-                    <Input
-                      value={cboInput}
-                      onChange={e => setCboInput(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addRole(); } }}
-                      placeholder="CBO (opc.)"
-                    />
-                    <Button type="button" variant="outline" size="sm" onClick={addRole}>Adicionar</Button>
-                  </div>
-                  {rolesArr.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {rolesArr.map(r => (
-                        <Badge key={r.role} variant="secondary" className="text-xs font-normal gap-1 pr-1">
-                          {r.role}{r.cbo ? ` · CBO ${r.cbo}` : ''}
-                          <button type="button" onClick={() => removeRole(r.role)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  <p className="text-[10px] text-muted-foreground">Adicione vários cargos, cada um com seu CBO (ex.: Encanador · CBO 7241-10).</p>
+              <div className="space-y-2">
+                <Label>{term.isRural ? 'Talhão / Área' : 'Setor'}</Label>
+                <Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>{term.isRural ? 'Função(ões) rural(is)' : 'Cargo(s)'} + CBO</Label>
+                <div className="grid grid-cols-[1fr_140px_auto] gap-2">
+                  <Input
+                    value={roleInput}
+                    onChange={e => setRoleInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addRole(); } }}
+                    placeholder={term.isRural ? 'Ex: Tratorista' : 'Ex: Encanador'}
+                  />
+                  <Input
+                    value={cboInput}
+                    onChange={e => setCboInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addRole(); } }}
+                    placeholder="CBO (opc.)"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={addRole}>Adicionar</Button>
                 </div>
+                {rolesArr.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {rolesArr.map(r => (
+                      <Badge key={r.role} variant="secondary" className="text-xs font-normal gap-1 pr-1">
+                        {r.role}{r.cbo ? ` · CBO ${r.cbo}` : ''}
+                        <button type="button" onClick={() => removeRole(r.role)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[10px] text-muted-foreground">Adicione vários cargos, cada um com seu CBO (ex.: Encanador · CBO 7241-10).</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>Nº trabalhadores</Label><Input type="number" min={0} value={form.worker_count} onChange={e => setForm({ ...form, worker_count: parseInt(e.target.value) || 0 })} /></div>

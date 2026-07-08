@@ -15,6 +15,8 @@ export interface DashRisk {
   agent_name: string;
   severity: number;
   probability: number;
+  magnitude: number;
+  exposed_workers: number | null;
   risk_level: string;
 }
 export interface DashAction {

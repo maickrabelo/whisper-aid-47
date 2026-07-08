@@ -6,12 +6,45 @@ export interface PasswordRule {
   test: (pwd: string) => boolean;
 }
 
+const SEQUENCES = [
+  "0123456789",
+  "abcdefghijklmnopqrstuvwxyz",
+  "qwertyuiop",
+  "asdfghjkl",
+  "zxcvbnm",
+];
+
+const hasSequence = (pwd: string, minLen = 4): boolean => {
+  if (pwd.length < minLen) return false;
+  const lower = pwd.toLowerCase();
+  for (const seq of SEQUENCES) {
+    const rev = seq.split("").reverse().join("");
+    for (let i = 0; i <= seq.length - minLen; i++) {
+      if (lower.includes(seq.slice(i, i + minLen))) return true;
+      if (lower.includes(rev.slice(i, i + minLen))) return true;
+    }
+  }
+  return false;
+};
+
+const hasRepeated = (pwd: string, minLen = 4): boolean => {
+  return new RegExp(`(.)\\1{${minLen - 1},}`).test(pwd);
+};
+
 export const strongPasswordRules: PasswordRule[] = [
   { label: "Pelo menos 8 caracteres", test: (p) => p.length >= 8 },
   { label: "Uma letra maiúscula (A-Z)", test: (p) => /[A-Z]/.test(p) },
   { label: "Uma letra minúscula (a-z)", test: (p) => /[a-z]/.test(p) },
   { label: "Um número (0-9)", test: (p) => /[0-9]/.test(p) },
   { label: "Um caractere especial (!@#$...)", test: (p) => /[^A-Za-z0-9]/.test(p) },
+  {
+    label: "Sem sequências óbvias (1234, abcd, qwerty)",
+    test: (p) => p.length === 0 || !hasSequence(p, 4),
+  },
+  {
+    label: "Sem caracteres repetidos (aaaa, 1111)",
+    test: (p) => p.length === 0 || !hasRepeated(p, 4),
+  },
 ];
 
 export const isStrongPassword = (password: string) =>

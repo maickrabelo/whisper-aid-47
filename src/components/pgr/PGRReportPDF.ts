@@ -581,6 +581,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
 
   subTitle('2.3 Avaliação');
   paragraph('A avaliação dos riscos é realizada após a antecipação e reconhecimento, considerando o agente, fonte geradora, GHE, função, atividade, medidas de controle existentes e propostas. Apenas os resultados das avaliações são inseridos no Inventário de Riscos (NR-09 item 4.3).');
+  paragraph('Magnitude — em atendimento ao item 1.5.5.2.1.1 da NR-1, o número de trabalhadores possivelmente atingidos é registrado para cada risco e utilizado como critério para elevar a probabilidade efetiva: magnitude "Ampla" (21–50 trabalhadores ou 51–80% do GHE) eleva a probabilidade em +1 nível; magnitude "Setor inteiro" (>50 trabalhadores ou >80% do GHE) eleva em +2 níveis, respeitando o teto da matriz. Riscos com maior magnitude também recebem prioridade no plano de ação.');
 
   // Matrizes efetivamente utilizadas no inventário (admitidas pela NR-1 / ABNT NBR ISO 31000)
   const usedMatrixSizes = Array.from(

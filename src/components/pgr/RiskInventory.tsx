@@ -119,6 +119,8 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importOptions, setImportOptions] = useState<{ type: 'hseit' | 'copsoq'; id: string; title: string }[]>([]);
   const [epiList, setEpiList] = useState<{ name: string; ca: string }[]>([]);
   const [epiDraft, setEpiDraft] = useState<{ name: string; ca: string }>({ name: '', ca: '' });
 

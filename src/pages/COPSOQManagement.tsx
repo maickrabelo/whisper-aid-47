@@ -224,55 +224,6 @@ export default function COPSOQManagement() {
                   <div><Label>Avaliação Ativa</Label><p className="text-sm text-muted-foreground">Permite que funcionários respondam</p></div>
                   <Switch checked={isActive} onCheckedChange={setIsActive} />
                 </div>
-                <div className="space-y-3 pt-2">
-                  <Label className="text-base font-medium">Modo de Coleta</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setCollectionMode('form')}
-                      className={`relative flex flex-col items-center gap-3 rounded-xl border-2 p-5 transition-all duration-200 ${
-                        collectionMode === 'form'
-                          ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                          : 'border-border bg-card hover:border-muted-foreground/30 hover:bg-accent/50'
-                      }`}
-                    >
-                      {collectionMode === 'form' && (
-                        <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
-                      )}
-                      <div className={`rounded-full p-3 transition-colors ${
-                        collectionMode === 'form' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                      }`}>
-                        <FileText className="h-6 w-6" />
-                      </div>
-                      <div className="text-center">
-                        <p className={`font-semibold text-sm ${collectionMode === 'form' ? 'text-primary' : 'text-foreground'}`}>Formulário</p>
-                        <p className="text-xs text-muted-foreground mt-1">Questionário tradicional com todas as perguntas</p>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCollectionMode('ai')}
-                      className={`relative flex flex-col items-center gap-3 rounded-xl border-2 p-5 transition-all duration-200 ${
-                        collectionMode === 'ai'
-                          ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                          : 'border-border bg-card hover:border-muted-foreground/30 hover:bg-accent/50'
-                      }`}
-                    >
-                      {collectionMode === 'ai' && (
-                        <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
-                      )}
-                      <div className={`rounded-full p-3 transition-colors ${
-                        collectionMode === 'ai' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                      }`}>
-                        <Sparkles className="h-6 w-6" />
-                      </div>
-                      <div className="text-center">
-                        <p className={`font-semibold text-sm ${collectionMode === 'ai' ? 'text-primary' : 'text-foreground'}`}>SOnIA (IA)</p>
-                        <p className="text-xs text-muted-foreground mt-1">Assistente guia o respondente pergunta a pergunta</p>
-                      </div>
-                    </button>
-                  </div>
-                </div>
 
                 {/* Multi-sector mode */}
                 <div className="space-y-3 pt-2 px-4 pb-3 rounded-lg bg-blue-500/5 border border-blue-500/20">

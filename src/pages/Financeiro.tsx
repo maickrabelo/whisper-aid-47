@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
+import { useCompanyHasSST } from '@/hooks/useCompanyHasSST';
 import Navbar from '@/components/Navbar';
 import {
   CreditCard,

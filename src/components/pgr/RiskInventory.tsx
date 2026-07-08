@@ -178,7 +178,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
     setLoading(true);
     const promises: any[] = [
       supabase.from('pgr_risks').select('*').eq('pgr_document_id', pgrDocumentId).order('created_at'),
-      supabase.from('pgr_ghe').select('id, name').eq('pgr_document_id', pgrDocumentId).order('name'),
+      supabase.from('pgr_ghe').select('id, name, worker_count').eq('pgr_document_id', pgrDocumentId).order('name'),
       supabase.from('esocial_agents_catalog').select('code, category, name').order('code'),
     ];
     if (term.isRural) {

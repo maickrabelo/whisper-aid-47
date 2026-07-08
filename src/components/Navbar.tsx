@@ -5,6 +5,7 @@ import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check, Spar
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useWhiteLabel, BrandColorTheme } from '@/contexts/WhiteLabelContext';
 import { useSmsPlan } from '@/hooks/useSmsPlan';
+import { useCompanyHasSST } from '@/hooks/useCompanyHasSST';
 import CompanySwitcher from '@/components/CompanySwitcher';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';

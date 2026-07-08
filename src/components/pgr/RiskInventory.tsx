@@ -27,6 +27,8 @@ interface Risk {
   matrix_size: MatrixSize;
   severity: number;
   probability: number;
+  magnitude: number;
+  exposed_workers: number | null;
   risk_level: string;
   existing_epc: string | null;
   existing_epi: string | null;
@@ -37,7 +39,7 @@ interface Risk {
   source_module: string | null;
   source_module_id: string | null;
 }
-interface GHE { id: string; name: string; }
+interface GHE { id: string; name: string; worker_count?: number; }
 interface Agent { code: string; category: string; name: string; }
 
 const CATEGORY_LABELS: Record<string, string> = {

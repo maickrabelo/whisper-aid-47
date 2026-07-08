@@ -58,6 +58,39 @@ const LEVEL_LABELS: Record<string, string> = {
   substantial: 'Substancial', intolerable: 'Intolerável',
 };
 
+const MAGNITUDE_LABELS: Record<number, string> = {
+  1: 'Individual (1 trab.)',
+  2: 'Pontual (2–5 ou ≤20% do GHE)',
+  3: 'Parcial (6–20 ou 21–50% do GHE)',
+  4: 'Ampla (21–50 ou 51–80% do GHE)',
+  5: 'Setor inteiro (>50 ou >80% do GHE)',
+};
+const MAGNITUDE_SHORT: Record<number, string> = {
+  1: 'Individual', 2: 'Pontual', 3: 'Parcial', 4: 'Ampla', 5: 'Setor inteiro',
+};
+const MAGNITUDE_STYLES: Record<number, string> = {
+  1: 'bg-slate-100 text-slate-700',
+  2: 'bg-slate-100 text-slate-700',
+  3: 'bg-blue-100 text-blue-700',
+  4: 'bg-amber-100 text-amber-700',
+  5: 'bg-red-100 text-red-700',
+};
+
+export const magnitudeBump = (magnitude: number): number =>
+  magnitude === 5 ? 2 : magnitude === 4 ? 1 : 0;
+
+export const suggestMagnitude = (exposed: number | null | undefined, gheTotal: number | null | undefined): number => {
+  const e = Number(exposed) || 0;
+  const t = Number(gheTotal) || 0;
+  if (e <= 0) return 1;
+  const pct = t > 0 ? (e / t) * 100 : 0;
+  if (e > 50 || pct > 80) return 5;
+  if (e >= 21 || pct > 50) return 4;
+  if (e >= 6 || pct > 20) return 3;
+  if (e >= 2) return 2;
+  return 1;
+};
+
 export const classifyRisk = (size: MatrixSize, severity: number, probability: number): string => {
   const v = severity * probability;
   if (size === 3) {

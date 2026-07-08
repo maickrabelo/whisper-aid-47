@@ -425,6 +425,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                 <TableHead className="text-center">Matriz</TableHead>
                 <TableHead className="text-center">S</TableHead>
                 <TableHead className="text-center">P</TableHead>
+                <TableHead className="text-center" title="Magnitude — NR-1 1.5.5.2.1.1">Magnitude</TableHead>
                 <TableHead>Nível</TableHead>
                 <TableHead className="w-24"></TableHead>
               </TableRow>

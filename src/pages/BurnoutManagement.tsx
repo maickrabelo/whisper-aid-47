@@ -206,7 +206,7 @@ export default function BurnoutManagement() {
         end_date: endDate || null,
         is_active: isActive,
         created_by: user?.id,
-        collection_mode: collectionMode,
+        collection_mode: 'form',
       };
       
       let assessmentId = id;

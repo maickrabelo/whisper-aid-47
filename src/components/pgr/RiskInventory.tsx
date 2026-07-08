@@ -215,6 +215,9 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       const epi_ca = finalList.map(e => e.ca).join(', ');
       const payload: any = { ...form, existing_epi, epi_ca, pgr_document_id: pgrDocumentId };
       if (!payload.ghe_id) payload.ghe_id = null;
+      payload.measurement_value = payload.measurement_value === '' || payload.measurement_value == null ? null : Number(payload.measurement_value);
+      payload.exposure_limit = payload.exposure_limit === '' || payload.exposure_limit == null ? null : Number(payload.exposure_limit);
+      if (!payload.measurement_unit) payload.measurement_unit = null;
       if (editing) {
         const { error } = await supabase.from('pgr_risks').update(payload).eq('id', editing.id);
         if (error) throw error;

@@ -203,7 +203,7 @@ export default function HSEITManagement() {
         end_date: endDate || null,
         is_active: isActive,
         created_by: user?.id,
-        collection_mode: collectionMode,
+        collection_mode: 'form',
         wording_variant: wordingVariant,
         multi_sector_enabled: multiSectorEnabled,
       };

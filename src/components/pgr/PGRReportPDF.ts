@@ -56,6 +56,8 @@ export interface PGRReportInput {
     exposure_limit?: number | string | null;
     severity: number;
     probability: number;
+    magnitude?: number | null;
+    exposed_workers?: number | null;
     matrix_size?: number | null;
     risk_level?: string | null;
     existing_epc?: string | null;
@@ -579,6 +581,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
 
   subTitle('2.3 Avaliação');
   paragraph('A avaliação dos riscos é realizada após a antecipação e reconhecimento, considerando o agente, fonte geradora, GHE, função, atividade, medidas de controle existentes e propostas. Apenas os resultados das avaliações são inseridos no Inventário de Riscos (NR-09 item 4.3).');
+  paragraph('Magnitude — em atendimento ao item 1.5.5.2.1.1 da NR-1, o número de trabalhadores possivelmente atingidos é registrado para cada risco e utilizado como critério para elevar a probabilidade efetiva: magnitude "Ampla" (21–50 trabalhadores ou 51–80% do GHE) eleva a probabilidade em +1 nível; magnitude "Setor inteiro" (>50 trabalhadores ou >80% do GHE) eleva em +2 níveis, respeitando o teto da matriz. Riscos com maior magnitude também recebem prioridade no plano de ação.');
 
   // Matrizes efetivamente utilizadas no inventário (admitidas pela NR-1 / ABNT NBR ISO 31000)
   const usedMatrixSizes = Array.from(
@@ -679,21 +682,29 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
         return (a.agent_name || '').localeCompare(b.agent_name || '');
       });
 
-      const rows = sortedRisks.map(r => [
-        r.category || '—',
-        `${r.agent_name}${r.esocial_agent_code ? ` (${r.esocial_agent_code})` : ''}`,
-        r.source || '—',
-        r.measurement_value != null ? `${r.measurement_value} ${r.measurement_unit || ''}` : '—',
-        r.exposure_limit != null ? String(r.exposure_limit) : '—',
-        `S${r.severity}×P${r.probability} (${Number(r.matrix_size) || 5}×${Number(r.matrix_size) || 5})\n${(r.risk_level || '').toUpperCase()}`,
-        [r.existing_epc, r.existing_epi ? `EPI: ${r.existing_epi}${r.epi_ca ? ` (CA ${r.epi_ca})` : ''}` : '']
-          .filter(Boolean).join('\n') || '—',
-      ]);
+      const magShort: Record<number, string> = { 1: 'Individual', 2: 'Pontual', 3: 'Parcial', 4: 'Ampla', 5: 'Setor' };
+      const rows = sortedRisks.map(r => {
+        const mag = Number(r.magnitude) || 1;
+        const bump = mag === 5 ? 2 : mag === 4 ? 1 : 0;
+        const probAdj = Math.min(r.probability + bump, Number(r.matrix_size) || 5);
+        const magCell = `${magShort[mag] || '—'}${r.exposed_workers ? ` · ${r.exposed_workers}` : ''}${bump > 0 ? `\nP:${r.probability}→${probAdj}` : ''}`;
+        return [
+          r.category || '—',
+          `${r.agent_name}${r.esocial_agent_code ? ` (${r.esocial_agent_code})` : ''}`,
+          r.source || '—',
+          r.measurement_value != null ? `${r.measurement_value} ${r.measurement_unit || ''}` : '—',
+          r.exposure_limit != null ? String(r.exposure_limit) : '—',
+          `S${r.severity}×P${r.probability} (${Number(r.matrix_size) || 5}×${Number(r.matrix_size) || 5})\n${(r.risk_level || '').toUpperCase()}`,
+          magCell,
+          [r.existing_epc, r.existing_epi ? `EPI: ${r.existing_epi}${r.epi_ca ? ` (CA ${r.epi_ca})` : ''}` : '']
+            .filter(Boolean).join('\n') || '—',
+        ];
+      });
 
       table(
-        ['Cat.', 'Agente', 'Fonte', 'Medição', 'Limite', 'Risco', 'Controles'],
+        ['Cat.', 'Agente', 'Fonte', 'Medição', 'Limite', 'Risco', 'Magnitude', 'Controles'],
         rows,
-        [16, 38, 24, 22, 18, 22, CONTENT_W - 16 - 38 - 24 - 22 - 18 - 22]
+        [14, 32, 20, 18, 16, 20, 22, CONTENT_W - 14 - 32 - 20 - 18 - 16 - 20 - 22]
       );
     }
   }

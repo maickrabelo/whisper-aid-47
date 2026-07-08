@@ -27,6 +27,8 @@ interface Risk {
   matrix_size: MatrixSize;
   severity: number;
   probability: number;
+  magnitude: number;
+  exposed_workers: number | null;
   risk_level: string;
   existing_epc: string | null;
   existing_epi: string | null;
@@ -37,7 +39,7 @@ interface Risk {
   source_module: string | null;
   source_module_id: string | null;
 }
-interface GHE { id: string; name: string; }
+interface GHE { id: string; name: string; worker_count?: number; }
 interface Agent { code: string; category: string; name: string; }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -54,6 +56,39 @@ const LEVEL_STYLES: Record<string, string> = {
 const LEVEL_LABELS: Record<string, string> = {
   trivial: 'Trivial', tolerable: 'Tolerável', moderate: 'Moderado',
   substantial: 'Substancial', intolerable: 'Intolerável',
+};
+
+const MAGNITUDE_LABELS: Record<number, string> = {
+  1: 'Individual (1 trab.)',
+  2: 'Pontual (2–5 ou ≤20% do GHE)',
+  3: 'Parcial (6–20 ou 21–50% do GHE)',
+  4: 'Ampla (21–50 ou 51–80% do GHE)',
+  5: 'Setor inteiro (>50 ou >80% do GHE)',
+};
+const MAGNITUDE_SHORT: Record<number, string> = {
+  1: 'Individual', 2: 'Pontual', 3: 'Parcial', 4: 'Ampla', 5: 'Setor inteiro',
+};
+const MAGNITUDE_STYLES: Record<number, string> = {
+  1: 'bg-slate-100 text-slate-700',
+  2: 'bg-slate-100 text-slate-700',
+  3: 'bg-blue-100 text-blue-700',
+  4: 'bg-amber-100 text-amber-700',
+  5: 'bg-red-100 text-red-700',
+};
+
+export const magnitudeBump = (magnitude: number): number =>
+  magnitude === 5 ? 2 : magnitude === 4 ? 1 : 0;
+
+export const suggestMagnitude = (exposed: number | null | undefined, gheTotal: number | null | undefined): number => {
+  const e = Number(exposed) || 0;
+  const t = Number(gheTotal) || 0;
+  if (e <= 0) return 1;
+  const pct = t > 0 ? (e / t) * 100 : 0;
+  if (e > 50 || pct > 80) return 5;
+  if (e >= 21 || pct > 50) return 4;
+  if (e >= 6 || pct > 20) return 3;
+  if (e >= 2) return 2;
+  return 1;
 };
 
 export const classifyRisk = (size: MatrixSize, severity: number, probability: number): string => {
@@ -89,6 +124,8 @@ const emptyForm = {
   matrix_size: 5 as MatrixSize,
   severity: 1,
   probability: 1,
+  magnitude: 1,
+  exposed_workers: '' as number | string,
   existing_epc: '',
   existing_epi: '',
   epi_ca: '',
@@ -141,7 +178,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
     setLoading(true);
     const promises: any[] = [
       supabase.from('pgr_risks').select('*').eq('pgr_document_id', pgrDocumentId).order('created_at'),
-      supabase.from('pgr_ghe').select('id, name').eq('pgr_document_id', pgrDocumentId).order('name'),
+      supabase.from('pgr_ghe').select('id, name, worker_count').eq('pgr_document_id', pgrDocumentId).order('name'),
       supabase.from('esocial_agents_catalog').select('code, category, name').order('code'),
     ];
     if (term.isRural) {
@@ -182,6 +219,8 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       matrix_size: (r.matrix_size || 5) as MatrixSize,
       severity: r.severity,
       probability: r.probability,
+      magnitude: r.magnitude ?? 1,
+      exposed_workers: r.exposed_workers ?? '',
       existing_epc: r.existing_epc || '',
       existing_epi: r.existing_epi || '',
       epi_ca: r.epi_ca || '',
@@ -220,6 +259,8 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       if (!payload.ghe_id) payload.ghe_id = null;
       payload.measurement_value = payload.measurement_value === '' || payload.measurement_value == null ? null : Number(payload.measurement_value);
       payload.exposure_limit = payload.exposure_limit === '' || payload.exposure_limit == null ? null : Number(payload.exposure_limit);
+      payload.exposed_workers = payload.exposed_workers === '' || payload.exposed_workers == null ? null : Number(payload.exposed_workers);
+      payload.magnitude = Number(payload.magnitude) || 1;
       if (!payload.measurement_unit) payload.measurement_unit = null;
       if (editing) {
         const { error } = await supabase.from('pgr_risks').update(payload).eq('id', editing.id);
@@ -384,6 +425,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                 <TableHead className="text-center">Matriz</TableHead>
                 <TableHead className="text-center">S</TableHead>
                 <TableHead className="text-center">P</TableHead>
+                <TableHead className="text-center" title="Magnitude — NR-1 1.5.5.2.1.1">Magnitude</TableHead>
                 <TableHead>Nível</TableHead>
                 <TableHead className="w-24"></TableHead>
               </TableRow>
@@ -407,6 +449,15 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                     <TableCell className="text-center"><Badge variant="secondary">{ms}×{ms}</Badge></TableCell>
                     <TableCell className="text-center">{r.severity}</TableCell>
                     <TableCell className="text-center">{r.probability}</TableCell>
+                    <TableCell className="text-center">
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${MAGNITUDE_STYLES[r.magnitude || 1]}`} title={MAGNITUDE_LABELS[r.magnitude || 1]}>
+                        {MAGNITUDE_SHORT[r.magnitude || 1]}
+                        {r.exposed_workers ? ` · ${r.exposed_workers}` : ''}
+                      </span>
+                      {magnitudeBump(r.magnitude || 1) > 0 && (
+                        <div className="text-[10px] text-amber-700 mt-0.5">P +{magnitudeBump(r.magnitude || 1)}</div>
+                      )}
+                    </TableCell>
                     <TableCell><span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[r.risk_level]}`}>{LEVEL_LABELS[r.risk_level]}</span></TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
@@ -558,9 +609,51 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                   </select>
                 </div>
               </div>
+
+              <div className="space-y-2 p-3 rounded-md border border-border bg-muted/30">
+                <Label className="text-sm font-semibold">Magnitude — trabalhadores atingidos</Label>
+                <p className="text-xs text-muted-foreground">
+                  NR-1 · 1.5.5.2.1.1 — o número de trabalhadores possivelmente atingidos eleva a probabilidade do risco.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Nº de trabalhadores expostos</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={form.exposed_workers as any}
+                      onChange={e => {
+                        const val = e.target.value;
+                        const gheTotal = ghes.find(g => g.id === form.ghe_id)?.worker_count;
+                        const suggested = val === '' ? form.magnitude : suggestMagnitude(Number(val), gheTotal);
+                        setForm(f => ({ ...f, exposed_workers: val, magnitude: suggested }));
+                      }}
+                      placeholder={ghes.find(g => g.id === form.ghe_id)?.worker_count ? `Total do GHE: ${ghes.find(g => g.id === form.ghe_id)?.worker_count}` : 'Ex: 12'}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Nível de magnitude</Label>
+                    <select
+                      className="w-full h-10 rounded-md border border-input bg-background px-3"
+                      value={form.magnitude}
+                      onChange={e => setForm({ ...form, magnitude: parseInt(e.target.value) })}
+                    >
+                      {[1, 2, 3, 4, 5].map(n => (
+                        <option key={n} value={n}>{n} — {MAGNITUDE_LABELS[n]}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {magnitudeBump(form.magnitude) > 0 && (
+                  <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                    ⚠ Probabilidade elevada de <b>{form.probability}</b> para <b>{Math.min(form.probability + magnitudeBump(form.magnitude), form.matrix_size)}</b> por magnitude (NR-1 1.5.5.2.1.1).
+                  </div>
+                )}
+              </div>
+
               <div className="text-xs text-muted-foreground">
-                Nível previsto: <span className={`px-2 py-0.5 rounded font-medium ${LEVEL_STYLES[classifyRisk(form.matrix_size, form.severity, form.probability)]}`}>
-                  {LEVEL_LABELS[classifyRisk(form.matrix_size, form.severity, form.probability)]}
+                Nível previsto: <span className={`px-2 py-0.5 rounded font-medium ${LEVEL_STYLES[classifyRisk(form.matrix_size, form.severity, Math.min(form.probability + magnitudeBump(form.magnitude), form.matrix_size))]}`}>
+                  {LEVEL_LABELS[classifyRisk(form.matrix_size, form.severity, Math.min(form.probability + magnitudeBump(form.magnitude), form.matrix_size))]}
                 </span>
               </div>
 

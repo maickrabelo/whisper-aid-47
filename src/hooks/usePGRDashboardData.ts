@@ -15,6 +15,8 @@ export interface DashRisk {
   agent_name: string;
   severity: number;
   probability: number;
+  magnitude: number;
+  exposed_workers: number | null;
   risk_level: string;
 }
 export interface DashAction {
@@ -49,7 +51,7 @@ export const usePGRDashboardData = (pgrDocumentId: string) => {
     setLoading(true);
     const [g, r, a] = await Promise.all([
       supabase.from('pgr_ghe').select('id, name, sector, role, worker_count').eq('pgr_document_id', pgrDocumentId),
-      supabase.from('pgr_risks').select('id, ghe_id, category, agent_name, severity, probability, risk_level').eq('pgr_document_id', pgrDocumentId),
+      supabase.from('pgr_risks').select('id, ghe_id, category, agent_name, severity, probability, magnitude, exposed_workers, risk_level').eq('pgr_document_id', pgrDocumentId),
       supabase.from('pgr_action_items').select('*').eq('pgr_document_id', pgrDocumentId).order('deadline', { nullsFirst: false }),
     ]);
     const acts = (a.data as any) || [];

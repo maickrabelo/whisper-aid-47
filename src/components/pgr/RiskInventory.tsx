@@ -124,6 +124,8 @@ const emptyForm = {
   matrix_size: 5 as MatrixSize,
   severity: 1,
   probability: 1,
+  magnitude: 1,
+  exposed_workers: '' as number | string,
   existing_epc: '',
   existing_epi: '',
   epi_ca: '',

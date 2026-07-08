@@ -30,6 +30,9 @@ interface Risk {
   existing_epc: string | null;
   existing_epi: string | null;
   epi_ca: string | null;
+  measurement_value: number | string | null;
+  measurement_unit: string | null;
+  exposure_limit: number | string | null;
   source_module: string | null;
   source_module_id: string | null;
 }
@@ -88,6 +91,9 @@ const emptyForm = {
   existing_epc: '',
   existing_epi: '',
   epi_ca: '',
+  measurement_value: '',
+  measurement_unit: '',
+  exposure_limit: '',
   pesticide_product: '',
   pesticide_active_ingredient: '',
   pesticide_toxicity_class: '',
@@ -176,6 +182,9 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       existing_epc: r.existing_epc || '',
       existing_epi: r.existing_epi || '',
       epi_ca: r.epi_ca || '',
+      measurement_value: r.measurement_value ?? '',
+      measurement_unit: r.measurement_unit || '',
+      exposure_limit: r.exposure_limit ?? '',
       pesticide_product: r.pesticide_product || '',
       pesticide_active_ingredient: r.pesticide_active_ingredient || '',
       pesticide_toxicity_class: r.pesticide_toxicity_class || '',
@@ -206,6 +215,9 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
       const epi_ca = finalList.map(e => e.ca).join(', ');
       const payload: any = { ...form, existing_epi, epi_ca, pgr_document_id: pgrDocumentId };
       if (!payload.ghe_id) payload.ghe_id = null;
+      payload.measurement_value = payload.measurement_value === '' || payload.measurement_value == null ? null : Number(payload.measurement_value);
+      payload.exposure_limit = payload.exposure_limit === '' || payload.exposure_limit == null ? null : Number(payload.exposure_limit);
+      if (!payload.measurement_unit) payload.measurement_unit = null;
       if (editing) {
         const { error } = await supabase.from('pgr_risks').update(payload).eq('id', editing.id);
         if (error) throw error;
@@ -463,6 +475,38 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                 <Label>Descrição da exposição</Label>
                 <Textarea rows={2} value={form.exposure_description} onChange={e => setForm({ ...form, exposure_description: e.target.value })} placeholder="Tempo, frequência, intensidade..." />
               </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label>Medição</Label>
+                  <Input
+                    type="number"
+                    step="any"
+                    value={form.measurement_value as any}
+                    onChange={e => setForm({ ...form, measurement_value: e.target.value })}
+                    placeholder="Ex: 85"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Unidade</Label>
+                  <Input
+                    value={form.measurement_unit}
+                    onChange={e => setForm({ ...form, measurement_unit: e.target.value })}
+                    placeholder="Ex: dB(A), ppm, mg/m³"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Limite de tolerância</Label>
+                  <Input
+                    type="number"
+                    step="any"
+                    value={form.exposure_limit as any}
+                    onChange={e => setForm({ ...form, exposure_limit: e.target.value })}
+                    placeholder="Ex: 85 (NR-15/ACGIH)"
+                  />
+                </div>
+              </div>
+
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-2">

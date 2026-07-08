@@ -30,6 +30,9 @@ interface Risk {
   existing_epc: string | null;
   existing_epi: string | null;
   epi_ca: string | null;
+  measurement_value: number | string | null;
+  measurement_unit: string | null;
+  exposure_limit: number | string | null;
   source_module: string | null;
   source_module_id: string | null;
 }

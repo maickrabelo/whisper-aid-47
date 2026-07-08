@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
+import { COPSOQ_CATEGORY_LABELS } from "@/data/copsoqQuestions";
 import { AEPBadge } from "@/components/aep/AEPBadge";
 
 type MatrixSize = 3 | 4 | 5;
@@ -118,6 +119,8 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importOptions, setImportOptions] = useState<{ type: 'hseit' | 'copsoq'; id: string; title: string }[]>([]);
   const [epiList, setEpiList] = useState<{ name: string; ca: string }[]>([]);
   const [epiDraft, setEpiDraft] = useState<{ name: string; ca: string }>({ name: '', ca: '' });
 
@@ -243,46 +246,67 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
   const importPsychosocial = async () => {
     setImporting(true);
     try {
-      const { data: hseit } = await supabase
-        .from('hseit_assessments')
-        .select('id, title')
-        .eq('company_id', companyId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!hseit) { toast.info("Nenhuma avaliação HSE-IT encontrada"); return; }
+      const [hseitRes, copsoqRes] = await Promise.all([
+        supabase.from('hseit_assessments').select('id, title').eq('company_id', companyId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('copsoq_assessments').select('id, title').eq('company_id', companyId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      ]);
 
-      const sourceId = (hseit as any).id;
+      const options: { type: 'hseit' | 'copsoq'; id: string; title: string }[] = [];
+      if (hseitRes.data) options.push({ type: 'hseit', id: hseitRes.data.id, title: hseitRes.data.title });
+      if (copsoqRes.data) options.push({ type: 'copsoq', id: copsoqRes.data.id, title: copsoqRes.data.title });
+
+      if (options.length === 0) {
+        toast.info("Nenhuma avaliação psicossocial (HSE-IT ou COPSOQ) encontrada");
+        return;
+      }
+      if (options.length === 1) {
+        await importPsychosocialFrom(options[0]);
+        return;
+      }
+      setImportOptions(options);
+      setImportDialogOpen(true);
+    } finally { setImporting(false); }
+  };
+
+  const importPsychosocialFrom = async (option: { type: 'hseit' | 'copsoq'; id: string; title: string }) => {
+    setImporting(true);
+    try {
       const { data: existing } = await supabase
         .from('pgr_risks')
         .select('id')
         .eq('pgr_document_id', pgrDocumentId)
-        .eq('source_module', 'hseit')
-        .eq('source_module_id', sourceId);
+        .eq('source_module', option.type)
+        .eq('source_module_id', option.id);
       if (existing && existing.length > 0) {
         toast.info("Riscos psicossociais já importados desta avaliação");
         return;
       }
 
-      const dimensions = [
-        'Demandas', 'Controle', 'Apoio da chefia', 'Apoio dos colegas',
-        'Relacionamentos', 'Função', 'Mudanças'
-      ];
+      let dimensions: string[] = [];
+      if (option.type === 'hseit') {
+        dimensions = [
+          'Demandas', 'Controle', 'Apoio da chefia', 'Apoio dos colegas',
+          'Relacionamentos', 'Função', 'Mudanças'
+        ];
+      } else {
+        dimensions = Object.values(COPSOQ_CATEGORY_LABELS);
+      }
       const inserts = dimensions.map(d => ({
         pgr_document_id: pgrDocumentId,
         category: 'psicossocial',
         agent_name: `Fator psicossocial — ${d}`,
-        source: `HSE-IT — ${(hseit as any).title}`,
+        source: `${option.type === 'hseit' ? 'HSE-IT' : 'COPSOQ II'} — ${option.title}`,
         matrix_size: 5,
         severity: 3,
         probability: 3,
-        source_module: 'hseit',
-        source_module_id: sourceId,
+        source_module: option.type,
+        source_module_id: option.id,
       }));
       const { error } = await supabase.from('pgr_risks').insert(inserts as any);
       if (error) throw error;
       toast.success(`${dimensions.length} riscos psicossociais importados — revise severidade/probabilidade`);
       load();
+      setImportDialogOpen(false);
     } catch (e: any) {
       toast.error("Erro ao importar: " + e.message);
     } finally { setImporting(false); }
@@ -336,7 +360,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
           <div className="flex gap-2">
             <Button variant="outline" onClick={importPsychosocial} disabled={importing}>
               {importing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-              Importar HSE-IT
+              Importar psicossocial
             </Button>
             <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Risco</Button>
           </div>
@@ -612,6 +636,32 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
               <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Importar riscos psicossociais</DialogTitle></DialogHeader>
+            <div className="space-y-3 py-2">
+              <p className="text-sm text-muted-foreground">Selecione a avaliação de origem para criar os itens do inventário de riscos:</p>
+              {importOptions.map(opt => (
+                <Button
+                  key={opt.id}
+                  variant="outline"
+                  className="w-full justify-start h-auto py-3 px-4"
+                  onClick={() => importPsychosocialFrom(opt)}
+                  disabled={importing}
+                >
+                  <span className="flex flex-col items-start">
+                    <span className="font-semibold">{opt.type === 'hseit' ? 'HSE-IT' : 'COPSOQ II'}</span>
+                    <span className="text-xs text-muted-foreground font-normal">{opt.title}</span>
+                  </span>
+                </Button>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Cancelar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

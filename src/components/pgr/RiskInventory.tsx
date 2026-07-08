@@ -639,6 +639,32 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Importar riscos psicossociais</DialogTitle></DialogHeader>
+            <div className="space-y-3 py-2">
+              <p className="text-sm text-muted-foreground">Selecione a avaliação de origem para criar os itens do inventário de riscos:</p>
+              {importOptions.map(opt => (
+                <Button
+                  key={opt.id}
+                  variant="outline"
+                  className="w-full justify-start h-auto py-3 px-4"
+                  onClick={() => importPsychosocialFrom(opt)}
+                  disabled={importing}
+                >
+                  <span className="flex flex-col items-start">
+                    <span className="font-semibold">{opt.type === 'hseit' ? 'HSE-IT' : 'COPSOQ II'}</span>
+                    <span className="text-xs text-muted-foreground font-normal">{opt.title}</span>
+                  </span>
+                </Button>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Cancelar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

@@ -360,7 +360,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
           <div className="flex gap-2">
             <Button variant="outline" onClick={importPsychosocial} disabled={importing}>
               {importing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-              Importar HSE-IT
+              Importar psicossocial
             </Button>
             <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Risco</Button>
           </div>

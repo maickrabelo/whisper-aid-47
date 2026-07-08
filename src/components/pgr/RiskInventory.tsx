@@ -478,6 +478,38 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-2">
+                  <Label>Medição</Label>
+                  <Input
+                    type="number"
+                    step="any"
+                    value={form.measurement_value as any}
+                    onChange={e => setForm({ ...form, measurement_value: e.target.value })}
+                    placeholder="Ex: 85"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Unidade</Label>
+                  <Input
+                    value={form.measurement_unit}
+                    onChange={e => setForm({ ...form, measurement_unit: e.target.value })}
+                    placeholder="Ex: dB(A), ppm, mg/m³"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Limite de tolerância</Label>
+                  <Input
+                    type="number"
+                    step="any"
+                    value={form.exposure_limit as any}
+                    onChange={e => setForm({ ...form, exposure_limit: e.target.value })}
+                    placeholder="Ex: 85 (NR-15/ACGIH)"
+                  />
+                </div>
+              </div>
+
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-2">
                   <Label>Matriz de risco</Label>
                   <select
                     className="w-full h-10 rounded-md border border-input bg-background px-3"

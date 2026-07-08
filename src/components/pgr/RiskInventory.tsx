@@ -246,46 +246,67 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
   const importPsychosocial = async () => {
     setImporting(true);
     try {
-      const { data: hseit } = await supabase
-        .from('hseit_assessments')
-        .select('id, title')
-        .eq('company_id', companyId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!hseit) { toast.info("Nenhuma avaliação HSE-IT encontrada"); return; }
+      const [hseitRes, copsoqRes] = await Promise.all([
+        supabase.from('hseit_assessments').select('id, title').eq('company_id', companyId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('copsoq_assessments').select('id, title').eq('company_id', companyId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      ]);
 
-      const sourceId = (hseit as any).id;
+      const options: { type: 'hseit' | 'copsoq'; id: string; title: string }[] = [];
+      if (hseitRes.data) options.push({ type: 'hseit', id: hseitRes.data.id, title: hseitRes.data.title });
+      if (copsoqRes.data) options.push({ type: 'copsoq', id: copsoqRes.data.id, title: copsoqRes.data.title });
+
+      if (options.length === 0) {
+        toast.info("Nenhuma avaliação psicossocial (HSE-IT ou COPSOQ) encontrada");
+        return;
+      }
+      if (options.length === 1) {
+        await importPsychosocialFrom(options[0]);
+        return;
+      }
+      setImportOptions(options);
+      setImportDialogOpen(true);
+    } finally { setImporting(false); }
+  };
+
+  const importPsychosocialFrom = async (option: { type: 'hseit' | 'copsoq'; id: string; title: string }) => {
+    setImporting(true);
+    try {
       const { data: existing } = await supabase
         .from('pgr_risks')
         .select('id')
         .eq('pgr_document_id', pgrDocumentId)
-        .eq('source_module', 'hseit')
-        .eq('source_module_id', sourceId);
+        .eq('source_module', option.type)
+        .eq('source_module_id', option.id);
       if (existing && existing.length > 0) {
         toast.info("Riscos psicossociais já importados desta avaliação");
         return;
       }
 
-      const dimensions = [
-        'Demandas', 'Controle', 'Apoio da chefia', 'Apoio dos colegas',
-        'Relacionamentos', 'Função', 'Mudanças'
-      ];
+      let dimensions: string[] = [];
+      if (option.type === 'hseit') {
+        dimensions = [
+          'Demandas', 'Controle', 'Apoio da chefia', 'Apoio dos colegas',
+          'Relacionamentos', 'Função', 'Mudanças'
+        ];
+      } else {
+        dimensions = Object.values(COPSOQ_CATEGORY_LABELS);
+      }
       const inserts = dimensions.map(d => ({
         pgr_document_id: pgrDocumentId,
         category: 'psicossocial',
         agent_name: `Fator psicossocial — ${d}`,
-        source: `HSE-IT — ${(hseit as any).title}`,
+        source: `${option.type === 'hseit' ? 'HSE-IT' : 'COPSOQ II'} — ${option.title}`,
         matrix_size: 5,
         severity: 3,
         probability: 3,
-        source_module: 'hseit',
-        source_module_id: sourceId,
+        source_module: option.type,
+        source_module_id: option.id,
       }));
       const { error } = await supabase.from('pgr_risks').insert(inserts as any);
       if (error) throw error;
       toast.success(`${dimensions.length} riscos psicossociais importados — revise severidade/probabilidade`);
       load();
+      setImportDialogOpen(false);
     } catch (e: any) {
       toast.error("Erro ao importar: " + e.message);
     } finally { setImporting(false); }

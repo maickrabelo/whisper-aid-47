@@ -203,7 +203,7 @@ export default function HSEITManagement() {
         end_date: endDate || null,
         is_active: isActive,
         created_by: user?.id,
-        collection_mode: collectionMode,
+        collection_mode: 'form',
         wording_variant: wordingVariant,
         multi_sector_enabled: multiSectorEnabled,
       };
@@ -408,22 +408,6 @@ export default function HSEITManagement() {
                   />
                 </div>
 
-                {/* Collection Mode */}
-                <div className="flex items-center justify-between pt-2 pb-2 px-4 rounded-lg bg-primary/5 border border-primary/10">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-primary" />
-                      Modo de Coleta
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {collectionMode === 'ai' ? 'SOnIA guia o respondente pergunta a pergunta' : 'Formulário tradicional com todas as perguntas'}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={collectionMode === 'ai'}
-                    onCheckedChange={(checked) => setCollectionMode(checked ? 'ai' : 'form')}
-                  />
-                </div>
 
                 {/* Wording Variant */}
                 <div className="flex items-center justify-between pt-2 pb-2 px-4 rounded-lg bg-accent/5 border border-accent/20">

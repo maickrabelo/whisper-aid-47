@@ -206,7 +206,7 @@ export default function BurnoutManagement() {
         end_date: endDate || null,
         is_active: isActive,
         created_by: user?.id,
-        collection_mode: collectionMode,
+        collection_mode: 'form',
       };
       
       let assessmentId = id;
@@ -419,13 +419,6 @@ export default function BurnoutManagement() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between pt-2 pb-2 px-4 rounded-lg bg-primary/5 border border-primary/10">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Modo de Coleta</Label>
-                    <p className="text-sm text-muted-foreground">{collectionMode === 'ai' ? 'SOnIA guia o respondente pergunta a pergunta' : 'Formulário tradicional'}</p>
-                  </div>
-                  <Switch checked={collectionMode === 'ai'} onCheckedChange={(c) => setCollectionMode(c ? 'ai' : 'form')} />
-                </div>
               </CardContent>
             </Card>
             

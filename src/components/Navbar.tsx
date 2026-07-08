@@ -35,6 +35,9 @@ interface NavbarProps {
 const Navbar = ({ smsBrand = false }: NavbarProps) => {
   const { user, role, availableRoles, switchRole, signOut, profile } = useRealAuth();
   const hasDualRole = availableRoles.includes('sst') && availableRoles.includes('company');
+  const { hasSST: companyHasSST } = useCompanyHasSST((profile as any)?.company_id ?? null);
+  // Cliente final (empresa gerida por uma SST) não deve ver Financeiro — quem paga é a gestora
+  const canSeeFinanceiro = role === 'sst' || (role === 'company' && !companyHasSST);
   const { brandLogo, isWhiteLabel, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
   const { isSmsPlan } = useSmsPlan();
   const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');

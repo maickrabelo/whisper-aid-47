@@ -449,6 +449,15 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
                     <TableCell className="text-center"><Badge variant="secondary">{ms}×{ms}</Badge></TableCell>
                     <TableCell className="text-center">{r.severity}</TableCell>
                     <TableCell className="text-center">{r.probability}</TableCell>
+                    <TableCell className="text-center">
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${MAGNITUDE_STYLES[r.magnitude || 1]}`} title={MAGNITUDE_LABELS[r.magnitude || 1]}>
+                        {MAGNITUDE_SHORT[r.magnitude || 1]}
+                        {r.exposed_workers ? ` · ${r.exposed_workers}` : ''}
+                      </span>
+                      {magnitudeBump(r.magnitude || 1) > 0 && (
+                        <div className="text-[10px] text-amber-700 mt-0.5">P +{magnitudeBump(r.magnitude || 1)}</div>
+                      )}
+                    </TableCell>
                     <TableCell><span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[r.risk_level]}`}>{LEVEL_LABELS[r.risk_level]}</span></TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>

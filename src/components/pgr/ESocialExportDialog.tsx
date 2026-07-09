@@ -89,90 +89,50 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
   const [generating, setGenerating] = useState<'pdf' | 'xml' | null>(null);
 
   const fetchCurrentSstLogoUrl = async () => {
-    const [{ data: assignments }, { data: auth }] = await Promise.all([
-      supabase
-        .from('company_sst_assignments')
-        .select('sst_manager_id')
-        .eq('company_id', pgr.company_id),
-      supabase.auth.getUser(),
-    ]);
+    // Logo da gestora SST = estritamente sst_managers.logo_url.
+    // Prioridade 1: gestora atribuída à empresa do PGR (fonte da verdade).
+    // Prioridade 2 (fallback): gestora do usuário logado, apenas se não houver atribuição.
+    const { data: assignments } = await supabase
+      .from('company_sst_assignments')
+      .select('sst_manager_id')
+      .eq('company_id', pgr.company_id);
 
-    const managerIds = new Set<string>();
-    (assignments || []).forEach((assignment: any) => {
-      if (assignment?.sst_manager_id) managerIds.add(assignment.sst_manager_id);
-    });
+    let managerId: string | null =
+      (assignments || []).find((a: any) => a?.sst_manager_id)?.sst_manager_id || null;
 
-    const userId = auth?.user?.id;
-    let currentProfileCompanyId: string | null = null;
-    if (userId) {
-      const [{ data: profileRow }, { data: linkedManagers }] = await Promise.all([
-        supabase
+    if (!managerId) {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth?.user?.id;
+      if (userId) {
+        const { data: profileRow } = await supabase
           .from('profiles')
-          .select('sst_manager_id, company_id')
-          .eq('id', userId)
-          .maybeSingle(),
-        supabase
-          .from('user_sst_managers')
           .select('sst_manager_id')
-          .eq('user_id', userId),
-      ]);
+          .eq('id', userId)
+          .maybeSingle();
+        managerId = (profileRow as any)?.sst_manager_id || null;
 
-      if ((profileRow as any)?.sst_manager_id) managerIds.add((profileRow as any).sst_manager_id);
-      currentProfileCompanyId = (profileRow as any)?.company_id || null;
-      (linkedManagers || []).forEach((manager: any) => {
-        if (manager?.sst_manager_id) managerIds.add(manager.sst_manager_id);
-      });
-    }
-
-    const ids = Array.from(managerIds);
-    if (ids.length === 0) return null;
-
-    const { data: managers } = await supabase
-      .from('sst_managers')
-      .select('id, email, logo_url, updated_at')
-      .in('id', ids);
-
-    // Prefer the SST manager assigned to this PGR's company; only if none is
-    // assigned we fall back to a manager linked to the current user.
-    const assignedId = (assignments || []).find((assignment: any) => assignment?.sst_manager_id)?.sst_manager_id;
-    const manager = assignedId
-      ? (managers || []).find((item: any) => item.id === assignedId)
-      : (managers || []).find((item: any) => item.logo_url);
-
-    const companyCandidates: Array<{ logo_url?: string | null; updated_at?: string | null }> = [];
-    const matchingEmail = (manager as any)?.email || auth?.user?.email || null;
-
-    if (currentProfileCompanyId || matchingEmail) {
-      let query = supabase
-        .from('companies')
-        .select('id, email, logo_url, updated_at')
-        .not('logo_url', 'is', null);
-
-      if (currentProfileCompanyId && matchingEmail) {
-        query = query.or(`id.eq.${currentProfileCompanyId},email.eq.${matchingEmail}`);
-      } else if (currentProfileCompanyId) {
-        query = query.eq('id', currentProfileCompanyId);
-      } else if (matchingEmail) {
-        query = query.eq('email', matchingEmail);
+        if (!managerId) {
+          const { data: linked } = await supabase
+            .from('user_sst_managers')
+            .select('sst_manager_id')
+            .eq('user_id', userId)
+            .limit(1);
+          managerId = (linked || [])[0]?.sst_manager_id || null;
+        }
       }
-
-      const { data: companiesWithLogo } = await query;
-      (companiesWithLogo || []).forEach((company: any) => {
-        const sameEmail = matchingEmail && company.email?.toLowerCase?.() === matchingEmail.toLowerCase();
-        const sameProfileCompany = currentProfileCompanyId && company.id === currentProfileCompanyId;
-        if (sameEmail || sameProfileCompany) companyCandidates.push(company);
-      });
     }
 
-    const candidates = [
-      ...companyCandidates,
-      manager as any,
-    ]
-      .filter((item: any) => item?.logo_url)
-      .sort((a: any, b: any) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime());
+    if (!managerId) return null;
 
-    return freshLogoUrl((candidates[0] as any)?.logo_url || null);
+    const { data: manager } = await supabase
+      .from('sst_managers')
+      .select('logo_url')
+      .eq('id', managerId)
+      .maybeSingle();
+
+    return freshLogoUrl((manager as any)?.logo_url || null);
   };
+
 
   const generatePDF = async () => {
     setGenerating('pdf');

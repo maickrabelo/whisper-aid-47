@@ -188,14 +188,36 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     state.y += 5.5;
   };
 
-  const paragraph = (text: string, opts: { size?: number; gap?: number } = {}) => {
+  const paragraph = (text: string, opts: { size?: number; gap?: number; align?: 'left' | 'justify' } = {}) => {
     const size = opts.size ?? 9.5;
+    const align = opts.align ?? 'justify';
     setText(size, false, COLORS.text);
-    const lines = doc.splitTextToSize(text, CONTENT_W);
-    for (const line of lines) {
-      ensure(size * 0.45 + 1.2);
-      doc.text(line, MARGIN, state.y);
-      state.y += size * 0.45 + 1.2;
+    const lines = doc.splitTextToSize(text, CONTENT_W) as string[];
+    const lineH = size * 0.45 + 1.2;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      ensure(lineH);
+      // Justificar todas as linhas exceto a última do parágrafo
+      if (align === 'justify' && i < lines.length - 1) {
+        const words = line.split(/\s+/).filter(Boolean);
+        if (words.length > 1) {
+          const textWidth = doc.getStringUnitWidth(words.join(' ')) * size / doc.internal.scaleFactor;
+          const spaceWidth = doc.getStringUnitWidth(' ') * size / doc.internal.scaleFactor;
+          const gaps = words.length - 1;
+          const extra = (CONTENT_W - textWidth) / gaps;
+          const finalSpace = spaceWidth + extra;
+          let x = MARGIN;
+          for (let w = 0; w < words.length; w++) {
+            doc.text(words[w], x, state.y);
+            x += doc.getStringUnitWidth(words[w]) * size / doc.internal.scaleFactor + finalSpace;
+          }
+        } else {
+          doc.text(line, MARGIN, state.y);
+        }
+      } else {
+        doc.text(line, MARGIN, state.y);
+      }
+      state.y += lineH;
     }
     state.y += opts.gap ?? 2;
   };

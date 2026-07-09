@@ -679,7 +679,21 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
       ].join('   •   ');
       paragraph(meta, { size: 8.5 });
       if (ghe.activities_description) {
-        paragraph(`Atividades: ${ghe.activities_description}`, { size: 8.5 });
+        const raw = ghe.activities_description.trim();
+        // Divide por quebras de linha, ";" ou "•" para separar atividades por função
+        const parts = raw
+          .split(/\n+|(?:\s*[;•]\s*)|(?:\s*\.\s*(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ]))/)
+          .map(s => s.trim())
+          .filter(s => s.length > 2);
+        if (parts.length > 1) {
+          setText(9, true, COLORS.text);
+          ensure(5);
+          doc.text('Atividades por função:', MARGIN, state.y);
+          state.y += 4;
+          bullets(parts);
+        } else {
+          paragraph(`Atividades: ${raw}`, { size: 8.5 });
+        }
       }
 
       const gheRisks = input.risks.filter(r => r.ghe_id === ghe.id);

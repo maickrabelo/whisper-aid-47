@@ -437,18 +437,22 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   doc.text(compLines, PAGE_W / 2, 120, { align: 'center' });
 
   setText(10, false, COLORS.text);
-  doc.text(`CNPJ: ${placeholder(input.company.cnpj)}`, PAGE_W / 2, 140, { align: 'center' });
-  doc.text(`CNAE: ${placeholder(input.pgr.cnae)}  •  Grau de Risco (NR-4): ${placeholder(input.pgr.risk_grade)}`,
-    PAGE_W / 2, 148, { align: 'center' });
+  const cnpjLines = doc.splitTextToSize(`CNPJ: ${placeholder(input.company.cnpj)}`, CONTENT_W);
+  doc.text(cnpjLines, PAGE_W / 2, 142, { align: 'center' });
+
+  const cnaeLine1 = doc.splitTextToSize(`CNAE: ${placeholder(input.pgr.cnae)}`, CONTENT_W);
+  doc.text(cnaeLine1, PAGE_W / 2, 152, { align: 'center' });
+  const gr = doc.splitTextToSize(`Grau de Risco (NR-4): ${placeholder(input.pgr.risk_grade)}`, CONTENT_W);
+  doc.text(gr, PAGE_W / 2, 160, { align: 'center' });
 
   setText(10, true, COLORS.muted);
   doc.text(
     `Vigência: ${fmtDate(input.pgr.validity_start)}  até  ${fmtDate(input.pgr.validity_end)}`,
-    PAGE_W / 2, 170, { align: 'center' }
+    PAGE_W / 2, 180, { align: 'center' }
   );
   setText(9, false, COLORS.muted);
   doc.text(`Revisão ${String(input.pgr.version).padStart(2, '0')}  •  Emitido em ${todayBR()}`,
-    PAGE_W / 2, 178, { align: 'center' });
+    PAGE_W / 2, 188, { align: 'center' });
 
   // Rodapé capa
   doc.setDrawColor(...LIME);

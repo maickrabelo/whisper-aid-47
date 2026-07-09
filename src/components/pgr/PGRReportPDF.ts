@@ -723,18 +723,27 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
       });
 
       const magShort: Record<number, string> = { 1: 'Individual', 2: 'Pontual', 3: 'Parcial', 4: 'Ampla', 5: 'Setor' };
+      const riskLevelPT: Record<string, string> = {
+        trivial: 'TRIVIAL',
+        tolerable: 'TOLERADO',
+        moderate: 'MODERADO',
+        substantial: 'SUBSTANCIAL',
+        intolerable: 'INTOLERÁVEL',
+      };
       const rows = sortedRisks.map(r => {
         const mag = Number(r.magnitude) || 1;
         const bump = mag === 5 ? 2 : mag === 4 ? 1 : 0;
         const probAdj = Math.min(r.probability + bump, Number(r.matrix_size) || 5);
         const magCell = `${magShort[mag] || '—'}${r.exposed_workers ? ` · ${r.exposed_workers}` : ''}${bump > 0 ? `\nP:${r.probability}→${probAdj}` : ''}`;
+        const lvlKey = (r.risk_level || '').toString().trim().toLowerCase();
+        const lvlPT = riskLevelPT[lvlKey] || (r.risk_level || '—').toUpperCase();
         return [
           r.category || '—',
           `${r.agent_name}${r.esocial_agent_code ? ` (${r.esocial_agent_code})` : ''}`,
           r.source || '—',
           r.measurement_value != null ? `${r.measurement_value} ${r.measurement_unit || ''}` : '—',
           r.exposure_limit != null ? String(r.exposure_limit) : '—',
-          `S${r.severity}×P${r.probability} (${Number(r.matrix_size) || 5}×${Number(r.matrix_size) || 5})\n${(r.risk_level || '').toUpperCase()}`,
+          `S${r.severity}×P${r.probability} (${Number(r.matrix_size) || 5}×${Number(r.matrix_size) || 5})\n${lvlPT}`,
           magCell,
           [r.existing_epc, r.existing_epi ? `EPI: ${r.existing_epi}${r.epi_ca ? ` (CA ${r.epi_ca})` : ''}` : '']
             .filter(Boolean).join('\n') || '—',

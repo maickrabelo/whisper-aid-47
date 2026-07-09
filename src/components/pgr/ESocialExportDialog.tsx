@@ -138,9 +138,9 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
     setGenerating('pdf');
     try {
       const [{ data: ghes }, { data: risks }, { data: actions }, { data: companyRow }, sstLogoUrl] = await Promise.all([
-        supabase.from('pgr_ghe').select('*').eq('pgr_document_id', pgr.id),
-        supabase.from('pgr_risks').select('*').eq('pgr_document_id', pgr.id),
-        supabase.from('pgr_action_items').select('*').eq('pgr_document_id', pgr.id),
+        supabase.from('pgr_ghe').select('*').eq('pgr_document_id', pgr.id).order('name', { ascending: true }).limit(1000),
+        supabase.from('pgr_risks').select('*').eq('pgr_document_id', pgr.id).limit(2000),
+        supabase.from('pgr_action_items').select('*').eq('pgr_document_id', pgr.id).limit(1000),
         supabase.from('companies').select('logo_url').eq('id', pgr.company_id).maybeSingle(),
         fetchCurrentSstLogoUrl(),
       ]);

@@ -1,30 +1,76 @@
-## Problema
 
-No PDF do PGR, as duas logos do cabeçalho estão vindo de empresas (nenhuma da gestora SST). Isso acontece porque `fetchCurrentSstLogoUrl` em `src/components/pgr/ESocialExportDialog.tsx` mistura a logo da gestora com logos de `companies` (buscadas por `profiles.company_id` do usuário logado e por e-mail), e ainda coloca as `companyCandidates` na frente do registro real do `sst_managers` na ordenação final. Quando o usuário tem qualquer vínculo com uma empresa que possua logo (caso do eng.alberto0808), essa logo de empresa é retornada como "logo da gestora" e ocupa o canto esquerdo. O canto direito então recebe a logo da empresa do PGR — resultado: duas logos de empresa.
+## Objetivo
 
-## Correção
+Refinar a geração do PDF do PGR em `src/components/pgr/PGRReportPDF.ts` para padronizar tipografia, aplicar justificação, corrigir a capa, estruturar atividades por GHE em bullets, traduzir termos técnicos e garantir que todos os GHEs cadastrados apareçam no inventário.
 
-Reescrever `fetchCurrentSstLogoUrl` em `src/components/pgr/ESocialExportDialog.tsx` para buscar **exclusivamente** a logo da gestora SST, sem qualquer fallback para `companies`.
+Todas as mudanças ficam concentradas no gerador de PDF (`PGRReportPDF.ts`) e no carregamento de GHEs em `ESocialExportDialog.tsx` (fonte dos dados que alimenta o PDF).
 
-Regra de resolução da gestora, nesta ordem:
+---
 
-1. Gestora atribuída à empresa do PGR via `company_sst_assignments.sst_manager_id` (fonte da verdade — é a gestora daquele PGR).
-2. Se, e somente se, não houver atribuição, cair para a gestora do usuário logado (`profiles.sst_manager_id`, depois `user_sst_managers.sst_manager_id`) — cobre o caso raro de uso administrativo/preview antes da atribuição.
+## 1. Padronização de fonte
 
-Depois de resolver o `sst_manager_id`, buscar `logo_url` em `sst_managers` e passar por `freshLogoUrl` (cache-buster). Retornar `null` quando a gestora não tiver logo — nunca substituir por logo de empresa.
+Hoje algumas células de tabela (após o Resumo Executivo) e a legenda de matriz alternam pesos sem resetar explicitamente a família para `helvetica`. Vou:
 
-Remover completamente:
-- A consulta a `companies` dentro dessa função (`companyCandidates`, filtros por `email`/`currentProfileCompanyId`).
-- A ordenação que promove `companyCandidates` acima do registro do `sst_managers`.
+- Centralizar todas as chamadas em um helper `setText` (já existe) e garantir que **toda** rotina de desenho (header/footer/legenda/matriz/tabela) chame `setText` antes de `doc.text`, sem depender do estado anterior.
+- Auditar os pontos onde `doc.setFont(...)` é chamado sem `helvetica` explícito (dentro de `table.drawHeader` e legenda da matriz) e forçar `helvetica` em todos.
 
-A logo da empresa do PGR continua sendo buscada separadamente em `generatePDF` a partir de `companies` via `pgr.company_id` (canto direito) — esse trecho já está correto e não precisa mudar.
+Resultado: uma única família Helvetica em todo o documento, sem "quebras" visuais.
 
-## Verificação
+## 2. Alinhamento justificado
 
-- Conta afetada (eng.alberto0808@gmail.com): gerar PGR e conferir que o canto esquerdo mostra a logo da gestora e o canto direito a da empresa.
-- Conta de gestora sem logo cadastrada: canto esquerdo fica vazio, canto direito com a logo da empresa (nunca duplicada).
-- Conta de empresa acessando um PGR próprio (sem gestora atribuída): canto esquerdo vazio, direito com a logo da empresa.
+A função `paragraph()` hoje quebra linhas com `splitTextToSize` e imprime cada linha à esquerda. Vou substituir por `doc.text(lines, x, y, { align: 'justify', maxWidth: CONTENT_W })` (suportado pelo jsPDF) para justificar o corpo do texto. A última linha permanece alinhada à esquerda (comportamento nativo). Títulos, bullets e células de tabela ficam como estão.
 
-## Fora do escopo
+## 3. Capa: CNPJ e CNAE legíveis
 
-Não alterar `renderReportLogos` (`src/lib/pdfLogos.ts`) nem o layout da capa em `PGRReportPDF.ts` — o bug é apenas de resolução da URL da logo da gestora.
+Hoje CNPJ (y=140) e a linha "CNAE • Grau de Risco" (y=148) são desenhados como texto de linha única centralizada — se o CNAE for extenso, corta. Vou:
+
+- Aumentar o espaçamento vertical entre nome da empresa (y=120) e bloco de metadados.
+- Renderizar CNPJ e "CNAE • Grau de Risco" em duas linhas separadas com `splitTextToSize` para garantir wrap quando necessário.
+- Reposicionar o bloco de vigência (y=170→y=180) para não colidir com o wrap.
+
+## 4. Atividades por GHE em bullets
+
+Hoje `paragraph('Atividades: ' + ghe.activities_description)` imprime um único bloco corrido. Vou:
+
+- Detectar separadores no campo `activities_description` (quebras de linha `\n`, `;`, `•`, ou o padrão "Função X:" / "Cargo:").
+- Renderizar cada atividade/função como um item de `bullets([...])`, prefixado pela função quando identificável (ex.: `Almoxarife — recebe e confere materiais...` vira um bullet, `Auxiliar de Almoxarife — ...` outro).
+- Fallback: se não houver separador identificável, mantém como parágrafo justificado (comportamento antigo).
+
+## 5. Tradução dos níveis de risco
+
+No inventário (`PGRReportPDF.ts` linha ~697), a célula "Risco" imprime `(r.risk_level || '').toUpperCase()`, resultando em `TOLERABLE`, `MODERATE`, `SUBSTANTIAL`, `INTOLERABLE`, `TRIVIAL`. Vou adicionar um dicionário local reutilizando o já existente em `RiskInventory.tsx`:
+
+```text
+trivial      → TRIVIAL
+tolerable    → TOLERADO
+moderate     → MODERADO
+substantial  → SUBSTANCIAL
+intolerable  → INTOLERÁVEL
+```
+
+Também vou revisar labels de probabilidade/severidade — se aparecer "Improbable" em algum ponto (a busca inicial não encontrou; provavelmente é interpretação do "Tolerable" pelo usuário, mas checarei também o campo `magShort` e legendas).
+
+## 6. GHEs faltando no PDF (bug)
+
+Ao investigar em `ESocialExportDialog.tsx` (que monta `input.ghes` para o PDF) preciso verificar:
+
+- Se há `.limit()` ou paginação implícita no `supabase.from('pgr_ghe').select(...)`.
+- Se o filtro por `pgr_document_id` está correto (revisões antigas podem ter GHEs órfãos).
+- Ordenação estável por nome/setor.
+
+Fix esperado: remover qualquer `limit`, adicionar `order('name')`, e garantir que a query traga todos os GHEs vinculados ao `pgr.id` atual. Se o problema for RLS, revisar policy de `pgr_ghe` para SELECT.
+
+---
+
+## Arquivos alterados
+
+- `src/components/pgr/PGRReportPDF.ts` — itens 1, 2, 3, 4, 5
+- `src/components/pgr/ESocialExportDialog.tsx` — item 6 (query de GHEs)
+
+## Validação
+
+Após implementar, vou gerar um PDF de teste via Playwright usando um PGR existente (Sisal Estilo) e:
+
+1. Converter para imagens com `pdftoppm` e inspecionar visualmente capa + parágrafos justificados + tabela de riscos traduzida.
+2. Contar GHEs no PDF vs. count no banco (`pgr_ghe` por `pgr_document_id`) para confirmar que todos aparecem.
+3. Conferir que a fonte é uniforme em todas as páginas.

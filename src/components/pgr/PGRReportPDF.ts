@@ -188,14 +188,36 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     state.y += 5.5;
   };
 
-  const paragraph = (text: string, opts: { size?: number; gap?: number } = {}) => {
+  const paragraph = (text: string, opts: { size?: number; gap?: number; align?: 'left' | 'justify' } = {}) => {
     const size = opts.size ?? 9.5;
+    const align = opts.align ?? 'justify';
     setText(size, false, COLORS.text);
-    const lines = doc.splitTextToSize(text, CONTENT_W);
-    for (const line of lines) {
-      ensure(size * 0.45 + 1.2);
-      doc.text(line, MARGIN, state.y);
-      state.y += size * 0.45 + 1.2;
+    const lines = doc.splitTextToSize(text, CONTENT_W) as string[];
+    const lineH = size * 0.45 + 1.2;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      ensure(lineH);
+      // Justificar todas as linhas exceto a última do parágrafo
+      if (align === 'justify' && i < lines.length - 1) {
+        const words = line.split(/\s+/).filter(Boolean);
+        if (words.length > 1) {
+          const textWidth = doc.getStringUnitWidth(words.join(' ')) * size / doc.internal.scaleFactor;
+          const spaceWidth = doc.getStringUnitWidth(' ') * size / doc.internal.scaleFactor;
+          const gaps = words.length - 1;
+          const extra = (CONTENT_W - textWidth) / gaps;
+          const finalSpace = spaceWidth + extra;
+          let x = MARGIN;
+          for (let w = 0; w < words.length; w++) {
+            doc.text(words[w], x, state.y);
+            x += doc.getStringUnitWidth(words[w]) * size / doc.internal.scaleFactor + finalSpace;
+          }
+        } else {
+          doc.text(line, MARGIN, state.y);
+        }
+      } else {
+        doc.text(line, MARGIN, state.y);
+      }
+      state.y += lineH;
     }
     state.y += opts.gap ?? 2;
   };
@@ -415,18 +437,22 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   doc.text(compLines, PAGE_W / 2, 120, { align: 'center' });
 
   setText(10, false, COLORS.text);
-  doc.text(`CNPJ: ${placeholder(input.company.cnpj)}`, PAGE_W / 2, 140, { align: 'center' });
-  doc.text(`CNAE: ${placeholder(input.pgr.cnae)}  •  Grau de Risco (NR-4): ${placeholder(input.pgr.risk_grade)}`,
-    PAGE_W / 2, 148, { align: 'center' });
+  const cnpjLines = doc.splitTextToSize(`CNPJ: ${placeholder(input.company.cnpj)}`, CONTENT_W);
+  doc.text(cnpjLines, PAGE_W / 2, 142, { align: 'center' });
+
+  const cnaeLine1 = doc.splitTextToSize(`CNAE: ${placeholder(input.pgr.cnae)}`, CONTENT_W);
+  doc.text(cnaeLine1, PAGE_W / 2, 152, { align: 'center' });
+  const gr = doc.splitTextToSize(`Grau de Risco (NR-4): ${placeholder(input.pgr.risk_grade)}`, CONTENT_W);
+  doc.text(gr, PAGE_W / 2, 160, { align: 'center' });
 
   setText(10, true, COLORS.muted);
   doc.text(
     `Vigência: ${fmtDate(input.pgr.validity_start)}  até  ${fmtDate(input.pgr.validity_end)}`,
-    PAGE_W / 2, 170, { align: 'center' }
+    PAGE_W / 2, 180, { align: 'center' }
   );
   setText(9, false, COLORS.muted);
   doc.text(`Revisão ${String(input.pgr.version).padStart(2, '0')}  •  Emitido em ${todayBR()}`,
-    PAGE_W / 2, 178, { align: 'center' });
+    PAGE_W / 2, 188, { align: 'center' });
 
   // Rodapé capa
   doc.setDrawColor(...LIME);
@@ -653,7 +679,21 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
       ].join('   •   ');
       paragraph(meta, { size: 8.5 });
       if (ghe.activities_description) {
-        paragraph(`Atividades: ${ghe.activities_description}`, { size: 8.5 });
+        const raw = ghe.activities_description.trim();
+        // Divide por quebras de linha, ";" ou "•" para separar atividades por função
+        const parts = raw
+          .split(/\n+|(?:\s*[;•]\s*)|(?:\s*\.\s*(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ]))/)
+          .map(s => s.trim())
+          .filter(s => s.length > 2);
+        if (parts.length > 1) {
+          setText(9, true, COLORS.text);
+          ensure(5);
+          doc.text('Atividades por função:', MARGIN, state.y);
+          state.y += 4;
+          bullets(parts);
+        } else {
+          paragraph(`Atividades: ${raw}`, { size: 8.5 });
+        }
       }
 
       const gheRisks = input.risks.filter(r => r.ghe_id === ghe.id);
@@ -683,18 +723,27 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
       });
 
       const magShort: Record<number, string> = { 1: 'Individual', 2: 'Pontual', 3: 'Parcial', 4: 'Ampla', 5: 'Setor' };
+      const riskLevelPT: Record<string, string> = {
+        trivial: 'TRIVIAL',
+        tolerable: 'TOLERADO',
+        moderate: 'MODERADO',
+        substantial: 'SUBSTANCIAL',
+        intolerable: 'INTOLERÁVEL',
+      };
       const rows = sortedRisks.map(r => {
         const mag = Number(r.magnitude) || 1;
         const bump = mag === 5 ? 2 : mag === 4 ? 1 : 0;
         const probAdj = Math.min(r.probability + bump, Number(r.matrix_size) || 5);
         const magCell = `${magShort[mag] || '—'}${r.exposed_workers ? ` · ${r.exposed_workers}` : ''}${bump > 0 ? `\nP:${r.probability}→${probAdj}` : ''}`;
+        const lvlKey = (r.risk_level || '').toString().trim().toLowerCase();
+        const lvlPT = riskLevelPT[lvlKey] || (r.risk_level || '—').toUpperCase();
         return [
           r.category || '—',
           `${r.agent_name}${r.esocial_agent_code ? ` (${r.esocial_agent_code})` : ''}`,
           r.source || '—',
           r.measurement_value != null ? `${r.measurement_value} ${r.measurement_unit || ''}` : '—',
           r.exposure_limit != null ? String(r.exposure_limit) : '—',
-          `S${r.severity}×P${r.probability} (${Number(r.matrix_size) || 5}×${Number(r.matrix_size) || 5})\n${(r.risk_level || '').toUpperCase()}`,
+          `S${r.severity}×P${r.probability} (${Number(r.matrix_size) || 5}×${Number(r.matrix_size) || 5})\n${lvlPT}`,
           magCell,
           [r.existing_epc, r.existing_epi ? `EPI: ${r.existing_epi}${r.epi_ca ? ` (CA ${r.epi_ca})` : ''}` : '']
             .filter(Boolean).join('\n') || '—',

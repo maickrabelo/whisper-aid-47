@@ -103,6 +103,17 @@ const COLORS = {
   darkRed: [153, 27, 27] as [number, number, number],
 };
 
+const FONT = 'helvetica';
+const TYPE = {
+  body: 9.5,
+  bodySmall: 8.5,
+  bullet: 9.2,
+  table: 8.1,
+  caption: 7.5,
+  subtitle: 10.5,
+  section: 13,
+};
+
 const todayBR = () => new Date().toLocaleDateString('pt-BR');
 const fmtDate = (d: string | null | undefined) => {
   if (!d) return '—';
@@ -130,18 +141,45 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const regulation = isRural ? 'NR-31 — Portaria MTP 1.887/2022' : 'NR-01 — Portaria 6.730/2020';
 
   const setText = (size: number, bold = false, color: [number, number, number] = COLORS.text) => {
-    doc.setFont('helvetica', bold ? 'bold' : 'normal');
+    doc.setFont(FONT, bold ? 'bold' : 'normal');
     doc.setFontSize(size);
     doc.setTextColor(color[0], color[1], color[2]);
+  };
+
+  const textWidth = (text: string) => doc.getTextWidth(text);
+
+  const drawJustifiedLine = (line: string, x: number, y: number, maxWidth: number, size: number) => {
+    const words = line.trim().split(/\s+/).filter(Boolean);
+    if (words.length < 4) {
+      doc.text(line, x, y);
+      return;
+    }
+
+    const naturalWidth = textWidth(words.join(' '));
+    const minFillRatio = 0.76;
+    const maxExtraPerGap = size * 0.16;
+    const extraPerGap = (maxWidth - naturalWidth) / (words.length - 1);
+
+    if (naturalWidth / maxWidth < minFillRatio || extraPerGap <= 0 || extraPerGap > maxExtraPerGap) {
+      doc.text(line, x, y);
+      return;
+    }
+
+    const baseSpace = textWidth(' ');
+    let cursorX = x;
+    words.forEach((word, index) => {
+      doc.text(word, cursorX, y);
+      cursorX += textWidth(word) + (index < words.length - 1 ? baseSpace + extraPerGap : 0);
+    });
   };
 
   const addHeader = () => {
     if (state.skipChrome) return;
     doc.setFillColor(...COLORS.headerBg);
     doc.rect(0, 0, PAGE_W, MARGIN + 6, 'F');
-    setText(8, true, COLORS.primary);
+    setText(TYPE.bodySmall, true, COLORS.primary);
     doc.text(`${shortName} – ${fullName.toUpperCase()}`, MARGIN, MARGIN);
-    setText(8, false, COLORS.muted);
+    setText(TYPE.bodySmall, false, COLORS.muted);
     const rev = `Revisão ${String(input.pgr.version).padStart(2, '0')}  •  ${todayBR()}`;
     doc.text(rev, PAGE_W - MARGIN, MARGIN, { align: 'right' });
     doc.setDrawColor(...COLORS.accent);
@@ -151,7 +189,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
 
   const addFooter = () => {
     if (state.skipChrome) return;
-    setText(7, false, COLORS.muted);
+    setText(TYPE.caption, false, COLORS.muted);
     doc.text(input.company.name || 'Empresa', MARGIN, PAGE_H - MARGIN + 2);
     doc.text(`Página ${state.page}`, PAGE_W - MARGIN, PAGE_H - MARGIN + 2, { align: 'right' });
   };
@@ -172,7 +210,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const sectionTitle = (text: string) => {
     ensure(14);
     state.y += 4;
-    setText(13, true, COLORS.primary);
+    setText(TYPE.section, true, COLORS.primary);
     doc.text(text, MARGIN, state.y);
     doc.setDrawColor(...COLORS.accent);
     doc.setLineWidth(0.6);
@@ -183,52 +221,44 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const subTitle = (text: string) => {
     ensure(10);
     state.y += 2;
-    setText(10.5, true, COLORS.text);
+    setText(TYPE.subtitle, true, COLORS.text);
     doc.text(text, MARGIN, state.y);
     state.y += 5.5;
   };
 
-  const paragraph = (text: string, opts: { size?: number; gap?: number; align?: 'left' | 'justify' } = {}) => {
-    const size = opts.size ?? 9.5;
+  const paragraph = (text: string, opts: { size?: number; gap?: number; align?: 'left' | 'justify'; width?: number; x?: number } = {}) => {
+    const size = opts.size ?? TYPE.body;
     const align = opts.align ?? 'justify';
+    const width = opts.width ?? CONTENT_W;
+    const x = opts.x ?? MARGIN;
     setText(size, false, COLORS.text);
-    const lines = doc.splitTextToSize(text, CONTENT_W) as string[];
+    const blocks = String(text || '').split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
     const lineH = size * 0.45 + 1.2;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      ensure(lineH);
-      // Justificar todas as linhas exceto a última do parágrafo
-      if (align === 'justify' && i < lines.length - 1) {
-        const words = line.split(/\s+/).filter(Boolean);
-        if (words.length > 1) {
-          const textWidth = doc.getStringUnitWidth(words.join(' ')) * size / doc.internal.scaleFactor;
-          const spaceWidth = doc.getStringUnitWidth(' ') * size / doc.internal.scaleFactor;
-          const gaps = words.length - 1;
-          const extra = (CONTENT_W - textWidth) / gaps;
-          const finalSpace = spaceWidth + extra;
-          let x = MARGIN;
-          for (let w = 0; w < words.length; w++) {
-            doc.text(words[w], x, state.y);
-            x += doc.getStringUnitWidth(words[w]) * size / doc.internal.scaleFactor + finalSpace;
-          }
+    blocks.forEach((block, blockIndex) => {
+      const lines = doc.splitTextToSize(block, width) as string[];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        ensure(lineH);
+        if (align === 'justify' && i < lines.length - 1) {
+          drawJustifiedLine(line, x, state.y, width, size);
         } else {
-          doc.text(line, MARGIN, state.y);
+          doc.text(line, x, state.y);
         }
-      } else {
-        doc.text(line, MARGIN, state.y);
+        state.y += lineH;
       }
-      state.y += lineH;
-    }
+      if (blockIndex < blocks.length - 1) state.y += 1.4;
+    });
     state.y += opts.gap ?? 2;
   };
 
   const bullets = (items: string[]) => {
-    setText(9.5, false, COLORS.text);
+    setText(TYPE.bullet, false, COLORS.text);
     for (const item of items) {
       const lines = doc.splitTextToSize(item, CONTENT_W - 5);
       ensure(lines.length * 4.5 + 1);
       doc.setFillColor(...COLORS.accent);
       doc.circle(MARGIN + 1.2, state.y - 1.2, 0.7, 'F');
+      setText(TYPE.bullet, false, COLORS.text);
       doc.text(lines, MARGIN + 4, state.y);
       state.y += lines.length * 4.3 + 1;
     }
@@ -244,7 +274,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   ) => {
     const headerBg = opts.headerColor ?? COLORS.primary;
     const cellPad = 1.5;
-    const fontSize = 8.2;
+    const fontSize = TYPE.table;
 
     const drawHeader = () => {
       ensure(8);
@@ -289,6 +319,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
       let x = MARGIN;
       wrapped.forEach((lines, i) => {
         doc.rect(x, state.y, colWidths[i], rowH);
+        setText(fontSize, false, COLORS.text);
         doc.text(lines, x + cellPad, state.y + 4);
         x += colWidths[i];
       });
@@ -396,10 +427,11 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     state.y = y0 + size * cell + 4;
 
     let lx = MARGIN;
-    setText(7.5, false, COLORS.text);
+    setText(TYPE.caption, false, COLORS.text);
     for (const [lbl, col] of legendForSize(size)) {
       doc.setFillColor(col[0], col[1], col[2]);
       doc.rect(lx, state.y, 4, 4, 'F');
+      setText(TYPE.caption, false, COLORS.text);
       doc.text(lbl, lx + 5, state.y + 3.2);
       lx += 38;
     }
@@ -436,23 +468,24 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const compLines = doc.splitTextToSize(input.company.name || 'EMPRESA', CONTENT_W);
   doc.text(compLines, PAGE_W / 2, 120, { align: 'center' });
 
-  setText(10, false, COLORS.text);
+  setText(12, true, COLORS.text);
   const cnpjLines = doc.splitTextToSize(`CNPJ: ${placeholder(input.company.cnpj)}`, CONTENT_W);
   doc.text(cnpjLines, PAGE_W / 2, 142, { align: 'center' });
 
+  setText(9.5, false, COLORS.text);
   const cnaeLine1 = doc.splitTextToSize(`CNAE: ${placeholder(input.pgr.cnae)}`, CONTENT_W);
-  doc.text(cnaeLine1, PAGE_W / 2, 152, { align: 'center' });
+  doc.text(cnaeLine1, PAGE_W / 2, 154, { align: 'center' });
   const gr = doc.splitTextToSize(`Grau de Risco (NR-4): ${placeholder(input.pgr.risk_grade)}`, CONTENT_W);
-  doc.text(gr, PAGE_W / 2, 160, { align: 'center' });
+  doc.text(gr, PAGE_W / 2, 162, { align: 'center' });
 
   setText(10, true, COLORS.muted);
   doc.text(
     `Vigência: ${fmtDate(input.pgr.validity_start)}  até  ${fmtDate(input.pgr.validity_end)}`,
-    PAGE_W / 2, 180, { align: 'center' }
+    PAGE_W / 2, 182, { align: 'center' }
   );
   setText(9, false, COLORS.muted);
   doc.text(`Revisão ${String(input.pgr.version).padStart(2, '0')}  •  Emitido em ${todayBR()}`,
-    PAGE_W / 2, 188, { align: 'center' });
+    PAGE_W / 2, 190, { align: 'center' });
 
   // Rodapé capa
   doc.setDrawColor(...LIME);
@@ -677,7 +710,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
         `Trabalhadores: ${ghe.worker_count ?? 0}`,
         `Jornada: ${ghe.work_schedule || '—'}`,
       ].join('   •   ');
-      paragraph(meta, { size: 8.5 });
+      paragraph(meta, { size: TYPE.bodySmall, align: 'left' });
       if (ghe.activities_description) {
         const raw = ghe.activities_description.trim();
         // Divide por quebras de linha, ";" ou "•" para separar atividades por função
@@ -686,19 +719,19 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
           .map(s => s.trim())
           .filter(s => s.length > 2);
         if (parts.length > 1) {
-          setText(9, true, COLORS.text);
+          setText(TYPE.bodySmall, true, COLORS.text);
           ensure(5);
           doc.text('Atividades por função:', MARGIN, state.y);
           state.y += 4;
           bullets(parts);
         } else {
-          paragraph(`Atividades: ${raw}`, { size: 8.5 });
+          paragraph(`Atividades: ${raw}`, { size: TYPE.bodySmall });
         }
       }
 
       const gheRisks = input.risks.filter(r => r.ghe_id === ghe.id);
       if (gheRisks.length === 0) {
-        paragraph('— Sem riscos cadastrados para este GHE —', { size: 8.5 });
+        paragraph('— Sem riscos cadastrados para este GHE —', { size: TYPE.bodySmall, align: 'left' });
         continue;
       }
 

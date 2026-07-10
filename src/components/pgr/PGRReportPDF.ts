@@ -212,9 +212,10 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     state.y += 4;
     setText(TYPE.section, false, COLORS.primary);
     doc.text(text, MARGIN, state.y);
-    doc.setDrawColor(...COLORS.accent);
-    doc.setLineWidth(0.6);
-    doc.line(MARGIN, state.y + 1.5, MARGIN + 30, state.y + 1.5);
+    const w = textWidth(text);
+    doc.setDrawColor(...COLORS.primary);
+    doc.setLineWidth(0.4);
+    doc.line(MARGIN, state.y + 1.6, MARGIN + w, state.y + 1.6);
     state.y += 8;
   };
 

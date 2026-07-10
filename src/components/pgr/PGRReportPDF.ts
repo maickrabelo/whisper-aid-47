@@ -514,7 +514,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const idRows: string[][] = [
     ['Razão Social', placeholder(input.company.name), 'CNPJ', placeholder(input.company.cnpj)],
     ['Endereço', placeholder(input.pgr.address), 'CNAE', placeholder(input.pgr.cnae)],
-    ['Ramo de Atividade', '—', 'Grau de Risco (NR-4)', placeholder(input.pgr.risk_grade)],
+    ['Ramo de Atividade', placeholder(input.pgr.activity_branch), 'Grau de Risco (NR-4)', placeholder(input.pgr.risk_grade)],
     ['Vigência', `${fmtDate(input.pgr.validity_start)} a ${fmtDate(input.pgr.validity_end)}`, 'Revisão', String(input.pgr.version).padStart(2, '0')],
   ];
   table(['Campo', 'Valor', 'Campo', 'Valor'], idRows, [35, 60, 35, CONTENT_W - 35 - 60 - 35]);

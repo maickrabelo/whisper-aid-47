@@ -183,6 +183,10 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
             <Input value={form.risk_grade} onChange={e => setForm({ ...form, risk_grade: e.target.value })} placeholder="Ex: 2" />
           </div>
           <div className="space-y-2 md:col-span-2">
+            <Label>Ramo de Atividade</Label>
+            <Input value={form.activity_branch} onChange={e => setForm({ ...form, activity_branch: e.target.value })} placeholder="Ex: Construção civil de edifícios" />
+          </div>
+          <div className="space-y-2 md:col-span-2">
             <Label>Endereço completo</Label>
             <Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Rua, número, bairro, cidade - UF" />
           </div>

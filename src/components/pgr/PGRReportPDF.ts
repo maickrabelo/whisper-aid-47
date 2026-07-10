@@ -212,9 +212,10 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     state.y += 4;
     setText(TYPE.section, false, COLORS.primary);
     doc.text(text, MARGIN, state.y);
-    doc.setDrawColor(...COLORS.accent);
-    doc.setLineWidth(0.6);
-    doc.line(MARGIN, state.y + 1.5, MARGIN + 30, state.y + 1.5);
+    const w = textWidth(text);
+    doc.setDrawColor(...COLORS.primary);
+    doc.setLineWidth(0.4);
+    doc.line(MARGIN, state.y + 1.6, MARGIN + w, state.y + 1.6);
     state.y += 8;
   };
 
@@ -730,11 +731,32 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
           ensure(5);
           doc.text('Atividades por função:', MARGIN, state.y);
           state.y += 4;
-          bullets(parts);
+          // Detecta cabeçalhos de função (linhas curtas em MAIÚSCULAS) e renderiza em negrito, sem bullet.
+          const isFunctionHeader = (s: string) =>
+            s.length <= 60 &&
+            /[A-ZÁÉÍÓÚÂÊÔÃÕÇ]/.test(s) &&
+            s === s.toUpperCase() &&
+            !/[.:;]$/.test(s);
+          let buffer: string[] = [];
+          const flush = () => { if (buffer.length) { bullets(buffer); buffer = []; } };
+          for (const p of parts) {
+            if (isFunctionHeader(p)) {
+              flush();
+              ensure(6);
+              state.y += 1;
+              setText(TYPE.bodySmall, true, COLORS.primary);
+              doc.text(p, MARGIN, state.y);
+              state.y += 4.5;
+            } else {
+              buffer.push(p);
+            }
+          }
+          flush();
         } else {
           paragraph(`Atividades: ${raw}`, { size: TYPE.bodySmall });
         }
       }
+
 
       const gheRisks = input.risks.filter(r => r.ghe_id === ghe.id);
       if (gheRisks.length === 0) {

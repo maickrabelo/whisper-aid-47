@@ -156,8 +156,8 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     }
 
     const naturalWidth = textWidth(words.join(' '));
-    const minFillRatio = 0.76;
-    const maxExtraPerGap = size * 0.16;
+    const minFillRatio = 0.88;
+    const maxExtraPerGap = size * 0.075;
     const extraPerGap = (maxWidth - naturalWidth) / (words.length - 1);
 
     if (naturalWidth / maxWidth < minFillRatio || extraPerGap <= 0 || extraPerGap > maxExtraPerGap) {
@@ -232,7 +232,10 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     const width = opts.width ?? CONTENT_W;
     const x = opts.x ?? MARGIN;
     setText(size, false, COLORS.text);
-    const blocks = String(text || '').split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+    const blocks = String(text || '')
+      .split(/\n{2,}/)
+      .map(p => p.replace(/\s*\n\s*/g, ' ').replace(/\s{2,}/g, ' ').trim())
+      .filter(Boolean);
     const lineH = size * 0.45 + 1.2;
     blocks.forEach((block, blockIndex) => {
       const lines = doc.splitTextToSize(block, width) as string[];

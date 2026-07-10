@@ -210,7 +210,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const sectionTitle = (text: string) => {
     ensure(14);
     state.y += 4;
-    setText(TYPE.section, true, COLORS.primary);
+    setText(TYPE.section, false, COLORS.primary);
     doc.text(text, MARGIN, state.y);
     doc.setDrawColor(...COLORS.accent);
     doc.setLineWidth(0.6);
@@ -221,7 +221,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const subTitle = (text: string) => {
     ensure(10);
     state.y += 2;
-    setText(TYPE.subtitle, true, COLORS.text);
+    setText(TYPE.subtitle, false, COLORS.text);
     doc.text(text, MARGIN, state.y);
     state.y += 5.5;
   };
@@ -232,7 +232,11 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     const width = opts.width ?? CONTENT_W;
     const x = opts.x ?? MARGIN;
     setText(size, false, COLORS.text);
-    const blocks = String(text || '')
+    const source = String(text || '')
+      .replace(/\r/g, '')
+      .replace(/\n(?=\s*\d+[.)]\s+)/g, '\n\n')
+      .replace(/\n(?=\s*[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9][A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9\s/().,:;\-]{10,}\s*(?:\n|$))/gm, '\n\n');
+    const blocks = source
       .split(/\n{2,}/)
       .map(p => p.replace(/\s*\n\s*/g, ' ').replace(/\s{2,}/g, ' ').trim())
       .filter(Boolean);
@@ -283,7 +287,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
       ensure(8);
       doc.setFillColor(...headerBg);
       doc.rect(MARGIN, state.y, CONTENT_W, 7, 'F');
-      setText(fontSize, true, [255, 255, 255]);
+      setText(fontSize, false, [255, 255, 255]);
       let x = MARGIN;
       headers.forEach((h, i) => {
         doc.text(h, x + cellPad, state.y + 4.7);
@@ -396,10 +400,10 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     const x0 = MARGIN + labelW + 6;
     const y0 = state.y + 14;
 
-    setText(8, true, COLORS.primary);
+    setText(8, false, COLORS.primary);
     doc.text('PROBABILIDADE', MARGIN + 3, y0 + (size * cell) / 2, { angle: 90, align: 'center' });
 
-    setText(8, true, COLORS.text);
+    setText(8, false, COLORS.text);
     doc.text('SEVERIDADE →', x0, state.y + 5);
     for (let i = 0; i < size; i++) {
       const cx = x0 + i * cell + cell / 2;
@@ -409,7 +413,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     // Probabilidade: maior no topo, menor embaixo
     for (let r = 0; r < size; r++) {
       const probVal = size - r;
-      setText(7.5, true, COLORS.text);
+      setText(7.5, false, COLORS.text);
       const ly = y0 + r * cell + cell / 2 + 1;
       doc.text(String(probVal), MARGIN + labelW - 1, ly, { align: 'right' });
       for (let c = 0; c < size; c++) {
@@ -420,7 +424,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
         doc.setDrawColor(150, 150, 150);
         doc.setLineWidth(0.2);
         doc.rect(x0 + c * cell, y0 + r * cell, cell, cell, 'FD');
-        setText(10, true, COLORS.text);
+        setText(10, false, COLORS.text);
         doc.text(String(score), x0 + c * cell + cell / 2, y0 + r * cell + cell / 2 + 1, {
           align: 'center',
         });
@@ -471,7 +475,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const compLines = doc.splitTextToSize(input.company.name || 'EMPRESA', CONTENT_W);
   doc.text(compLines, PAGE_W / 2, 120, { align: 'center' });
 
-  setText(12, true, COLORS.text);
+  setText(14, true, COLORS.text);
   const cnpjLines = doc.splitTextToSize(`CNPJ: ${placeholder(input.company.cnpj)}`, CONTENT_W);
   doc.text(cnpjLines, PAGE_W / 2, 142, { align: 'center' });
 
@@ -695,7 +699,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   // ─── Resumo Executivo (se houver) ─────────────────────────
   if (input.pgr.executive_summary && input.pgr.executive_summary.trim()) {
     sectionTitle('Resumo Executivo');
-    paragraph(input.pgr.executive_summary);
+    paragraph(input.pgr.executive_summary.replace(/^\s*resumo\s+executivo\s*/i, ''));
   }
 
   // ─── PARTE IV — Inventário de Riscos ──────────────────────
@@ -722,7 +726,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
           .map(s => s.trim())
           .filter(s => s.length > 2);
         if (parts.length > 1) {
-          setText(TYPE.bodySmall, true, COLORS.text);
+          setText(TYPE.bodySmall, false, COLORS.text);
           ensure(5);
           doc.text('Atividades por função:', MARGIN, state.y);
           state.y += 4;
@@ -863,7 +867,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   doc.setDrawColor(80, 80, 80);
   doc.setLineWidth(0.4);
   doc.line(MARGIN + 20, state.y, MARGIN + 110, state.y);
-  setText(9.5, true, COLORS.text);
+  setText(9.5, false, COLORS.text);
   doc.text(placeholder(input.pgr.responsible_name), MARGIN + 65, state.y + 5, { align: 'center' });
   setText(8.5, false, COLORS.muted);
   doc.text(

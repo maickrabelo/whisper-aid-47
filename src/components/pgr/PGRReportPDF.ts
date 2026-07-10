@@ -19,6 +19,7 @@ export interface PGRReportInput {
     responsible_registration: string | null;
     cnae: string | null;
     risk_grade: string | null;
+    activity_branch?: string | null;
     address: string | null;
     document_type?: 'pgr' | 'pgtr' | null;
     rural_activity?: string | null;

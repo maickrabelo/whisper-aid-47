@@ -62,6 +62,7 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
     responsible_registration: pgr.responsible_registration || "",
     cnae: pgr.cnae || "",
     risk_grade: pgr.risk_grade || "",
+    activity_branch: pgr.activity_branch || "",
     address: pgr.address || "",
     rural_activity: pgr.rural_activity || "",
     rural_area_hectares: pgr.rural_area_hectares ?? "",
@@ -180,6 +181,10 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
           <div className="space-y-2">
             <Label>Grau de Risco (NR-4)</Label>
             <Input value={form.risk_grade} onChange={e => setForm({ ...form, risk_grade: e.target.value })} placeholder="Ex: 2" />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label>Ramo de Atividade</Label>
+            <Input value={form.activity_branch} onChange={e => setForm({ ...form, activity_branch: e.target.value })} placeholder="Ex: Construção civil de edifícios" />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>Endereço completo</Label>

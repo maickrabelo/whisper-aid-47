@@ -1,0 +1,1 @@
+ALTER TABLE public.pgr_documents ADD COLUMN IF NOT EXISTS activity_branch TEXT;

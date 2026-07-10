@@ -1929,6 +1929,7 @@ export type Database = {
       }
       pgr_documents: {
         Row: {
+          activity_branch: string | null
           address: string | null
           cnae: string | null
           company_id: string
@@ -1957,6 +1958,7 @@ export type Database = {
           worker_transport: string | null
         }
         Insert: {
+          activity_branch?: string | null
           address?: string | null
           cnae?: string | null
           company_id: string
@@ -1985,6 +1987,7 @@ export type Database = {
           worker_transport?: string | null
         }
         Update: {
+          activity_branch?: string | null
           address?: string | null
           cnae?: string | null
           company_id?: string

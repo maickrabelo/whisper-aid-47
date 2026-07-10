@@ -62,6 +62,7 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
     responsible_registration: pgr.responsible_registration || "",
     cnae: pgr.cnae || "",
     risk_grade: pgr.risk_grade || "",
+    activity_branch: pgr.activity_branch || "",
     address: pgr.address || "",
     rural_activity: pgr.rural_activity || "",
     rural_area_hectares: pgr.rural_area_hectares ?? "",

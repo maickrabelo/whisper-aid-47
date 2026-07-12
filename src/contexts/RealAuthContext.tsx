@@ -461,12 +461,16 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const refreshTrialStatus = async () => {
+    await checkTrialStatus(profile?.company_id ?? null, profile?.sst_manager_id ?? null);
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, session, profile, role, availableRoles, switchRole,
       isLoading, isTrialExpired, trialEndsAt, 
       companies, activeCompanyId, switchCompany,
-      signOut, refreshRole 
+      signOut, refreshRole, refreshTrialStatus
     }}>
       {children}
     </AuthContext.Provider>

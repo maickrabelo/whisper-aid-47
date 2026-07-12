@@ -164,6 +164,16 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
             >
               Quero continuar usando!
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+            >
+              {refreshing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+              Já paguei, atualizar status
+            </Button>
             <button
               onClick={signOut}
               className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2 mx-auto"

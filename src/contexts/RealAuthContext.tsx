@@ -317,6 +317,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setCompanies(userCompanies);
       setActiveCompanyId(userProfile?.company_id ?? null);
       await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+      await checkPaymentStatus(user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
     }
   };
 

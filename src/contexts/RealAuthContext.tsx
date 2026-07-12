@@ -431,6 +431,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setActiveCompanyId(null);
           setIsTrialExpired(false);
           setTrialEndsAt(null);
+          setPaymentStatus('ok');
+          setDaysOverdue(0);
           currentUserIdRef.current = null;
           hasRedirectedRef.current = false;
           return;

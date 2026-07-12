@@ -545,6 +545,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setActiveCompanyId(null);
       setIsTrialExpired(false);
       setTrialEndsAt(null);
+      setPaymentStatus('ok');
+      setDaysOverdue(0);
       hasRedirectedRef.current = false;
       navigate(isSmsPlan ? '/sms/auth' : '/auth');
       toast({

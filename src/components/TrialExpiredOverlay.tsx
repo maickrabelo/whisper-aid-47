@@ -347,6 +347,14 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
           {/* Footer actions */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-border">
             <button
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+              className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2 disabled:opacity-50"
+            >
+              {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Já paguei, atualizar status
+            </button>
+            <button
               onClick={() => window.open('https://wa.me/5511999406560?text=Olá! Meu trial da SOIA expirou e gostaria de tirar dúvidas sobre os planos.', '_blank')}
               className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2"
             >

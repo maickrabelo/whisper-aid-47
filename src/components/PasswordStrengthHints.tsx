@@ -33,16 +33,19 @@ const hasRepeated = (pwd: string, minLen = 4): boolean => {
 
 export const strongPasswordRules: PasswordRule[] = [
   { label: "Pelo menos 8 caracteres", test: (p) => p.length >= 8 },
-  { label: "Uma letra maiúscula (A-Z)", test: (p) => /[A-Z]/.test(p) },
-  { label: "Uma letra minúscula (a-z)", test: (p) => /[a-z]/.test(p) },
+  { label: "Uma letra (a-z ou A-Z)", test: (p) => /[A-Za-z]/.test(p) },
   { label: "Um número (0-9)", test: (p) => /[0-9]/.test(p) },
-  { label: "Um caractere especial (!@#$...)", test: (p) => /[^A-Za-z0-9]/.test(p) },
+];
+
+export const optionalPasswordRules: PasswordRule[] = [
+  { label: "Uma letra maiúscula (A-Z) — recomendado", test: (p) => /[A-Z]/.test(p) },
+  { label: "Um caractere especial (!@#$...) — recomendado", test: (p) => /[^A-Za-z0-9]/.test(p) },
   {
-    label: "Sem sequências óbvias (1234, abcd, qwerty)",
+    label: "Sem sequências óbvias (1234, abcd) — recomendado",
     test: (p) => p.length === 0 || !hasSequence(p, 4),
   },
   {
-    label: "Sem caracteres repetidos (aaaa, 1111)",
+    label: "Sem caracteres repetidos (aaaa, 1111) — recomendado",
     test: (p) => p.length === 0 || !hasRepeated(p, 4),
   },
 ];
@@ -57,12 +60,19 @@ interface Props {
 
 const PasswordStrengthHints: React.FC<Props> = ({ password, className }) => {
   const passedCount = strongPasswordRules.filter((r) => r.test(password)).length;
+  const optionalPassed = optionalPasswordRules.filter((r) => r.test(password)).length;
+  const total = strongPasswordRules.length + optionalPasswordRules.length;
+  const score = passedCount + optionalPassed;
   const strength =
-    passedCount <= 2 ? "Fraca" : passedCount === 3 || passedCount === 4 ? "Média" : "Forte";
+    passedCount < strongPasswordRules.length
+      ? "Fraca"
+      : score < total - 1
+      ? "Média"
+      : "Forte";
   const strengthColor =
-    passedCount <= 2
+    passedCount < strongPasswordRules.length
       ? "bg-destructive"
-      : passedCount <= 4
+      : score < total - 1
       ? "bg-yellow-500"
       : "bg-green-500";
 
@@ -75,11 +85,11 @@ const PasswordStrengthHints: React.FC<Props> = ({ password, className }) => {
       <div className="h-1.5 w-full rounded-full bg-border overflow-hidden">
         <div
           className={`h-full transition-all ${strengthColor}`}
-          style={{ width: `${(passedCount / strongPasswordRules.length) * 100}%` }}
+        style={{ width: `${(score / total) * 100}%` }}
         />
       </div>
       <ul className="space-y-1 pt-1">
-        {strongPasswordRules.map((rule) => {
+        {[...strongPasswordRules, ...optionalPasswordRules].map((rule) => {
           const ok = rule.test(password);
           return (
             <li

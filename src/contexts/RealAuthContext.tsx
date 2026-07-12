@@ -23,6 +23,8 @@ export interface UserCompany {
   logo_url: string | null;
 }
 
+export type PaymentStatus = 'ok' | 'overdue_warning' | 'overdue_critical' | 'blocked';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -33,6 +35,8 @@ interface AuthContextType {
   isLoading: boolean;
   isTrialExpired: boolean;
   trialEndsAt: string | null;
+  paymentStatus: PaymentStatus;
+  daysOverdue: number;
   companies: UserCompany[];
   activeCompanyId: string | null;
   switchCompany: (companyId: string) => Promise<void>;
@@ -40,6 +44,7 @@ interface AuthContextType {
   refreshRole: () => Promise<void>;
   refreshTrialStatus: () => Promise<void>;
 }
+
 
 const ROLE_OVERRIDE_KEY = 'active_role_override';
 

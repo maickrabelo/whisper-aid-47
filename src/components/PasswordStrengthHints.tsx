@@ -60,12 +60,19 @@ interface Props {
 
 const PasswordStrengthHints: React.FC<Props> = ({ password, className }) => {
   const passedCount = strongPasswordRules.filter((r) => r.test(password)).length;
+  const optionalPassed = optionalPasswordRules.filter((r) => r.test(password)).length;
+  const total = strongPasswordRules.length + optionalPasswordRules.length;
+  const score = passedCount + optionalPassed;
   const strength =
-    passedCount <= 2 ? "Fraca" : passedCount === 3 || passedCount === 4 ? "Média" : "Forte";
+    passedCount < strongPasswordRules.length
+      ? "Fraca"
+      : score < total - 1
+      ? "Média"
+      : "Forte";
   const strengthColor =
-    passedCount <= 2
+    passedCount < strongPasswordRules.length
       ? "bg-destructive"
-      : passedCount <= 4
+      : score < total - 1
       ? "bg-yellow-500"
       : "bg-green-500";
 

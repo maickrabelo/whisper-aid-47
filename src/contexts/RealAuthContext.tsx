@@ -38,6 +38,7 @@ interface AuthContextType {
   switchCompany: (companyId: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshRole: () => Promise<void>;
+  refreshTrialStatus: () => Promise<void>;
 }
 
 const ROLE_OVERRIDE_KEY = 'active_role_override';

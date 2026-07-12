@@ -45,7 +45,7 @@ interface TrialExpiredOverlayProps {
 
 const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: categoryProp }) => {
   const navigate = useNavigate();
-  const { signOut, role, user } = useRealAuth();
+  const { signOut, role, user, refreshTrialStatus } = useRealAuth();
   const { isSmsPlan, isLoading: smsLoading } = useSmsPlan();
   const category: Category = categoryProp ?? (role === 'sst' ? 'manager' : 'company');
 
@@ -54,6 +54,25 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
   const [cycle, setCycle] = useState<Cycle>('annual');
   const [trialPlanInfo, setTrialPlanInfo] = useState<{ name: string; redirectUrl: string | null } | null>(null);
   const [checkingTrialPlan, setCheckingTrialPlan] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Poll trial status while overlay is mounted — auto-unblocks after payment webhook lands.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshTrialStatus();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [refreshTrialStatus]);
+
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshTrialStatus();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
 
   // Detect if user's current plan is a trial-only plan (e.g. Teste SMS) → show simple popup
   useEffect(() => {

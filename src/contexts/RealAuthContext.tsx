@@ -38,6 +38,7 @@ interface AuthContextType {
   switchCompany: (companyId: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshRole: () => Promise<void>;
+  refreshTrialStatus: () => Promise<void>;
 }
 
 const ROLE_OVERRIDE_KEY = 'active_role_override';
@@ -460,12 +461,16 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const refreshTrialStatus = async () => {
+    await checkTrialStatus(profile?.company_id ?? null, profile?.sst_manager_id ?? null);
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, session, profile, role, availableRoles, switchRole,
       isLoading, isTrialExpired, trialEndsAt, 
       companies, activeCompanyId, switchCompany,
-      signOut, refreshRole 
+      signOut, refreshRole, refreshTrialStatus
     }}>
       {children}
     </AuthContext.Provider>

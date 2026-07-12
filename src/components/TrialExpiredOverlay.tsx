@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldOff, LogOut, Check, Loader2, MessageCircle } from 'lucide-react';
+import { ShieldOff, LogOut, Check, Loader2, MessageCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +45,7 @@ interface TrialExpiredOverlayProps {
 
 const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: categoryProp }) => {
   const navigate = useNavigate();
-  const { signOut, role, user } = useRealAuth();
+  const { signOut, role, user, refreshTrialStatus } = useRealAuth();
   const { isSmsPlan, isLoading: smsLoading } = useSmsPlan();
   const category: Category = categoryProp ?? (role === 'sst' ? 'manager' : 'company');
 
@@ -54,6 +54,25 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
   const [cycle, setCycle] = useState<Cycle>('annual');
   const [trialPlanInfo, setTrialPlanInfo] = useState<{ name: string; redirectUrl: string | null } | null>(null);
   const [checkingTrialPlan, setCheckingTrialPlan] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Poll trial status while overlay is mounted — auto-unblocks after payment webhook lands.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshTrialStatus();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [refreshTrialStatus]);
+
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshTrialStatus();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
 
   // Detect if user's current plan is a trial-only plan (e.g. Teste SMS) → show simple popup
   useEffect(() => {
@@ -145,6 +164,16 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
             >
               Quero continuar usando!
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+            >
+              {refreshing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+              Já paguei, atualizar status
+            </Button>
             <button
               onClick={signOut}
               className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2 mx-auto"
@@ -181,6 +210,16 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
               onClick={() => window.open(SMS_UPGRADE_URL, '_blank')}
             >
               Quero continuar usando!
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+            >
+              {refreshing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+              Já paguei, atualizar status
             </Button>
             <button
               onClick={signOut}
@@ -307,6 +346,14 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
 
           {/* Footer actions */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-border">
+            <button
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+              className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2 disabled:opacity-50"
+            >
+              {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Já paguei, atualizar status
+            </button>
             <button
               onClick={() => window.open('https://wa.me/5511999406560?text=Olá! Meu trial da SOIA expirou e gostaria de tirar dúvidas sobre os planos.', '_blank')}
               className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2"

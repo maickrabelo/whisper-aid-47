@@ -153,6 +153,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setActiveCompanyId(companyId);
       setProfile(prev => prev ? { ...prev, company_id: companyId } : prev);
       await checkTrialStatus(companyId, profile?.sst_manager_id ?? null);
+      await checkPaymentStatus(user?.id ?? null, companyId, profile?.sst_manager_id ?? null);
       
       const selected = companies.find(c => c.id === companyId);
       toast({

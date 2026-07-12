@@ -178,15 +178,17 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : Promise.resolve({ data: null }),
     ]);
 
+    const trialStatuses = ['trial', 'trialing'];
+
     const company = companyResult?.data;
-    if (company?.subscription_status === 'trial' && company?.trial_ends_at) {
+    if (company?.subscription_status && trialStatuses.includes(company.subscription_status) && company?.trial_ends_at) {
       setTrialEndsAt(company.trial_ends_at);
       setIsTrialExpired(new Date() > new Date(company.trial_ends_at));
       return;
     }
 
     const sstManager = sstResult?.data;
-    if (sstManager?.subscription_status === 'trial' && sstManager?.trial_ends_at) {
+    if (sstManager?.subscription_status && trialStatuses.includes(sstManager.subscription_status) && sstManager?.trial_ends_at) {
       setTrialEndsAt(sstManager.trial_ends_at);
       setIsTrialExpired(new Date() > new Date(sstManager.trial_ends_at));
       return;

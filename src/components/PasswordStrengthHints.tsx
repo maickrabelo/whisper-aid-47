@@ -33,16 +33,19 @@ const hasRepeated = (pwd: string, minLen = 4): boolean => {
 
 export const strongPasswordRules: PasswordRule[] = [
   { label: "Pelo menos 8 caracteres", test: (p) => p.length >= 8 },
-  { label: "Uma letra maiúscula (A-Z)", test: (p) => /[A-Z]/.test(p) },
-  { label: "Uma letra minúscula (a-z)", test: (p) => /[a-z]/.test(p) },
+  { label: "Uma letra (a-z ou A-Z)", test: (p) => /[A-Za-z]/.test(p) },
   { label: "Um número (0-9)", test: (p) => /[0-9]/.test(p) },
-  { label: "Um caractere especial (!@#$...)", test: (p) => /[^A-Za-z0-9]/.test(p) },
+];
+
+export const optionalPasswordRules: PasswordRule[] = [
+  { label: "Uma letra maiúscula (A-Z) — recomendado", test: (p) => /[A-Z]/.test(p) },
+  { label: "Um caractere especial (!@#$...) — recomendado", test: (p) => /[^A-Za-z0-9]/.test(p) },
   {
-    label: "Sem sequências óbvias (1234, abcd, qwerty)",
+    label: "Sem sequências óbvias (1234, abcd) — recomendado",
     test: (p) => p.length === 0 || !hasSequence(p, 4),
   },
   {
-    label: "Sem caracteres repetidos (aaaa, 1111)",
+    label: "Sem caracteres repetidos (aaaa, 1111) — recomendado",
     test: (p) => p.length === 0 || !hasRepeated(p, 4),
   },
 ];

@@ -555,16 +555,21 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const refreshTrialStatus = async () => {
-    await checkTrialStatus(profile?.company_id ?? null, profile?.sst_manager_id ?? null);
+    await Promise.all([
+      checkTrialStatus(profile?.company_id ?? null, profile?.sst_manager_id ?? null),
+      checkPaymentStatus(user?.id ?? null, profile?.company_id ?? null, profile?.sst_manager_id ?? null),
+    ]);
   };
 
   return (
     <AuthContext.Provider value={{ 
       user, session, profile, role, availableRoles, switchRole,
-      isLoading, isTrialExpired, trialEndsAt, 
+      isLoading, isTrialExpired, trialEndsAt,
+      paymentStatus, daysOverdue,
       companies, activeCompanyId, switchCompany,
       signOut, refreshRole, refreshTrialStatus
     }}>
+
       {children}
     </AuthContext.Provider>
   );

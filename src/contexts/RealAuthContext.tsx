@@ -206,6 +206,92 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setTrialEndsAt(null);
   };
 
+  const checkPaymentStatus = async (userId: string | null, companyId: string | null, sstManagerId: string | null) => {
+    if (!userId && !companyId && !sstManagerId) {
+      setPaymentStatus('ok');
+      setDaysOverdue(0);
+      return;
+    }
+
+    try {
+      // Find most recent active subscription for this user (owner, company parent, or via SST manager profiles)
+      const orClauses: string[] = [];
+      if (userId) orClauses.push(`owner_user_id.eq.${userId}`);
+
+      let subQuery = supabase
+        .from('subscriptions')
+        .select('id, status, current_period_end, owner_user_id')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      // Primary lookup: owner_user_id
+      let { data: sub } = userId
+        ? await subQuery.eq('owner_user_id', userId).maybeSingle()
+        : { data: null } as any;
+
+      // Fallback: company.parent_subscription_id
+      if (!sub && companyId) {
+        const { data: comp } = await supabase
+          .from('companies')
+          .select('parent_subscription_id')
+          .eq('id', companyId)
+          .maybeSingle();
+        const parentId = (comp as any)?.parent_subscription_id;
+        if (parentId) {
+          const { data: parentSub } = await supabase
+            .from('subscriptions')
+            .select('id, status, current_period_end')
+            .eq('id', parentId)
+            .eq('status', 'active')
+            .maybeSingle();
+          sub = parentSub as any;
+        }
+      }
+
+      // Fallback: any active subscription owned by profiles sharing the sst_manager_id
+      if (!sub && sstManagerId) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('sst_manager_id', sstManagerId);
+        const ownerIds = (profs ?? []).map((p: any) => p.id);
+        if (ownerIds.length > 0) {
+          const { data: mgrSub } = await supabase
+            .from('subscriptions')
+            .select('id, status, current_period_end')
+            .in('owner_user_id', ownerIds)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          sub = mgrSub as any;
+        }
+      }
+
+      if (!sub || !(sub as any).current_period_end) {
+        setPaymentStatus('ok');
+        setDaysOverdue(0);
+        return;
+      }
+
+      const end = new Date((sub as any).current_period_end).getTime();
+      const now = Date.now();
+      const diffDays = Math.floor((now - end) / (1000 * 60 * 60 * 24));
+      setDaysOverdue(diffDays > 0 ? diffDays : 0);
+
+      if (diffDays >= 7) setPaymentStatus('blocked');
+      else if (diffDays >= 3) setPaymentStatus('overdue_critical');
+      else if (diffDays >= 1) setPaymentStatus('overdue_warning');
+      else setPaymentStatus('ok');
+    } catch (e) {
+      console.error('checkPaymentStatus error', e);
+      setPaymentStatus('ok');
+      setDaysOverdue(0);
+    }
+  };
+
+
   const loadFullUserData = async (userId: string) => {
     const [roleResult, userProfile] = await Promise.all([
       fetchUserRole(userId),

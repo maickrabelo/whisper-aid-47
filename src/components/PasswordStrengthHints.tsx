@@ -85,11 +85,11 @@ const PasswordStrengthHints: React.FC<Props> = ({ password, className }) => {
       <div className="h-1.5 w-full rounded-full bg-border overflow-hidden">
         <div
           className={`h-full transition-all ${strengthColor}`}
-          style={{ width: `${(passedCount / strongPasswordRules.length) * 100}%` }}
+        style={{ width: `${(score / total) * 100}%` }}
         />
       </div>
       <ul className="space-y-1 pt-1">
-        {strongPasswordRules.map((rule) => {
+        {[...strongPasswordRules, ...optionalPasswordRules].map((rule) => {
           const ok = rule.test(password);
           return (
             <li

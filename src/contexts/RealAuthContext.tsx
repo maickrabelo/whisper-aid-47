@@ -23,6 +23,8 @@ export interface UserCompany {
   logo_url: string | null;
 }
 
+export type PaymentStatus = 'ok' | 'overdue_warning' | 'overdue_critical' | 'blocked';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -33,6 +35,8 @@ interface AuthContextType {
   isLoading: boolean;
   isTrialExpired: boolean;
   trialEndsAt: string | null;
+  paymentStatus: PaymentStatus;
+  daysOverdue: number;
   companies: UserCompany[];
   activeCompanyId: string | null;
   switchCompany: (companyId: string) => Promise<void>;
@@ -40,6 +44,7 @@ interface AuthContextType {
   refreshRole: () => Promise<void>;
   refreshTrialStatus: () => Promise<void>;
 }
+
 
 const ROLE_OVERRIDE_KEY = 'active_role_override';
 
@@ -54,6 +59,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isLoading, setIsLoading] = useState(true);
   const [isTrialExpired, setIsTrialExpired] = useState(false);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('ok');
+  const [daysOverdue, setDaysOverdue] = useState<number>(0);
   const [companies, setCompanies] = useState<UserCompany[]>([]);
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -146,6 +153,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setActiveCompanyId(companyId);
       setProfile(prev => prev ? { ...prev, company_id: companyId } : prev);
       await checkTrialStatus(companyId, profile?.sst_manager_id ?? null);
+      await checkPaymentStatus(user?.id ?? null, companyId, profile?.sst_manager_id ?? null);
       
       const selected = companies.find(c => c.id === companyId);
       toast({
@@ -199,6 +207,92 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setTrialEndsAt(null);
   };
 
+  const checkPaymentStatus = async (userId: string | null, companyId: string | null, sstManagerId: string | null) => {
+    if (!userId && !companyId && !sstManagerId) {
+      setPaymentStatus('ok');
+      setDaysOverdue(0);
+      return;
+    }
+
+    try {
+      // Find most recent active subscription for this user (owner, company parent, or via SST manager profiles)
+      const orClauses: string[] = [];
+      if (userId) orClauses.push(`owner_user_id.eq.${userId}`);
+
+      let subQuery = supabase
+        .from('subscriptions')
+        .select('id, status, current_period_end, owner_user_id')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      // Primary lookup: owner_user_id
+      let { data: sub } = userId
+        ? await subQuery.eq('owner_user_id', userId).maybeSingle()
+        : { data: null } as any;
+
+      // Fallback: company.parent_subscription_id
+      if (!sub && companyId) {
+        const { data: comp } = await supabase
+          .from('companies')
+          .select('parent_subscription_id')
+          .eq('id', companyId)
+          .maybeSingle();
+        const parentId = (comp as any)?.parent_subscription_id;
+        if (parentId) {
+          const { data: parentSub } = await supabase
+            .from('subscriptions')
+            .select('id, status, current_period_end')
+            .eq('id', parentId)
+            .eq('status', 'active')
+            .maybeSingle();
+          sub = parentSub as any;
+        }
+      }
+
+      // Fallback: any active subscription owned by profiles sharing the sst_manager_id
+      if (!sub && sstManagerId) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('sst_manager_id', sstManagerId);
+        const ownerIds = (profs ?? []).map((p: any) => p.id);
+        if (ownerIds.length > 0) {
+          const { data: mgrSub } = await supabase
+            .from('subscriptions')
+            .select('id, status, current_period_end')
+            .in('owner_user_id', ownerIds)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          sub = mgrSub as any;
+        }
+      }
+
+      if (!sub || !(sub as any).current_period_end) {
+        setPaymentStatus('ok');
+        setDaysOverdue(0);
+        return;
+      }
+
+      const end = new Date((sub as any).current_period_end).getTime();
+      const now = Date.now();
+      const diffDays = Math.floor((now - end) / (1000 * 60 * 60 * 24));
+      setDaysOverdue(diffDays > 0 ? diffDays : 0);
+
+      if (diffDays >= 7) setPaymentStatus('blocked');
+      else if (diffDays >= 3) setPaymentStatus('overdue_critical');
+      else if (diffDays >= 1) setPaymentStatus('overdue_warning');
+      else setPaymentStatus('ok');
+    } catch (e) {
+      console.error('checkPaymentStatus error', e);
+      setPaymentStatus('ok');
+      setDaysOverdue(0);
+    }
+  };
+
+
   const loadFullUserData = async (userId: string) => {
     const [roleResult, userProfile] = await Promise.all([
       fetchUserRole(userId),
@@ -223,6 +317,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setCompanies(userCompanies);
       setActiveCompanyId(userProfile?.company_id ?? null);
       await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+      await checkPaymentStatus(user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
     }
   };
 
@@ -336,6 +431,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setActiveCompanyId(null);
           setIsTrialExpired(false);
           setTrialEndsAt(null);
+          setPaymentStatus('ok');
+          setDaysOverdue(0);
           currentUserIdRef.current = null;
           hasRedirectedRef.current = false;
           return;
@@ -352,6 +449,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setCompanies(userCompanies);
             setActiveCompanyId(userProfile?.company_id ?? null);
             await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+            await checkPaymentStatus(session.user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
 
             sendAccessLog({
               event_type: 'login',
@@ -389,6 +487,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setCompanies(userCompanies);
           setActiveCompanyId(userProfile?.company_id ?? null);
           await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+          await checkPaymentStatus(session.user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
 
           // Redirect if user is already logged in and on the login page
           const currentPath = window.location.pathname;
@@ -446,6 +545,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setActiveCompanyId(null);
       setIsTrialExpired(false);
       setTrialEndsAt(null);
+      setPaymentStatus('ok');
+      setDaysOverdue(0);
       hasRedirectedRef.current = false;
       navigate(isSmsPlan ? '/sms/auth' : '/auth');
       toast({
@@ -462,16 +563,21 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const refreshTrialStatus = async () => {
-    await checkTrialStatus(profile?.company_id ?? null, profile?.sst_manager_id ?? null);
+    await Promise.all([
+      checkTrialStatus(profile?.company_id ?? null, profile?.sst_manager_id ?? null),
+      checkPaymentStatus(user?.id ?? null, profile?.company_id ?? null, profile?.sst_manager_id ?? null),
+    ]);
   };
 
   return (
     <AuthContext.Provider value={{ 
       user, session, profile, role, availableRoles, switchRole,
-      isLoading, isTrialExpired, trialEndsAt, 
+      isLoading, isTrialExpired, trialEndsAt,
+      paymentStatus, daysOverdue,
       companies, activeCompanyId, switchCompany,
       signOut, refreshRole, refreshTrialStatus
     }}>
+
       {children}
     </AuthContext.Provider>
   );

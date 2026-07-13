@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat, X } from "lucide-react";
+import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat, X, Info } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 import { COPSOQ_CATEGORY_LABELS } from "@/data/copsoqQuestions";

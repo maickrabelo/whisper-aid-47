@@ -101,7 +101,7 @@ const PGRDashboard = () => {
   const createPGR = async (docType: PgrDocType) => {
     if (!companyId) return;
     try {
-      const label = docType === 'pgtr' ? 'PGTR' : 'PGR';
+      const label = docType === 'pgtr' ? 'PGRTR' : 'PGR';
       const { data, error } = await supabase
         .from('pgr_documents')
         .insert({
@@ -165,7 +165,7 @@ const PGRDashboard = () => {
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Nenhum documento criado para esta empresa</h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Escolha entre PGR (NR-01) ou PGTR (NR-31 — trabalhador rural) para começar.
+                Escolha entre PGR (NR-01) ou PGRTR (NR-31 — trabalhador rural) para começar.
               </p>
               <Button onClick={() => setCreateOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />

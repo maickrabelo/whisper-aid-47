@@ -137,8 +137,8 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   const state = { y: TOP_Y, page: 1, skipChrome: true };
   const isRural = input.pgr.document_type === 'pgtr';
-  const shortName = isRural ? 'PGTR' : 'PGR';
-  const fullName = isRural ? 'Plano de Gerenciamento de Riscos do Trabalhador Rural' : 'Programa de Gerenciamento de Riscos';
+  const shortName = isRural ? 'PGRTR' : 'PGR';
+  const fullName = isRural ? 'Programa de Gerenciamento de Riscos do Trabalhador Rural' : 'Programa de Gerenciamento de Riscos';
   const regulation = isRural ? 'NR-31 — Portaria MTP 1.887/2022' : 'NR-01 — Portaria 6.730/2020';
 
   const setText = (size: number, bold = false, color: [number, number, number] = COLORS.text) => {
@@ -535,11 +535,11 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   subTitle('1.1 Introdução');
   if (isRural) {
     paragraph(
-      `O Documento Base do Plano de Gerenciamento de Riscos do Trabalhador Rural (PGTR) de ${input.company.name || '(EMPRESA)'} está estruturado conforme a NR-31 — Segurança e Saúde no Trabalho na Agricultura, Pecuária, Silvicultura, Exploração Florestal e Aquicultura (Portaria MTP nº 1.887/2022). Contempla os riscos peculiares à atividade rural, incluindo exposição a agrotóxicos, máquinas agrícolas, agentes biológicos, condições climáticas, alojamento e transporte de trabalhadores.`
+      `O Documento Base do Programa de Gerenciamento de Riscos do Trabalhador Rural (PGRTR) de ${input.company.name || '(EMPRESA)'} está estruturado conforme a NR-31 — Segurança e Saúde no Trabalho na Agricultura, Pecuária, Silvicultura, Exploração Florestal e Aquicultura (Portaria MTP nº 1.887/2022). Contempla os riscos peculiares à atividade rural, incluindo exposição a agrotóxicos, máquinas agrícolas, agentes biológicos, condições climáticas, alojamento e transporte de trabalhadores.`
     );
     subTitle('1.2 Objetivo');
     paragraph(
-      'O PGTR tem por objetivo estabelecer diretrizes para o gerenciamento dos riscos ocupacionais em ambientes rurais, contemplando trabalhadores permanentes, safristas e temporários, com medidas de prevenção adaptadas à atividade agropecuária, silvicultura, exploração florestal e aquicultura, em conformidade com a NR-31.'
+      'O PGRTR tem por objetivo estabelecer diretrizes para o gerenciamento dos riscos ocupacionais em ambientes rurais, contemplando trabalhadores permanentes, safristas e temporários, com medidas de prevenção adaptadas à atividade agropecuária, silvicultura, exploração florestal e aquicultura, em conformidade com a NR-31.'
     );
   } else {
     paragraph(
@@ -905,7 +905,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
 
 export async function downloadPGRReport(input: PGRReportInput) {
   const doc = await generatePGRReportPDF(input);
-  const prefix = input.pgr.document_type === 'pgtr' ? 'PGTR' : 'PGR';
+  const prefix = input.pgr.document_type === 'pgtr' ? 'PGRTR' : 'PGR';
   const fname = `${prefix}_${slugify(input.company.name)}_v${input.pgr.version}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fname);
 }

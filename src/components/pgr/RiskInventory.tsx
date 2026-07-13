@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat, X } from "lucide-react";
+import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat, X, Info } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 import { COPSOQ_CATEGORY_LABELS } from "@/data/copsoqQuestions";
@@ -160,6 +160,15 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
   const [importOptions, setImportOptions] = useState<{ type: 'hseit' | 'copsoq'; id: string; title: string }[]>([]);
   const [epiList, setEpiList] = useState<{ name: string; ca: string }[]>([]);
   const [epiDraft, setEpiDraft] = useState<{ name: string; ca: string }>({ name: '', ca: '' });
+
+  const migrationKey = `pgr-migration-guide-dismissed:${pgrDocumentId}`;
+  const [showMigrationGuide, setShowMigrationGuide] = useState<boolean>(() => {
+    try { return localStorage.getItem(migrationKey) !== '1'; } catch { return true; }
+  });
+  const dismissMigrationGuide = () => {
+    try { localStorage.setItem(migrationKey, '1'); } catch {}
+    setShowMigrationGuide(false);
+  };
 
   const parseEpiPair = (names: string | null | undefined, cas: string | null | undefined) => {
     const n = (names || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -406,6 +415,51 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
             <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Risco</Button>
           </div>
         </div>
+
+        {showMigrationGuide && (
+          <div className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-4 relative">
+            <button
+              type="button"
+              onClick={dismissMigrationGuide}
+              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+              aria-label="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="text-sm space-y-2">
+                <div className="font-semibold">
+                  Como migrar meu {term.shortName} atual para o sistema
+                </div>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                  <li>
+                    Vá na aba <strong>{term.gheLabel}s</strong> e cadastre os grupos homogêneos
+                    (setores/funções) que já constam no seu {term.shortName} vigente.
+                  </li>
+                  <li>
+                    Volte aqui no <strong>Inventário</strong> e clique em <strong>Novo Risco</strong>{' '}
+                    para cada risco existente — escolha o {term.gheLabel}, o agente
+                    {term.isRural ? ' (catálogo NR-31 já integrado)' : ''}, a severidade, a
+                    probabilidade e a magnitude (nº de trabalhadores expostos).
+                  </li>
+                  <li>
+                    Para riscos que já possuem controles implantados, preencha os campos de{' '}
+                    <strong>EPC/EPI existente</strong>, CA, medições e evidências.
+                  </li>
+                  <li>
+                    Ao terminar, vá em <strong>Plano de Ação</strong> para registrar as ações
+                    corretivas/preventivas que já estão em andamento ou planejadas.
+                  </li>
+                </ol>
+                <p className="text-xs text-muted-foreground pt-1">
+                  Dica: cadastre primeiro os {term.gheLabel}s — o Inventário exige o vínculo com um grupo.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         <div className="mb-6 flex flex-wrap gap-4">
           {matricesToRender.map(renderMatrix)}

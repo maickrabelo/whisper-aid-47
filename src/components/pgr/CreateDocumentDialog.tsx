@@ -24,7 +24,7 @@ export const CreateDocumentDialog = ({ open, onOpenChange, onSelect }: Props) =>
         <DialogHeader>
           <DialogTitle>Escolha o tipo de documento</DialogTitle>
           <DialogDescription>
-            Selecione entre PGR (indústria/serviços — NR-01) ou PGTR (trabalhador rural — NR-31).
+            Selecione entre PGR (indústria/serviços — NR-01) ou PGRTR (trabalhador rural — NR-31).
           </DialogDescription>
         </DialogHeader>
 
@@ -59,9 +59,9 @@ export const CreateDocumentDialog = ({ open, onOpenChange, onSelect }: Props) =>
                 {creating === 'pgtr' ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <Wheat className="h-6 w-6 text-primary" />}
               </div>
               <div>
-                <div className="font-semibold">PGTR</div>
+                <div className="font-semibold">PGRTR</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Plano de Gerenciamento de Riscos do Trabalhador Rural — NR-31. Agricultura, pecuária, silvicultura e aquicultura.
+                  Programa de Gerenciamento de Riscos no Trabalho Rural — NR-31. Agricultura, pecuária, silvicultura e aquicultura.
                 </div>
               </div>
             </div>

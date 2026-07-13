@@ -535,11 +535,11 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   subTitle('1.1 Introdução');
   if (isRural) {
     paragraph(
-      `O Documento Base do Plano de Gerenciamento de Riscos do Trabalhador Rural (PGTR) de ${input.company.name || '(EMPRESA)'} está estruturado conforme a NR-31 — Segurança e Saúde no Trabalho na Agricultura, Pecuária, Silvicultura, Exploração Florestal e Aquicultura (Portaria MTP nº 1.887/2022). Contempla os riscos peculiares à atividade rural, incluindo exposição a agrotóxicos, máquinas agrícolas, agentes biológicos, condições climáticas, alojamento e transporte de trabalhadores.`
+      `O Documento Base do Programa de Gerenciamento de Riscos do Trabalhador Rural (PGRTR) de ${input.company.name || '(EMPRESA)'} está estruturado conforme a NR-31 — Segurança e Saúde no Trabalho na Agricultura, Pecuária, Silvicultura, Exploração Florestal e Aquicultura (Portaria MTP nº 1.887/2022). Contempla os riscos peculiares à atividade rural, incluindo exposição a agrotóxicos, máquinas agrícolas, agentes biológicos, condições climáticas, alojamento e transporte de trabalhadores.`
     );
     subTitle('1.2 Objetivo');
     paragraph(
-      'O PGTR tem por objetivo estabelecer diretrizes para o gerenciamento dos riscos ocupacionais em ambientes rurais, contemplando trabalhadores permanentes, safristas e temporários, com medidas de prevenção adaptadas à atividade agropecuária, silvicultura, exploração florestal e aquicultura, em conformidade com a NR-31.'
+      'O PGRTR tem por objetivo estabelecer diretrizes para o gerenciamento dos riscos ocupacionais em ambientes rurais, contemplando trabalhadores permanentes, safristas e temporários, com medidas de prevenção adaptadas à atividade agropecuária, silvicultura, exploração florestal e aquicultura, em conformidade com a NR-31.'
     );
   } else {
     paragraph(

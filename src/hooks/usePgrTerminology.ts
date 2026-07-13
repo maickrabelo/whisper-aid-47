@@ -3,7 +3,7 @@ export type PgrDocType = 'pgr' | 'pgtr';
 export interface PgrTerminology {
   isRural: boolean;
   docType: PgrDocType;
-  shortName: string;      // "PGR" | "PGTR"
+  shortName: string;      // "PGR" | "PGRTR"
   fullName: string;
   regulation: string;     // "NR-01" | "NR-31"
   gheLabel: string;       // "GHE" | "GHER"

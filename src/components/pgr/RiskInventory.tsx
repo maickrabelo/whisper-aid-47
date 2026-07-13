@@ -161,6 +161,15 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
   const [epiList, setEpiList] = useState<{ name: string; ca: string }[]>([]);
   const [epiDraft, setEpiDraft] = useState<{ name: string; ca: string }>({ name: '', ca: '' });
 
+  const migrationKey = `pgr-migration-guide-dismissed:${pgrDocumentId}`;
+  const [showMigrationGuide, setShowMigrationGuide] = useState<boolean>(() => {
+    try { return localStorage.getItem(migrationKey) !== '1'; } catch { return true; }
+  });
+  const dismissMigrationGuide = () => {
+    try { localStorage.setItem(migrationKey, '1'); } catch {}
+    setShowMigrationGuide(false);
+  };
+
   const parseEpiPair = (names: string | null | undefined, cas: string | null | undefined) => {
     const n = (names || '').split(',').map(s => s.trim()).filter(Boolean);
     const c = (cas || '').split(',').map(s => s.trim());

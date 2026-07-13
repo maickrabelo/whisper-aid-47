@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     // Fetch all subscriptions for this user (by id or email)
     const { data: subs, error: subErr } = await supabase
       .from('subscriptions')
-      .select('id, plan_id, status, billing_cycle, amount_cents, current_period_start, current_period_end, next_charge_date, asaas_customer_id, asaas_subscription_id, invoice_url, created_at, owner_email, subscription_plans(name, slug, tier, category)')
+      .select('id, plan_id, status, billing_cycle, amount_cents, current_period_start, current_period_end, next_charge_date, asaas_customer_id, asaas_subscription_id, invoice_url, created_at, owner_email, subscription_plans(name, slug, tier, category, price_monthly_cents, price_annual_cents)')
       .or(`owner_user_id.eq.${user.id},owner_email.eq.${user.email}`)
       .order('created_at', { ascending: false });
 

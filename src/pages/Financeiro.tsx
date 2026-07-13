@@ -193,7 +193,7 @@ export default function Financeiro() {
                     <p className="text-sm text-muted-foreground mt-1">
                       Cobrança {CYCLE_LABEL[sub.billing_cycle] || sub.billing_cycle} ·{' '}
                       <span className="font-semibold text-foreground">
-                        {formatBRL(sub.amount_cents)}
+                        {formatBRL(recurringAmountCents)}
                       </span>
                     </p>
                   </div>
@@ -266,7 +266,7 @@ export default function Financeiro() {
                     Valor da próxima
                   </div>
                   <div className="text-2xl font-bold">
-                    {formatBRL(sub.amount_cents)}
+                    {formatBRL(recurringAmountCents)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {CYCLE_LABEL[sub.billing_cycle] || sub.billing_cycle}

@@ -101,7 +101,7 @@ const PGRDashboard = () => {
   const createPGR = async (docType: PgrDocType) => {
     if (!companyId) return;
     try {
-      const label = docType === 'pgtr' ? 'PGTR' : 'PGR';
+      const label = docType === 'pgtr' ? 'PGRTR' : 'PGR';
       const { data, error } = await supabase
         .from('pgr_documents')
         .insert({

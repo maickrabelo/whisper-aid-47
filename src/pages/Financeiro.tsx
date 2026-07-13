@@ -110,6 +110,17 @@ export default function Financeiro() {
   const daysUntilNext: number | null = data?.daysUntilNext;
   const isSmsPlan = !!plan?.slug?.toLowerCase().includes('sms');
 
+  // Source of truth for recurring value: the plan's configured price.
+  // Falls back to stored amount_cents only if the plan has no price set.
+  const planRecurringCents = sub
+    ? (sub.billing_cycle === 'annual'
+        ? (plan?.price_annual_cents ?? null)
+        : (plan?.price_monthly_cents ?? null))
+    : null;
+  const recurringAmountCents = (planRecurringCents && planRecurringCents > 0)
+    ? planRecurringCents
+    : (sub?.amount_cents ?? 0);
+
   const handleUpgradeClick = () => {
     if (isSmsPlan) {
       setSmsDialogOpen(true);

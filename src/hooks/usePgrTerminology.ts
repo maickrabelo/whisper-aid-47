@@ -19,14 +19,14 @@ export function usePgrTerminology(documentType?: string | null): PgrTerminology 
     return {
       isRural: true,
       docType: 'pgtr',
-      shortName: 'PGTR',
-      fullName: 'Plano de Gerenciamento de Riscos do Trabalhador Rural',
+      shortName: 'PGRTR',
+      fullName: 'Programa de Gerenciamento de Riscos do Trabalhador Rural',
       regulation: 'NR-31',
       gheLabel: 'GHER',
       gheLabelLong: 'Grupo Homogêneo de Exposição Rural',
       addressLabel: 'Localização da propriedade rural',
-      createButtonLabel: 'Criar PGTR',
-      emptyStateTitle: 'Nenhum PGTR criado para esta empresa',
+      createButtonLabel: 'Criar PGRTR',
+      emptyStateTitle: 'Nenhum PGRTR criado para esta empresa',
     };
   }
   return {

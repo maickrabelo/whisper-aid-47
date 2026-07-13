@@ -24,7 +24,7 @@ export const CreateDocumentDialog = ({ open, onOpenChange, onSelect }: Props) =>
         <DialogHeader>
           <DialogTitle>Escolha o tipo de documento</DialogTitle>
           <DialogDescription>
-            Selecione entre PGR (indústria/serviços — NR-01) ou PGTR (trabalhador rural — NR-31).
+            Selecione entre PGR (indústria/serviços — NR-01) ou PGRTR (trabalhador rural — NR-31).
           </DialogDescription>
         </DialogHeader>
 

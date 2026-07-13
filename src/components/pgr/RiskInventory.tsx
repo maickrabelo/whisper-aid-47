@@ -416,6 +416,51 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
           </div>
         </div>
 
+        {showMigrationGuide && (
+          <div className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-4 relative">
+            <button
+              type="button"
+              onClick={dismissMigrationGuide}
+              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+              aria-label="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="text-sm space-y-2">
+                <div className="font-semibold">
+                  Como migrar meu {term.shortName} atual para o sistema
+                </div>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                  <li>
+                    Vá na aba <strong>{term.gheLabel}s</strong> e cadastre os grupos homogêneos
+                    (setores/funções) que já constam no seu {term.shortName} vigente.
+                  </li>
+                  <li>
+                    Volte aqui no <strong>Inventário</strong> e clique em <strong>Novo Risco</strong>{' '}
+                    para cada risco existente — escolha o {term.gheLabel}, o agente
+                    {term.isRural ? ' (catálogo NR-31 já integrado)' : ''}, a severidade, a
+                    probabilidade e a magnitude (nº de trabalhadores expostos).
+                  </li>
+                  <li>
+                    Para riscos que já possuem controles implantados, preencha os campos de{' '}
+                    <strong>EPC/EPI existente</strong>, CA, medições e evidências.
+                  </li>
+                  <li>
+                    Ao terminar, vá em <strong>Plano de Ação</strong> para registrar as ações
+                    corretivas/preventivas que já estão em andamento ou planejadas.
+                  </li>
+                </ol>
+                <p className="text-xs text-muted-foreground pt-1">
+                  Dica: cadastre primeiro os {term.gheLabel}s — o Inventário exige o vínculo com um grupo.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+
         <div className="mb-6 flex flex-wrap gap-4">
           {matricesToRender.map(renderMatrix)}
         </div>

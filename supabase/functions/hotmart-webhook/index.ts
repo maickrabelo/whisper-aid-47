@@ -782,9 +782,15 @@ Deno.serve(async (req) => {
       const billingCycle = (subscriptionInfo?.plan?.recurrency_period === 12 || purchase?.recurrence_number === 12)
         ? 'annual'
         : 'monthly';
-      const amountCents = Math.round(
+      const planRecurringPrice = billingCycle === 'annual'
+        ? (plan.price_annual_cents ?? null)
+        : (plan.price_monthly_cents ?? null);
+      const purchaseCents = Math.round(
         ((purchase?.price?.value ?? purchase?.full_price?.value ?? 0) as number) * 100,
-      ) || (plan.price_monthly_cents ?? plan.base_price_cents ?? 0);
+      );
+      const amountCents = (planRecurringPrice && planRecurringPrice > 0)
+        ? planRecurringPrice
+        : (purchaseCents || (plan.base_price_cents ?? 0));
 
       // Trial-mode plans (e.g. Teste SMS): provisiona como trial com expiração automática
       const trialDays = (plan as any).trial_days as number | null | undefined;

@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Loader2, Download, Send, GitBranch, Upload, Trash2, FileText, ClipboardList, Users, Paperclip, History, Link2, CheckCircle2, Pencil, Plus, Lock } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Send, GitBranch, Upload, Trash2, FileText, ClipboardList, Users, Paperclip, History, Link2, CheckCircle2, Pencil, Plus, Lock, Split } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { SendToInventoryDialog } from "@/components/aep/SendToInventoryDialog";
+import { SplitAEPByGHEDialog } from "@/components/aep/SplitAEPByGHEDialog";
 import { generateAEPReportPDF } from "@/components/aep/AEPReportPDF";
 import { classifyRisk, LEVEL_LABELS, LEVEL_STYLES, AEP_STATUS_LABELS, AEP_STATUS_STYLES } from "@/lib/aepRiskLevel";
 import { AEP_CATEGORIAS, AEP_CATEGORIA_COLORS } from "@/hooks/useAEPFatoresCatalog";
@@ -34,6 +35,7 @@ const AEPDetail = () => {
   const [sstLogoUrl, setSstLogoUrl] = useState<string | null>(null);
   const [sendOpen, setSendOpen] = useState(false);
   const [newVersionOpen, setNewVersionOpen] = useState(false);
+  const [splitOpen, setSplitOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   // Edição — Dados
@@ -418,6 +420,16 @@ const AEPDetail = () => {
   const today = new Date().toISOString().split('T')[0];
   const overdue = aep.next_review_date && aep.next_review_date < today;
 
+  // Helper: label do bloco a partir do escopo_ref
+  const escopoArr: any[] = Array.isArray(aep.escopo_json) ? aep.escopo_json : [];
+  const blocoLabel = (escopo_ref: string | null | undefined): { label: string; index: number } | null => {
+    if (!escopo_ref || escopoArr.length === 0) return null;
+    const idx = escopoArr.findIndex((e: any) => e.tempId === escopo_ref);
+    if (idx < 0) return null;
+    const it = escopoArr[idx];
+    return { index: idx + 1, label: `${it.setor || '—'} / ${it.funcao || '—'}` };
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-card">
@@ -502,6 +514,11 @@ const AEPDetail = () => {
             <Button variant="outline" size="sm" onClick={() => setNewVersionOpen(true)} className="gap-1">
               <GitBranch className="h-4 w-4" /> Nova versão
             </Button>
+            {Array.isArray(aep.escopo_json) && aep.escopo_json.length > 1 && (
+              <Button variant="outline" size="sm" onClick={() => setSplitOpen(true)} className="gap-1" title="Cria uma AEP separada para cada bloco (GHE) do escopo">
+                <Split className="h-4 w-4" /> Dividir por GHE
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={exportPDF} className="gap-1">
               <Download className="h-4 w-4" /> Exportar PDF
             </Button>
@@ -551,13 +568,23 @@ const AEPDetail = () => {
                   )}
                 </div>
                 {Array.isArray(aep.escopo_json) && aep.escopo_json.length > 0 ? (
-                  <div className="space-y-1">
-                    <div className="text-xs font-semibold text-muted-foreground">Escopo da AEP ({aep.escopo_json.length} item{aep.escopo_json.length > 1 ? 's' : ''})</div>
-                    <div className="flex flex-wrap gap-1">
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold text-muted-foreground">Escopo da AEP ({aep.escopo_json.length} bloco{aep.escopo_json.length > 1 ? 's' : ''})</div>
+                    <div className="space-y-2">
                       {aep.escopo_json.map((it: any, i: number) => (
-                        <Badge key={i} variant="secondary" className="text-xs font-normal">
-                          {it.setor} — {it.funcao}{it.cbo ? ` · CBO ${it.cbo}` : ''} · {it.worker_count || 1} trab.
-                        </Badge>
+                        <div key={i} className="border rounded p-2 space-y-1 bg-muted/20">
+                          <div className="flex items-center gap-2 flex-wrap text-xs">
+                            <Badge variant="outline" className="text-[10px]">Bloco {i + 1}</Badge>
+                            <span className="font-medium">{it.setor}</span>
+                            <span className="text-muted-foreground">— {it.funcao}</span>
+                            {it.cbo && <Badge variant="outline" className="text-[10px]">CBO {it.cbo}</Badge>}
+                            <Badge variant="secondary" className="text-[10px]">{it.worker_count || 1} trab.</Badge>
+                            {it.ghe_id && <Badge variant="outline" className="text-[10px]">GHE vinculado</Badge>}
+                          </div>
+                          {it.situacao_trabalho && (
+                            <div className="text-xs text-muted-foreground italic">"{it.situacao_trabalho}"</div>
+                          )}
+                        </div>
                       ))}
                     </div>
                     <div className="text-xs text-muted-foreground pt-1">
@@ -570,7 +597,10 @@ const AEPDetail = () => {
                     <Row label="Função/cargo" value={aep.funcao_nome} />
                   </>
                 )}
-                <Row label="Situação avaliada" value={aep.situacao_trabalho} />
+                {/* Situação avaliada só se não houver situações por bloco */}
+                {!(Array.isArray(aep.escopo_json) && aep.escopo_json.some((e: any) => e.situacao_trabalho)) && (
+                  <Row label="Situação avaliada" value={aep.situacao_trabalho} />
+                )}
                 <Row label="Data da avaliação" value={new Date(aep.assessment_date).toLocaleDateString('pt-BR')} />
                 {aep.next_review_date && <Row label="Próxima revisão" value={new Date(aep.next_review_date).toLocaleDateString('pt-BR')} />}
                 <Row label="Metodologias" value={(aep.methodologies || []).join(', ')} />
@@ -611,6 +641,12 @@ const AEPDetail = () => {
                             {LEVEL_LABELS[level]}
                           </span>
                           <span className="text-xs text-muted-foreground">S={f.severity} P={f.probability}</span>
+                          {(() => {
+                            const bl = blocoLabel(f.escopo_ref);
+                            if (bl) return <Badge variant="outline" className="text-[10px] bg-blue-50 border-blue-300 text-blue-700">Bloco {bl.index} · {bl.label}</Badge>;
+                            if (escopoArr.length > 1 && !f.escopo_ref) return <Badge variant="outline" className="text-[10px]">Geral</Badge>;
+                            return null;
+                          })()}
                         </div>
                         {isEditable && (
                           <div className="flex gap-0.5 shrink-0">
@@ -704,6 +740,12 @@ const AEPDetail = () => {
                       <span className="font-medium">{p.anonimizado ? '(Anonimizado)' : (p.nome || '—')}</span>
                       {p.funcao && <span className="text-muted-foreground"> — {p.funcao}</span>}
                     </div>
+                    {(() => {
+                      const bl = blocoLabel(p.escopo_ref);
+                      if (bl) return <Badge variant="outline" className="text-[10px] bg-blue-50 border-blue-300 text-blue-700">Bloco {bl.index}</Badge>;
+                      if (escopoArr.length > 1 && !p.escopo_ref) return <Badge variant="outline" className="text-[10px]">Geral</Badge>;
+                      return null;
+                    })()}
                     <Badge variant="outline" className="text-[10px]">{p.tipo_participacao}</Badge>
                     {isEditable && (
                       <div className="flex gap-0.5 shrink-0">
@@ -766,6 +808,17 @@ const AEPDetail = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {companyId && (
+        <SplitAEPByGHEDialog
+          open={splitOpen}
+          onOpenChange={setSplitOpen}
+          aep={aep}
+          fatores={fatores}
+          participantes={participantes}
+          companyId={companyId}
+        />
+      )}
 
       {/* Editar dados da AEP */}
       <Dialog open={editDadosOpen} onOpenChange={setEditDadosOpen}>

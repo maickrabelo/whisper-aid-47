@@ -296,6 +296,7 @@ export type Database = {
           aep_id: string
           categoria: string
           created_at: string
+          escopo_ref: string | null
           evidencia_texto: string | null
           fator_codigo: string | null
           fator_nome: string
@@ -314,6 +315,7 @@ export type Database = {
           aep_id: string
           categoria: string
           created_at?: string
+          escopo_ref?: string | null
           evidencia_texto?: string | null
           fator_codigo?: string | null
           fator_nome: string
@@ -332,6 +334,7 @@ export type Database = {
           aep_id?: string
           categoria?: string
           created_at?: string
+          escopo_ref?: string | null
           evidencia_texto?: string | null
           fator_codigo?: string | null
           fator_nome?: string
@@ -398,6 +401,7 @@ export type Database = {
           anonimizado: boolean
           created_at: string
           data_participacao: string | null
+          escopo_ref: string | null
           funcao: string | null
           id: string
           nome: string | null
@@ -408,6 +412,7 @@ export type Database = {
           anonimizado?: boolean
           created_at?: string
           data_participacao?: string | null
+          escopo_ref?: string | null
           funcao?: string | null
           id?: string
           nome?: string | null
@@ -418,6 +423,7 @@ export type Database = {
           anonimizado?: boolean
           created_at?: string
           data_participacao?: string | null
+          escopo_ref?: string | null
           funcao?: string | null
           id?: string
           nome?: string | null

@@ -74,15 +74,28 @@ async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participan
   doc.text(`Versão ${aep.version || 1} · ${AEP_STATUS_LABELS[aep.status] || aep.status}`, MARGIN, y); y += 6;
   doc.setTextColor(0);
 
+  const escopo: any[] = Array.isArray(aep.escopo_json) ? aep.escopo_json : [];
+  const hasBlocos = escopo.length > 0;
+
   // 1. Identificação
   doc.setFontSize(11); doc.setFont('helvetica', 'bold');
   doc.text('1. Identificação', MARGIN, y); y += 5;
   doc.setFontSize(9);
-  y = line(doc, y, 'Setor:', aep.setor_nome || '—');
-  y = line(doc, y, 'Função/cargo:', aep.funcao_nome || '—');
+  if (hasBlocos) {
+    doc.setFont('helvetica', 'bold'); doc.text('Escopo avaliado:', MARGIN, y); y += 5;
+    doc.setFont('helvetica', 'normal');
+    escopo.forEach((it: any, i: number) => {
+      const t = `${i + 1}. ${it.setor || '—'} — ${it.funcao || '—'}${it.cbo ? ` (CBO ${it.cbo})` : ''} · ${it.worker_count || 1} trab.`;
+      doc.text(t, MARGIN + 3, y); y += 4.5;
+    });
+  } else {
+    y = line(doc, y, 'Setor:', aep.setor_nome || '—');
+    y = line(doc, y, 'Função/cargo:', aep.funcao_nome || '—');
+  }
   y = line(doc, y, 'Data:', new Date(aep.assessment_date).toLocaleDateString('pt-BR'));
   if (aep.next_review_date) y = line(doc, y, 'Próxima revisão:', new Date(aep.next_review_date).toLocaleDateString('pt-BR'));
-  y = line(doc, y, 'Situação avaliada:', aep.situacao_trabalho || '—');
+  const hasBlocoSit = escopo.some((e: any) => e.situacao_trabalho);
+  if (!hasBlocoSit) y = line(doc, y, 'Situação avaliada:', aep.situacao_trabalho || '—');
   y += 3;
 
   // 2. Metodologia
@@ -97,12 +110,7 @@ async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participan
   if (aep.methodology_details) y = line(doc, y, 'Detalhes:', aep.methodology_details);
   y += 3;
 
-  // 3. Fatores
-  y = ensureSpace(doc, y, 15);
-  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-  doc.text(`3. Fatores levantados (${fatores.length})`, MARGIN, y); y += 5;
-
-  fatores.forEach((f, i) => {
+  const renderFat = (f: any, i: number) => {
     y = ensureSpace(doc, y, 25);
     doc.setFontSize(9); doc.setFont('helvetica', 'bold');
     doc.text(`${i + 1}. ${f.fator_nome}`, MARGIN, y); y += 4;
@@ -123,18 +131,65 @@ async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participan
       doc.text(w, MARGIN, y); y += w.length * 3.5;
     }
     y += 2;
-  });
+  };
 
-  // 4. Participantes
-  y = ensureSpace(doc, y, 15);
-  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-  doc.text(`4. Participantes (${participantes.length})`, MARGIN, y); y += 5;
-  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-  participantes.forEach(p => {
+  const renderPart = (p: any) => {
     y = ensureSpace(doc, y, 5);
     const nome = p.anonimizado ? '(Anonimizado)' : (p.nome || '—');
     doc.text(`• ${nome}${p.funcao ? ' — ' + p.funcao : ''} [${p.tipo_participacao || 'outro'}]`, MARGIN, y); y += 4.5;
-  });
+  };
+
+  // 3. Avaliação por bloco (ou lista flat legada)
+  y = ensureSpace(doc, y, 15);
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.text(hasBlocos ? '3. Avaliação por bloco (GHE)' : `3. Fatores levantados (${fatores.length})`, MARGIN, y); y += 5;
+
+  if (hasBlocos) {
+    const blocos = [
+      ...escopo.map((e: any, i: number) => ({ key: e.tempId, label: `${i + 1}. ${e.setor || '—'} / ${e.funcao || '—'}${e.cbo ? ` · CBO ${e.cbo}` : ''}`, item: e })),
+      { key: '__geral__', label: 'Geral', item: null as any },
+    ];
+    blocos.forEach(b => {
+      const fats = fatores.filter(f => (b.key === '__geral__') ? !f.escopo_ref : f.escopo_ref === b.key);
+      const parts = participantes.filter(p => (b.key === '__geral__') ? !p.escopo_ref : p.escopo_ref === b.key);
+      if (fats.length === 0 && parts.length === 0 && !b.item?.situacao_trabalho) return;
+
+      y = ensureSpace(doc, y, 15);
+      doc.setFillColor(230, 236, 250);
+      doc.rect(MARGIN, y - 4, CONTENT_W, 6, 'F');
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 64, 175);
+      doc.text(b.label, MARGIN + 2, y);
+      if (b.item?.worker_count) doc.text(`${b.item.worker_count} trab.`, PAGE_W - MARGIN - 2, y, { align: 'right' });
+      doc.setTextColor(0); y += 6;
+
+      if (b.item?.situacao_trabalho) {
+        doc.setFontSize(8); doc.setFont('helvetica', 'italic');
+        const w = doc.splitTextToSize(`Situação: ${b.item.situacao_trabalho}`, CONTENT_W);
+        doc.text(w, MARGIN, y); y += w.length * 3.5 + 1;
+        doc.setFont('helvetica', 'normal');
+      }
+      if (fats.length) {
+        doc.setFontSize(8); doc.setFont('helvetica', 'bold');
+        doc.text(`Fatores (${fats.length}):`, MARGIN, y); y += 4;
+        fats.forEach((f, i) => renderFat(f, i));
+      }
+      if (parts.length) {
+        y = ensureSpace(doc, y, 10);
+        doc.setFontSize(8); doc.setFont('helvetica', 'bold');
+        doc.text(`Participantes (${parts.length}):`, MARGIN, y); y += 4;
+        doc.setFont('helvetica', 'normal');
+        parts.forEach(renderPart);
+      }
+      y += 2;
+    });
+  } else {
+    fatores.forEach((f, i) => renderFat(f, i));
+    y = ensureSpace(doc, y, 15);
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text(`4. Participantes (${participantes.length})`, MARGIN, y); y += 5;
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+    participantes.forEach(renderPart);
+  }
   y += 3;
 
   // 5. Evidências

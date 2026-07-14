@@ -641,6 +641,12 @@ const AEPDetail = () => {
                             {LEVEL_LABELS[level]}
                           </span>
                           <span className="text-xs text-muted-foreground">S={f.severity} P={f.probability}</span>
+                          {(() => {
+                            const bl = blocoLabel(f.escopo_ref);
+                            if (bl) return <Badge variant="outline" className="text-[10px] bg-blue-50 border-blue-300 text-blue-700">Bloco {bl.index} · {bl.label}</Badge>;
+                            if (escopoArr.length > 1 && !f.escopo_ref) return <Badge variant="outline" className="text-[10px]">Geral</Badge>;
+                            return null;
+                          })()}
                         </div>
                         {isEditable && (
                           <div className="flex gap-0.5 shrink-0">

@@ -740,6 +740,12 @@ const AEPDetail = () => {
                       <span className="font-medium">{p.anonimizado ? '(Anonimizado)' : (p.nome || '—')}</span>
                       {p.funcao && <span className="text-muted-foreground"> — {p.funcao}</span>}
                     </div>
+                    {(() => {
+                      const bl = blocoLabel(p.escopo_ref);
+                      if (bl) return <Badge variant="outline" className="text-[10px] bg-blue-50 border-blue-300 text-blue-700">Bloco {bl.index}</Badge>;
+                      if (escopoArr.length > 1 && !p.escopo_ref) return <Badge variant="outline" className="text-[10px]">Geral</Badge>;
+                      return null;
+                    })()}
                     <Badge variant="outline" className="text-[10px]">{p.tipo_participacao}</Badge>
                     {isEditable && (
                       <div className="flex gap-0.5 shrink-0">

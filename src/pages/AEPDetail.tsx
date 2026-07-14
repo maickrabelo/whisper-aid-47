@@ -558,13 +558,23 @@ const AEPDetail = () => {
                   )}
                 </div>
                 {Array.isArray(aep.escopo_json) && aep.escopo_json.length > 0 ? (
-                  <div className="space-y-1">
-                    <div className="text-xs font-semibold text-muted-foreground">Escopo da AEP ({aep.escopo_json.length} item{aep.escopo_json.length > 1 ? 's' : ''})</div>
-                    <div className="flex flex-wrap gap-1">
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold text-muted-foreground">Escopo da AEP ({aep.escopo_json.length} bloco{aep.escopo_json.length > 1 ? 's' : ''})</div>
+                    <div className="space-y-2">
                       {aep.escopo_json.map((it: any, i: number) => (
-                        <Badge key={i} variant="secondary" className="text-xs font-normal">
-                          {it.setor} — {it.funcao}{it.cbo ? ` · CBO ${it.cbo}` : ''} · {it.worker_count || 1} trab.
-                        </Badge>
+                        <div key={i} className="border rounded p-2 space-y-1 bg-muted/20">
+                          <div className="flex items-center gap-2 flex-wrap text-xs">
+                            <Badge variant="outline" className="text-[10px]">Bloco {i + 1}</Badge>
+                            <span className="font-medium">{it.setor}</span>
+                            <span className="text-muted-foreground">— {it.funcao}</span>
+                            {it.cbo && <Badge variant="outline" className="text-[10px]">CBO {it.cbo}</Badge>}
+                            <Badge variant="secondary" className="text-[10px]">{it.worker_count || 1} trab.</Badge>
+                            {it.ghe_id && <Badge variant="outline" className="text-[10px]">GHE vinculado</Badge>}
+                          </div>
+                          {it.situacao_trabalho && (
+                            <div className="text-xs text-muted-foreground italic">"{it.situacao_trabalho}"</div>
+                          )}
+                        </div>
                       ))}
                     </div>
                     <div className="text-xs text-muted-foreground pt-1">
@@ -577,7 +587,10 @@ const AEPDetail = () => {
                     <Row label="Função/cargo" value={aep.funcao_nome} />
                   </>
                 )}
-                <Row label="Situação avaliada" value={aep.situacao_trabalho} />
+                {/* Situação avaliada só se não houver situações por bloco */}
+                {!(Array.isArray(aep.escopo_json) && aep.escopo_json.some((e: any) => e.situacao_trabalho)) && (
+                  <Row label="Situação avaliada" value={aep.situacao_trabalho} />
+                )}
                 <Row label="Data da avaliação" value={new Date(aep.assessment_date).toLocaleDateString('pt-BR')} />
                 {aep.next_review_date && <Row label="Próxima revisão" value={new Date(aep.next_review_date).toLocaleDateString('pt-BR')} />}
                 <Row label="Metodologias" value={(aep.methodologies || []).join(', ')} />

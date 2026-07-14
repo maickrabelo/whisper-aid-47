@@ -420,6 +420,16 @@ const AEPDetail = () => {
   const today = new Date().toISOString().split('T')[0];
   const overdue = aep.next_review_date && aep.next_review_date < today;
 
+  // Helper: label do bloco a partir do escopo_ref
+  const escopoArr: any[] = Array.isArray(aep.escopo_json) ? aep.escopo_json : [];
+  const blocoLabel = (escopo_ref: string | null | undefined): { label: string; index: number } | null => {
+    if (!escopo_ref || escopoArr.length === 0) return null;
+    const idx = escopoArr.findIndex((e: any) => e.tempId === escopo_ref);
+    if (idx < 0) return null;
+    const it = escopoArr[idx];
+    return { index: idx + 1, label: `${it.setor || '—'} / ${it.funcao || '—'}` };
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-card">

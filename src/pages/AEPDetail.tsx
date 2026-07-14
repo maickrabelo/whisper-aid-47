@@ -787,6 +787,17 @@ const AEPDetail = () => {
         </DialogContent>
       </Dialog>
 
+      {companyId && (
+        <SplitAEPByGHEDialog
+          open={splitOpen}
+          onOpenChange={setSplitOpen}
+          aep={aep}
+          fatores={fatores}
+          participantes={participantes}
+          companyId={companyId}
+        />
+      )}
+
       {/* Editar dados da AEP */}
       <Dialog open={editDadosOpen} onOpenChange={setEditDadosOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">

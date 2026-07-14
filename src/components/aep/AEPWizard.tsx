@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ const METODOLOGIAS = [
 
 interface FatorForm {
   tempId: string;
+  escopo_ref: string | null;
   categoria: AEPFatorCatalogo['categoria'];
   fator_codigo: string | null;
   fator_nome: string;
@@ -53,6 +54,7 @@ interface FatorForm {
 
 interface ParticipanteForm {
   tempId: string;
+  escopo_ref: string | null;
   nome: string;
   funcao: string;
   tipo_participacao: string;
@@ -66,7 +68,12 @@ interface EscopoItem {
   cbo: string;
   worker_count: number;
   ghe_id?: string;
+  situacao_trabalho: string;
 }
+
+const GERAL_KEY = '__geral__';
+
+const escopoLabel = (it: EscopoItem) => `${it.setor || '—'} / ${it.funcao || '—'}`;
 
 export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCreated }: Props) {
   const { data: catalog } = useAEPFatoresCatalog();
@@ -76,8 +83,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
 
   // Step 1
   const [escopo, setEscopo] = useState<EscopoItem[]>([]);
-  const [escopoDraft, setEscopoDraft] = useState<EscopoItem>({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: '' });
-  const [situacaoTrabalho, setSituacaoTrabalho] = useState('');
+  const [escopoDraft, setEscopoDraft] = useState<EscopoItem>({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: '', situacao_trabalho: '' });
   const [assessmentDate, setAssessmentDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [nextReviewDate, setNextReviewDate] = useState<string>('');
 
@@ -92,12 +98,14 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
   const [fatorCategoria, setFatorCategoria] = useState<AEPFatorCatalogo['categoria']>('ergonomico_fisico');
   const [fatorSelecionado, setFatorSelecionado] = useState('');
   const [importDialog, setImportDialog] = useState<null | 'hseit' | 'copsoq'>(null);
+  const [currentBlocoFat, setCurrentBlocoFat] = useState<string>(GERAL_KEY);
 
   // Step 4
   const [participantes, setParticipantes] = useState<ParticipanteForm[]>([]);
   const [novoParticipante, setNovoParticipante] = useState<ParticipanteForm>({
-    tempId: '', nome: '', funcao: '', tipo_participacao: 'entrevista', anonimizado: false,
+    tempId: '', escopo_ref: null, nome: '', funcao: '', tipo_participacao: 'entrevista', anonimizado: false,
   });
+  const [currentBlocoPart, setCurrentBlocoPart] = useState<string>(GERAL_KEY);
 
   // Step 5
   const [respName, setRespName] = useState('');
@@ -111,14 +119,21 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
       .then(({ data }) => setGhes((data as any) || []));
   }, [open, pgrDocumentId]);
 
+  // Ao entrar no passo 3/4, se houver 1 único bloco, seleciona automaticamente
+  useEffect(() => {
+    if (escopo.length === 1) {
+      setCurrentBlocoFat(escopo[0].tempId);
+      setCurrentBlocoPart(escopo[0].tempId);
+    }
+  }, [escopo.length]);
+
   const reset = () => {
     setStep(1);
-    setEscopo([]); setEscopoDraft({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: '' });
-    setSituacaoTrabalho('');
+    setEscopo([]); setEscopoDraft({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: '', situacao_trabalho: '' });
     setAssessmentDate(new Date().toISOString().split('T')[0]); setNextReviewDate('');
     setMethodologies([]); setMethodologyDetails(''); setInstrumentName(''); setAnonymityEnsured(false);
-    setFatores([]); setFatorSelecionado('');
-    setParticipantes([]);
+    setFatores([]); setFatorSelecionado(''); setCurrentBlocoFat(GERAL_KEY);
+    setParticipantes([]); setCurrentBlocoPart(GERAL_KEY);
     setRespName(''); setRespRole(''); setRespRegistration(''); setSignConfirm(false);
   };
 
@@ -127,14 +142,27 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
       toast.error('Informe setor e função'); return;
     }
     setEscopo(prev => [...prev, { ...escopoDraft, tempId: crypto.randomUUID(), worker_count: escopoDraft.worker_count || 1 }]);
-    setEscopoDraft({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: escopoDraft.ghe_id });
+    setEscopoDraft({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: escopoDraft.ghe_id, situacao_trabalho: '' });
   };
-  const removeEscopoItem = (id: string) => setEscopo(prev => prev.filter(i => i.tempId !== id));
+  const removeEscopoItem = (id: string) => {
+    setEscopo(prev => prev.filter(i => i.tempId !== id));
+    // Fatores/participantes vinculados voltam para "geral"
+    setFatores(prev => prev.map(f => f.escopo_ref === id ? { ...f, escopo_ref: null } : f));
+    setParticipantes(prev => prev.map(p => p.escopo_ref === id ? { ...p, escopo_ref: null } : p));
+    if (currentBlocoFat === id) setCurrentBlocoFat(GERAL_KEY);
+    if (currentBlocoPart === id) setCurrentBlocoPart(GERAL_KEY);
+  };
+  const updateEscopoItem = (id: string, patch: Partial<EscopoItem>) => {
+    setEscopo(prev => prev.map(i => i.tempId === id ? { ...i, ...patch } : i));
+  };
+
+  const blocoRefFromCurrent = (cur: string): string | null => cur === GERAL_KEY ? null : cur;
 
   const addFator = (custom?: Partial<FatorForm>) => {
     const fromCatalog = fatorSelecionado && !custom ? catalog.find(c => c.id === fatorSelecionado) : null;
     const f: FatorForm = {
       tempId: crypto.randomUUID(),
+      escopo_ref: blocoRefFromCurrent(currentBlocoFat),
       categoria: fromCatalog?.categoria || fatorCategoria,
       fator_codigo: fromCatalog?.codigo || null,
       fator_nome: fromCatalog?.nome || custom?.fator_nome || '',
@@ -161,13 +189,22 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
       toast.error('Informe o nome ou marque como anonimizado');
       return;
     }
-    setParticipantes(prev => [...prev, { ...novoParticipante, tempId: crypto.randomUUID() }]);
-    setNovoParticipante({ tempId: '', nome: '', funcao: '', tipo_participacao: 'entrevista', anonimizado: false });
+    setParticipantes(prev => [...prev, {
+      ...novoParticipante,
+      tempId: crypto.randomUUID(),
+      escopo_ref: blocoRefFromCurrent(currentBlocoPart),
+    }]);
+    setNovoParticipante({ tempId: '', escopo_ref: null, nome: '', funcao: '', tipo_participacao: 'entrevista', anonimizado: false });
   };
   const removeParticipante = (id: string) => setParticipantes(prev => prev.filter(p => p.tempId !== id));
+  const updateParticipante = (id: string, patch: Partial<ParticipanteForm>) => {
+    setParticipantes(prev => prev.map(p => p.tempId === id ? { ...p, ...patch } : p));
+  };
 
   const canNext = () => {
-    if (step === 1) return situacaoTrabalho.trim().length > 0 && escopo.length > 0;
+    if (step === 1) {
+      return escopo.length > 0 && escopo.every(e => (e.situacao_trabalho || '').trim().length > 0);
+    }
     if (step === 2) return methodologies.length > 0;
     if (step === 3) return fatores.length > 0;
     if (step === 4) return participantes.length > 0;
@@ -179,12 +216,48 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
   const escopoSummaryFuncao = escopo.map(e => e.cbo ? `${e.funcao} (CBO ${e.cbo})` : e.funcao).join(', ');
   const primaryGheId = escopo.find(e => e.ghe_id)?.ghe_id || null;
 
+  // Concatenação de situações para o campo legado situacao_trabalho
+  const situacaoConcat = useMemo(() => {
+    if (escopo.length === 1) return escopo[0].situacao_trabalho;
+    return escopo.map((e, i) => `[${i + 1}. ${escopoLabel(e)}]\n${e.situacao_trabalho}`).join('\n\n');
+  }, [escopo]);
+
+  const fatoresPorBloco = useMemo(() => {
+    const groups: Record<string, FatorForm[]> = { [GERAL_KEY]: [] };
+    escopo.forEach(e => { groups[e.tempId] = []; });
+    fatores.forEach(f => {
+      const key = f.escopo_ref && groups[f.escopo_ref] ? f.escopo_ref : GERAL_KEY;
+      groups[key].push(f);
+    });
+    return groups;
+  }, [fatores, escopo]);
+
+  const participantesPorBloco = useMemo(() => {
+    const groups: Record<string, ParticipanteForm[]> = { [GERAL_KEY]: [] };
+    escopo.forEach(e => { groups[e.tempId] = []; });
+    participantes.forEach(p => {
+      const key = p.escopo_ref && groups[p.escopo_ref] ? p.escopo_ref : GERAL_KEY;
+      groups[key].push(p);
+    });
+    return groups;
+  }, [participantes, escopo]);
+
   const submit = async () => {
     setSaving(true);
     try {
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id;
       const signatureHash = btoa(unescape(encodeURIComponent(`${respName}|${respRole}|${respRegistration}|${new Date().toISOString()}|${fatores.length}`))).slice(0, 32);
+
+      const escopoJson = escopo.map(e => ({
+        tempId: e.tempId,
+        setor: e.setor,
+        funcao: e.funcao,
+        cbo: e.cbo || null,
+        worker_count: e.worker_count,
+        ghe_id: e.ghe_id || null,
+        situacao_trabalho: e.situacao_trabalho,
+      }));
 
       const { data: aep, error: err1 } = await supabase
         .from('aep_avaliacoes' as any)
@@ -194,8 +267,8 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
           ghe_id: primaryGheId,
           setor_nome: escopoSummarySetor,
           funcao_nome: escopoSummaryFuncao,
-          escopo_json: escopo.map(e => ({ setor: e.setor, funcao: e.funcao, cbo: e.cbo || null, worker_count: e.worker_count, ghe_id: e.ghe_id || null })),
-          situacao_trabalho: situacaoTrabalho,
+          escopo_json: escopoJson,
+          situacao_trabalho: situacaoConcat,
           assessment_date: assessmentDate,
           next_review_date: nextReviewDate || null,
           responsible_name: respName,
@@ -220,6 +293,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
         const { error: err2 } = await supabase.from('aep_fatores_avaliados' as any).insert(
           fatores.map(f => ({
             aep_id: aepId,
+            escopo_ref: f.escopo_ref,
             categoria: f.categoria,
             fator_codigo: f.fator_codigo,
             fator_nome: f.fator_nome,
@@ -240,6 +314,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
         const { error: err3 } = await supabase.from('aep_participantes' as any).insert(
           participantes.map(p => ({
             aep_id: aepId,
+            escopo_ref: p.escopo_ref,
             nome: p.anonimizado ? null : p.nome,
             funcao: p.funcao,
             tipo_participacao: p.tipo_participacao,
@@ -261,6 +336,14 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
   };
 
   const catalogFiltered = catalog.filter(c => c.categoria === fatorCategoria);
+
+  const blocoTitle = (key: string, idx?: number) => {
+    if (key === GERAL_KEY) return 'Geral (todos os GHEs)';
+    const i = escopo.findIndex(e => e.tempId === key);
+    const it = escopo[i];
+    if (!it) return 'Geral';
+    return `${idx ?? i + 1}. ${escopoLabel(it)}${it.cbo ? ` · CBO ${it.cbo}` : ''}`;
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!saving) { onOpenChange(v); if (!v) reset(); } }}>
@@ -286,7 +369,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
               <div>
                 <Label className="text-sm font-semibold">Escopo da AEP *</Label>
                 <p className="text-xs text-muted-foreground">
-                  Cadastre todos os setores, cargos e funções cobertos por esta AEP. Uma única AEP pode cobrir vários setores e cargos.
+                  Cadastre cada GHE / função avaliada. <strong>Cada bloco tem sua própria descrição da situação de trabalho</strong> — depois, no passo 3, você poderá lançar fatores separadamente por bloco.
                 </p>
               </div>
               <div className="grid grid-cols-[1fr_1fr_110px_90px_auto] gap-2 items-end">
@@ -324,29 +407,36 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
               {escopo.length === 0 ? (
                 <div className="text-xs text-muted-foreground text-center py-2">Nenhum item de escopo adicionado ainda.</div>
               ) : (
-                <div className="space-y-1">
-                  {escopo.map(it => (
-                    <div key={it.tempId} className="flex items-center justify-between gap-2 p-2 rounded bg-background border text-sm">
-                      <div className="flex-1">
-                        <span className="font-medium">{it.setor}</span>
-                        <span className="text-muted-foreground"> — {it.funcao}</span>
-                        {it.cbo && <Badge variant="outline" className="ml-2 text-[10px]">CBO {it.cbo}</Badge>}
-                        <Badge variant="secondary" className="ml-2 text-[10px]">{it.worker_count} trab.</Badge>
-                        {it.ghe_id && <Badge variant="outline" className="ml-2 text-[10px]">GHE vinculado</Badge>}
+                <div className="space-y-2">
+                  {escopo.map((it, idx) => (
+                    <div key={it.tempId} className="p-3 rounded bg-background border space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-[10px]">Bloco {idx + 1}</Badge>
+                          <span className="font-medium text-sm">{it.setor}</span>
+                          <span className="text-muted-foreground text-sm"> — {it.funcao}</span>
+                          {it.cbo && <Badge variant="outline" className="text-[10px]">CBO {it.cbo}</Badge>}
+                          <Badge variant="secondary" className="text-[10px]">{it.worker_count} trab.</Badge>
+                          {it.ghe_id && <Badge variant="outline" className="text-[10px]">GHE vinculado</Badge>}
+                        </div>
+                        <Button size="icon" variant="ghost" onClick={() => removeEscopoItem(it.tempId)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                       </div>
-                      <Button size="icon" variant="ghost" onClick={() => removeEscopoItem(it.tempId)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Situação de trabalho avaliada neste bloco *</Label>
+                        <Textarea
+                          rows={3}
+                          value={it.situacao_trabalho}
+                          onChange={e => updateEscopoItem(it.tempId, { situacao_trabalho: e.target.value })}
+                          placeholder="Descreva a atividade avaliada deste GHE: tarefas, ferramentas, posto, jornada, ritmo..."
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
             </Card>
-            <div className="space-y-2">
-              <Label>Situação de trabalho avaliada *</Label>
-              <Textarea rows={4} value={situacaoTrabalho} onChange={e => setSituacaoTrabalho(e.target.value)}
-                placeholder="Descreva a atividade avaliada: tarefas, ferramentas, posto, jornada, ritmo, características relevantes..." />
-            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Data da avaliação *</Label>
@@ -402,9 +492,22 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
         {/* Step 3 */}
         {step === 3 && (
           <div className="space-y-4">
-            <Card className="p-3 bg-primary/5 border-primary/20">
-              <Label className="text-xs">Importar dimensões de avaliações psicossociais existentes</Label>
-              <div className="flex gap-2 mt-2 flex-wrap">
+            <Card className="p-3 bg-primary/5 border-primary/20 space-y-2">
+              <Label className="text-xs">Adicionar fatores para o bloco (GHE):</Label>
+              <select
+                className="w-full h-10 rounded-md border border-input bg-background px-2 text-sm"
+                value={currentBlocoFat}
+                onChange={e => setCurrentBlocoFat(e.target.value)}
+              >
+                {escopo.map((e, i) => (
+                  <option key={e.tempId} value={e.tempId}>{i + 1}. {escopoLabel(e)}{e.cbo ? ` · CBO ${e.cbo}` : ''}</option>
+                ))}
+                <option value={GERAL_KEY}>Geral (aplicável a todos os GHEs)</option>
+              </select>
+              <p className="text-[11px] text-muted-foreground">
+                Cada fator adicionado abaixo é gravado neste bloco. Alterne o bloco para lançar fatores específicos de outro GHE.
+              </p>
+              <div className="flex gap-2 mt-1 flex-wrap">
                 <Button size="sm" variant="outline" onClick={() => setImportDialog('hseit')}>
                   <Download className="h-4 w-4 mr-1" /> Importar do HSE-IT
                 </Button>
@@ -412,9 +515,6 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
                   <Download className="h-4 w-4 mr-1" /> Importar do COPSOQ II
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Traz as dimensões em risco como fatores psicossociais desta AEP, com rastreabilidade da origem. Os dados representam a percepção coletiva dos respondentes da avaliação (agregados), não de um único colaborador — é o esperado pela NR-17.
-              </p>
             </Card>
 
             <Card className="p-3 bg-muted/30">
@@ -440,62 +540,87 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
               </div>
             </Card>
 
-
-            <div className="space-y-3">
+            {/* Lista agrupada por bloco */}
+            <div className="space-y-4">
               {fatores.length === 0 && (
                 <div className="text-sm text-muted-foreground text-center py-6">Nenhum fator adicionado ainda.</div>
               )}
-              {fatores.map(f => {
-                const level = classifyRisk(5, f.severity, f.probability);
+              {[...escopo.map(e => e.tempId), GERAL_KEY].map(key => {
+                const list = fatoresPorBloco[key] || [];
+                if (list.length === 0) return null;
                 return (
-                  <Card key={f.tempId} className="p-3 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant="outline" className={AEP_CATEGORIA_COLORS[f.categoria]}>
-                            {AEP_CATEGORIAS[f.categoria]}
-                          </Badge>
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[level]}`}>
-                            {LEVEL_LABELS[level]}
-                          </span>
-                          {f.source_assessment_type && (
-                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-[10px]">
-                              Importado do {f.source_assessment_type === 'hseit' ? 'HSE-IT' : 'COPSOQ II'}
-                            </Badge>
-                          )}
-                        </div>
-                        <Input value={f.fator_nome} onChange={e => updateFator(f.tempId, { fator_nome: e.target.value })}
-                          className="font-medium" />
-                        <div className="grid grid-cols-2 gap-2">
-                          <Textarea rows={2} placeholder="Fonte / causa identificada"
-                            value={f.fonte_causa} onChange={e => updateFator(f.tempId, { fonte_causa: e.target.value })} />
-                          <Textarea rows={2} placeholder="Grupos expostos"
-                            value={f.grupos_expostos} onChange={e => updateFator(f.tempId, { grupos_expostos: e.target.value })} />
-                        </div>
-                        <Textarea rows={2} placeholder="Evidência coletada (observações do avaliador, trechos de entrevista, resultado de questionário...)"
-                          value={f.evidencia_texto} onChange={e => updateFator(f.tempId, { evidencia_texto: e.target.value })} />
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs">Severidade (1-5)</Label>
-                            <select className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
-                              value={f.severity} onChange={e => updateFator(f.tempId, { severity: parseInt(e.target.value) })}>
-                              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <Label className="text-xs">Probabilidade (1-5)</Label>
-                            <select className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
-                              value={f.probability} onChange={e => updateFator(f.tempId, { probability: parseInt(e.target.value) })}>
-                              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                      <Button size="icon" variant="ghost" onClick={() => removeFator(f.tempId)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                  <div key={key} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-px bg-border flex-1" />
+                      <Badge variant="outline" className="text-[11px]">{blocoTitle(key)}</Badge>
+                      <span className="text-[11px] text-muted-foreground">{list.length} fator(es)</span>
+                      <div className="h-px bg-border flex-1" />
                     </div>
-                  </Card>
+                    {list.map(f => {
+                      const level = classifyRisk(5, f.severity, f.probability);
+                      return (
+                        <Card key={f.tempId} className="p-3 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="outline" className={AEP_CATEGORIA_COLORS[f.categoria]}>
+                                  {AEP_CATEGORIAS[f.categoria]}
+                                </Badge>
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[level]}`}>
+                                  {LEVEL_LABELS[level]}
+                                </span>
+                                {f.source_assessment_type && (
+                                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-[10px]">
+                                    Importado do {f.source_assessment_type === 'hseit' ? 'HSE-IT' : 'COPSOQ II'}
+                                  </Badge>
+                                )}
+                                <select
+                                  className="ml-auto h-7 rounded-md border border-input bg-background px-2 text-[11px]"
+                                  value={f.escopo_ref || GERAL_KEY}
+                                  onChange={e => updateFator(f.tempId, { escopo_ref: e.target.value === GERAL_KEY ? null : e.target.value })}
+                                  title="Bloco (GHE) deste fator"
+                                >
+                                  {escopo.map((e, i) => (
+                                    <option key={e.tempId} value={e.tempId}>Bloco {i + 1} — {escopoLabel(e)}</option>
+                                  ))}
+                                  <option value={GERAL_KEY}>Geral</option>
+                                </select>
+                              </div>
+                              <Input value={f.fator_nome} onChange={e => updateFator(f.tempId, { fator_nome: e.target.value })}
+                                className="font-medium" />
+                              <div className="grid grid-cols-2 gap-2">
+                                <Textarea rows={2} placeholder="Fonte / causa identificada"
+                                  value={f.fonte_causa} onChange={e => updateFator(f.tempId, { fonte_causa: e.target.value })} />
+                                <Textarea rows={2} placeholder="Grupos expostos"
+                                  value={f.grupos_expostos} onChange={e => updateFator(f.tempId, { grupos_expostos: e.target.value })} />
+                              </div>
+                              <Textarea rows={2} placeholder="Evidência coletada (observações do avaliador, trechos de entrevista, resultado de questionário...)"
+                                value={f.evidencia_texto} onChange={e => updateFator(f.tempId, { evidencia_texto: e.target.value })} />
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <Label className="text-xs">Severidade (1-5)</Label>
+                                  <select className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                                    value={f.severity} onChange={e => updateFator(f.tempId, { severity: parseInt(e.target.value) })}>
+                                    {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
+                                  </select>
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Probabilidade (1-5)</Label>
+                                  <select className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                                    value={f.probability} onChange={e => updateFator(f.tempId, { probability: parseInt(e.target.value) })}>
+                                    {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                            <Button size="icon" variant="ghost" onClick={() => removeFator(f.tempId)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
                 );
               })}
             </div>
@@ -508,6 +633,21 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
             <div className="text-sm text-muted-foreground p-3 rounded bg-muted/50 border">
               A NR-17 exige participação dos trabalhadores. Registre quem foi ouvido/consultado. Use anonimato quando aplicável.
             </div>
+
+            <Card className="p-3 bg-primary/5 border-primary/20 space-y-2">
+              <Label className="text-xs">Adicionar participante para o bloco (GHE):</Label>
+              <select
+                className="w-full h-10 rounded-md border border-input bg-background px-2 text-sm"
+                value={currentBlocoPart}
+                onChange={e => setCurrentBlocoPart(e.target.value)}
+              >
+                {escopo.map((e, i) => (
+                  <option key={e.tempId} value={e.tempId}>{i + 1}. {escopoLabel(e)}{e.cbo ? ` · CBO ${e.cbo}` : ''}</option>
+                ))}
+                <option value={GERAL_KEY}>Geral (participou de mais de um GHE)</option>
+              </select>
+            </Card>
+
             <Card className="p-3 space-y-2">
               <div className="grid grid-cols-2 gap-2">
                 <Input placeholder="Nome" value={novoParticipante.nome}
@@ -537,22 +677,46 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
               </Button>
             </Card>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {participantes.length === 0 && (
                 <div className="text-sm text-muted-foreground text-center py-4">Nenhum participante registrado.</div>
               )}
-              {participantes.map(p => (
-                <div key={p.tempId} className="flex items-center justify-between p-2 border rounded">
-                  <div className="text-sm">
-                    <span className="font-medium">{p.anonimizado ? '(Anonimizado)' : p.nome}</span>
-                    {p.funcao && <span className="text-muted-foreground"> — {p.funcao}</span>}
-                    <Badge variant="outline" className="ml-2 text-[10px]">{p.tipo_participacao}</Badge>
+              {[...escopo.map(e => e.tempId), GERAL_KEY].map(key => {
+                const list = participantesPorBloco[key] || [];
+                if (list.length === 0) return null;
+                return (
+                  <div key={key} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-px bg-border flex-1" />
+                      <Badge variant="outline" className="text-[11px]">{blocoTitle(key)}</Badge>
+                      <span className="text-[11px] text-muted-foreground">{list.length}</span>
+                      <div className="h-px bg-border flex-1" />
+                    </div>
+                    {list.map(p => (
+                      <div key={p.tempId} className="flex items-center justify-between p-2 border rounded gap-2">
+                        <div className="text-sm flex-1">
+                          <span className="font-medium">{p.anonimizado ? '(Anonimizado)' : p.nome}</span>
+                          {p.funcao && <span className="text-muted-foreground"> — {p.funcao}</span>}
+                          <Badge variant="outline" className="ml-2 text-[10px]">{p.tipo_participacao}</Badge>
+                        </div>
+                        <select
+                          className="h-8 rounded-md border border-input bg-background px-2 text-[11px]"
+                          value={p.escopo_ref || GERAL_KEY}
+                          onChange={e => updateParticipante(p.tempId, { escopo_ref: e.target.value === GERAL_KEY ? null : e.target.value })}
+                        >
+                          {escopo.map((e, i) => (
+                            <option key={e.tempId} value={e.tempId}>Bloco {i + 1}</option>
+                          ))}
+                          <option value={GERAL_KEY}>Geral</option>
+                        </select>
+                        <Button size="icon" variant="ghost" onClick={() => removeParticipante(p.tempId)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                  <Button size="icon" variant="ghost" onClick={() => removeParticipante(p.tempId)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -585,13 +749,32 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
               </div>
             </label>
 
-            <Card className="p-3 space-y-1 text-sm">
-              <div className="font-semibold">Resumo</div>
-              <div>Escopo: <span className="text-muted-foreground">{escopo.length} item(ns) — {escopoSummarySetor || '—'}</span></div>
-              <div>Total trabalhadores cobertos: <span className="text-muted-foreground">{escopo.reduce((s, i) => s + (i.worker_count || 0), 0)}</span></div>
-              <div>Fatores levantados: <span className="text-muted-foreground">{fatores.length}</span></div>
-              <div>Participantes: <span className="text-muted-foreground">{participantes.length}</span></div>
-              <div>Metodologias: <span className="text-muted-foreground">{methodologies.length}</span></div>
+            <Card className="p-3 space-y-2 text-sm">
+              <div className="font-semibold">Resumo por bloco (GHE)</div>
+              {escopo.map((e, i) => {
+                const fs = fatoresPorBloco[e.tempId]?.length || 0;
+                const ps = participantesPorBloco[e.tempId]?.length || 0;
+                return (
+                  <div key={e.tempId} className="border rounded p-2 space-y-1">
+                    <div className="font-medium">{i + 1}. {escopoLabel(e)} <span className="text-xs text-muted-foreground">· {e.worker_count} trab.</span></div>
+                    <div className="text-xs text-muted-foreground">Fatores: {fs} · Participantes: {ps}</div>
+                    {e.situacao_trabalho && (
+                      <div className="text-xs line-clamp-2 text-muted-foreground">"{e.situacao_trabalho}"</div>
+                    )}
+                  </div>
+                );
+              })}
+              {(fatoresPorBloco[GERAL_KEY]?.length || participantesPorBloco[GERAL_KEY]?.length) ? (
+                <div className="border rounded p-2 bg-muted/30">
+                  <div className="font-medium text-xs">Geral (todos os GHEs)</div>
+                  <div className="text-xs text-muted-foreground">
+                    Fatores: {fatoresPorBloco[GERAL_KEY]?.length || 0} · Participantes: {participantesPorBloco[GERAL_KEY]?.length || 0}
+                  </div>
+                </div>
+              ) : null}
+              <div className="pt-2 border-t text-xs text-muted-foreground">
+                Total: {fatores.length} fator(es) · {participantes.length} participante(s) · {methodologies.length} metodologia(s)
+              </div>
             </Card>
           </div>
         )}
@@ -620,10 +803,12 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
           type={importDialog}
           companyId={companyId}
           onImport={(imported: ImportedFator[]) => {
+            const ref = blocoRefFromCurrent(currentBlocoFat);
             setFatores(prev => [
               ...prev,
               ...imported.map(i => ({
                 tempId: crypto.randomUUID(),
+                escopo_ref: ref,
                 categoria: 'psicossocial' as const,
                 fator_codigo: null,
                 fator_nome: i.fator_nome,
@@ -643,4 +828,3 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
     </Dialog>
   );
 }
-

@@ -504,6 +504,11 @@ const AEPDetail = () => {
             <Button variant="outline" size="sm" onClick={() => setNewVersionOpen(true)} className="gap-1">
               <GitBranch className="h-4 w-4" /> Nova versão
             </Button>
+            {Array.isArray(aep.escopo_json) && aep.escopo_json.length > 1 && (
+              <Button variant="outline" size="sm" onClick={() => setSplitOpen(true)} className="gap-1" title="Cria uma AEP separada para cada bloco (GHE) do escopo">
+                <Split className="h-4 w-4" /> Dividir por GHE
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={exportPDF} className="gap-1">
               <Download className="h-4 w-4" /> Exportar PDF
             </Button>

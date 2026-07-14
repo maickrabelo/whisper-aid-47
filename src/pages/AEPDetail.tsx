@@ -35,6 +35,7 @@ const AEPDetail = () => {
   const [sstLogoUrl, setSstLogoUrl] = useState<string | null>(null);
   const [sendOpen, setSendOpen] = useState(false);
   const [newVersionOpen, setNewVersionOpen] = useState(false);
+  const [splitOpen, setSplitOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   // Edição — Dados

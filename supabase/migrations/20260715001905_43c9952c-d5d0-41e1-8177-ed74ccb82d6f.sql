@@ -1,0 +1,1 @@
+UPDATE public.profiles SET must_change_password = false, password_reset_reason = NULL WHERE id = '5a09bce5-bf6d-4adb-a723-9af476826c94';

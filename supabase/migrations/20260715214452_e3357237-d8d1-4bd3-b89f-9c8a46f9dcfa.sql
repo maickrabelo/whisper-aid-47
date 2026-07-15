@@ -1,0 +1,2 @@
+ALTER TABLE public.copsoq_responses DROP CONSTRAINT copsoq_responses_assessment_id_fkey;
+ALTER TABLE public.copsoq_responses ADD CONSTRAINT copsoq_responses_assessment_id_fkey FOREIGN KEY (assessment_id) REFERENCES public.copsoq_assessments(id) ON DELETE CASCADE;

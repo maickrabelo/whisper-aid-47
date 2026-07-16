@@ -34,7 +34,7 @@ export interface COPSOQReportInput {
 }
 
 const COLORS = {
-  primary: [30, 58, 138] as [number, number, number],       // slate-blue
+  primary: [30, 58, 138] as [number, number, number],
   accent: [59, 130, 246] as [number, number, number],
   text: [30, 41, 59] as [number, number, number],
   muted: [100, 116, 139] as [number, number, number],
@@ -42,10 +42,136 @@ const COLORS = {
   favorable: [34, 197, 94] as [number, number, number],
   intermediate: [234, 179, 8] as [number, number, number],
   risk: [239, 68, 68] as [number, number, number],
+  neutral: [148, 163, 184] as [number, number, number],
 };
 
-const riskColor = (level: 'favorable' | 'intermediate' | 'risk') =>
-  level === 'favorable' ? COLORS.favorable : level === 'intermediate' ? COLORS.intermediate : COLORS.risk;
+type CopsoqRiskLevel = 'favorable' | 'intermediate' | 'risk';
+type CellRisk = CopsoqRiskLevel | 'na';
+
+const riskColor = (level: CellRisk) =>
+  level === 'favorable' ? COLORS.favorable
+  : level === 'intermediate' ? COLORS.intermediate
+  : level === 'risk' ? COLORS.risk
+  : COLORS.neutral;
+
+// Recomendações por dimensão (23) — 3 níveis de intervenção
+const RECOMMENDATIONS: Record<COPSOQCategory, Record<CopsoqRiskLevel, string>> = {
+  quantitativeDemands: {
+    risk: 'Redistribuir carga, revisar prazos, dimensionar equipe adequadamente e monitorar horas extras.',
+    intermediate: 'Monitorar volume de trabalho e ajustar cronogramas quando necessário.',
+    favorable: 'Manter equilíbrio atual de demandas quantitativas.',
+  },
+  workPace: {
+    risk: 'Reduzir picos de trabalho, planejar folgas entre ciclos intensos e revisar metas de produção.',
+    intermediate: 'Acompanhar picos de ritmo e implementar pausas programadas.',
+    favorable: 'Manter ritmo de trabalho sustentável.',
+  },
+  cognitiveDemands: {
+    risk: 'Oferecer capacitação, simplificar processos decisórios e apoiar tarefas complexas.',
+    intermediate: 'Revisar processos que exigem alta concentração e oferecer suporte técnico.',
+    favorable: 'Manter estímulo cognitivo saudável.',
+  },
+  emotionalDemands: {
+    risk: 'Implementar apoio psicológico, rotação em atividades emocionalmente intensas e supervisão clínica.',
+    intermediate: 'Oferecer canais de apoio emocional e treinamento em manejo emocional.',
+    favorable: 'Manter cuidados atuais com carga emocional.',
+  },
+  influence: {
+    risk: 'Ampliar autonomia decisória, envolver equipe em decisões e delegar responsabilidades.',
+    intermediate: 'Avaliar oportunidades de maior participação em decisões operacionais.',
+    favorable: 'Manter práticas de autonomia e influência.',
+  },
+  developmentPossibilities: {
+    risk: 'Criar plano de carreira, oferecer treinamentos e aproveitar as competências dos colaboradores.',
+    intermediate: 'Ampliar oportunidades de aprendizado e uso de habilidades.',
+    favorable: 'Manter cultura de desenvolvimento profissional.',
+  },
+  meaningOfWork: {
+    risk: 'Comunicar propósito da organização, alinhar valores e demonstrar impacto do trabalho.',
+    intermediate: 'Reforçar comunicação sobre a importância das atividades realizadas.',
+    favorable: 'Manter cultura de significado no trabalho.',
+  },
+  commitment: {
+    risk: 'Fortalecer identidade organizacional, ouvir colaboradores e agir em problemas do local de trabalho.',
+    intermediate: 'Estimular pertencimento e participação em iniciativas internas.',
+    favorable: 'Manter engajamento atual.',
+  },
+  predictability: {
+    risk: 'Comunicar mudanças com antecedência, criar canais formais de informação e planejamento transparente.',
+    intermediate: 'Melhorar comunicação sobre decisões e mudanças futuras.',
+    favorable: 'Manter transparência atual.',
+  },
+  roleClarity: {
+    risk: 'Revisar descrições de cargo, esclarecer responsabilidades e definir objetivos por colaborador.',
+    intermediate: 'Reforçar clareza de papéis em reuniões periódicas.',
+    favorable: 'Manter clareza atual de papéis.',
+  },
+  roleConflicts: {
+    risk: 'Alinhar prioridades entre gestores, eliminar exigências contraditórias e padronizar processos.',
+    intermediate: 'Monitorar conflitos de demandas e alinhar expectativas.',
+    favorable: 'Manter alinhamento atual.',
+  },
+  leadershipQuality: {
+    risk: 'Treinar lideranças, implementar feedback estruturado e avaliações 360°.',
+    intermediate: 'Desenvolver competências de liderança em nível intermediário.',
+    favorable: 'Manter práticas de liderança.',
+  },
+  socialSupport: {
+    risk: 'Instituir reuniões 1:1 regulares, capacitar chefias em escuta ativa e apoio à equipe.',
+    intermediate: 'Fortalecer disponibilidade e comunicação gestor-equipe.',
+    favorable: 'Manter apoio da liderança.',
+  },
+  socialCommunity: {
+    risk: 'Promover integração da equipe, atividades colaborativas e mediar conflitos entre pares.',
+    intermediate: 'Incentivar cooperação e ambiente colaborativo.',
+    favorable: 'Manter cultura de cooperação.',
+  },
+  jobInsecurity: {
+    risk: 'Comunicar estabilidade, planos de contingência e transparência sobre o futuro da organização.',
+    intermediate: 'Reforçar comunicação sobre estabilidade e perspectivas.',
+    favorable: 'Manter percepção de segurança.',
+  },
+  jobSatisfaction: {
+    risk: 'Investigar causas de insatisfação, revisar remuneração, benefícios e condições gerais.',
+    intermediate: 'Levantar aspectos de melhoria na experiência do trabalho.',
+    favorable: 'Manter fatores que geram satisfação.',
+  },
+  workFamilyConflict: {
+    risk: 'Revisar jornada, implementar flexibilidade, políticas de desconexão e apoio à família.',
+    intermediate: 'Monitorar equilíbrio trabalho-vida e ajustar demandas fora do horário.',
+    favorable: 'Manter equilíbrio atual.',
+  },
+  burnout: {
+    risk: 'Ação imediata: apoio psicológico, redução de carga, licenças e monitoramento clínico.',
+    intermediate: 'Programa de bem-estar, pausas estruturadas e sinais de alerta acompanhados.',
+    favorable: 'Manter cuidados preventivos de saúde mental.',
+  },
+  stress: {
+    risk: 'Intervenção clínica e organizacional: reduzir gatilhos, treinar manejo de estresse, apoio profissional.',
+    intermediate: 'Oferecer recursos de manejo de estresse e monitorar sintomas.',
+    favorable: 'Manter fatores de proteção ao estresse.',
+  },
+  selfRatedHealth: {
+    risk: 'Programas de saúde ocupacional, exames periódicos e acompanhamento clínico intensivo.',
+    intermediate: 'Reforçar campanhas de saúde e prevenção.',
+    favorable: 'Manter iniciativas de saúde no trabalho.',
+  },
+  trust: {
+    risk: 'Reconstruir confiança com comunicação transparente, coerência entre discurso e prática, escuta ativa.',
+    intermediate: 'Aumentar transparência e consistência das decisões da gestão.',
+    favorable: 'Manter cultura de confiança.',
+  },
+  justice: {
+    risk: 'Revisar processos de distribuição de tarefas e resolução de conflitos com critérios claros.',
+    intermediate: 'Reforçar critérios objetivos e transparência em decisões.',
+    favorable: 'Manter cultura de justiça organizacional.',
+  },
+  offensiveBehaviors: {
+    risk: 'Ação urgente: canal de denúncia ativo, política antiassédio, investigação e responsabilização.',
+    intermediate: 'Reforçar política antiassédio, capacitação e canais de denúncia.',
+    favorable: 'Manter ambiente respeitoso.',
+  },
+};
 
 export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<void> {
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -60,6 +186,15 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     pdf.setTextColor(color[0], color[1], color[2]);
   };
 
+  const drawPageHeader = () => {
+    setText(9, false, COLORS.muted);
+    pdf.text(`Relatório COPSOQ II — ${input.companyName}`, margin, 10);
+    pdf.setDrawColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
+    pdf.setLineWidth(0.3);
+    pdf.line(margin, 12, pw - margin, 12);
+    y = 20;
+  };
+
   const newPage = () => {
     pdf.addPage();
     y = margin;
@@ -68,15 +203,6 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
 
   const ensure = (needed: number) => {
     if (y + needed > ph - 20) newPage();
-  };
-
-  const drawPageHeader = () => {
-    setText(9, false, COLORS.muted);
-    pdf.text(`Relatório COPSOQ II — ${input.companyName}`, margin, 10);
-    pdf.setDrawColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
-    pdf.setLineWidth(0.3);
-    pdf.line(margin, 12, pw - margin, 12);
-    y = 20;
   };
 
   const drawSectionTitle = (title: string) => {
@@ -90,6 +216,13 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     y += 8;
   };
 
+  const drawSubTitle = (title: string) => {
+    ensure(10);
+    setText(11, true, COLORS.text);
+    pdf.text(title, margin, y);
+    y += 6;
+  };
+
   const drawParagraph = (text: string, size = 10) => {
     setText(size, false, COLORS.text);
     const lines = pdf.splitTextToSize(text, pw - 2 * margin);
@@ -101,7 +234,9 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     y += 2;
   };
 
-  // ═══ COVER PAGE ═══
+  // ══════════════════════════════════════════
+  // COVER
+  // ══════════════════════════════════════════
   pdf.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
   pdf.rect(0, 0, pw, 55, 'F');
   await renderReportLogos(pdf, pw, {
@@ -114,39 +249,30 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
 
   y = 80;
   setText(22, true, COLORS.primary);
-  const title = 'Relatório de Avaliação';
-  pdf.text(title, pw / 2, y, { align: 'center' });
+  pdf.text('Relatório de Avaliação', pw / 2, y, { align: 'center' });
   y += 10;
   setText(18, true, COLORS.accent);
   pdf.text('Riscos Psicossociais — COPSOQ II', pw / 2, y, { align: 'center' });
   y += 20;
-
   setText(11, false, COLORS.muted);
   pdf.text('Copenhagen Psychosocial Questionnaire (versão curta)', pw / 2, y, { align: 'center' });
   y += 30;
 
   // Company card
   pdf.setFillColor(COLORS.bg[0], COLORS.bg[1], COLORS.bg[2]);
-  pdf.roundedRect(margin, y, pw - 2 * margin, 55, 3, 3, 'F');
+  pdf.roundedRect(margin, y, pw - 2 * margin, 60, 3, 3, 'F');
   const cardX = margin + 8;
   let cardY = y + 12;
-  setText(10, true, COLORS.muted);
-  pdf.text('EMPRESA', cardX, cardY);
-  cardY += 6;
-  setText(14, true, COLORS.text);
-  pdf.text(input.companyName, cardX, cardY);
-  cardY += 10;
-  setText(10, true, COLORS.muted);
-  pdf.text('AVALIAÇÃO', cardX, cardY);
-  cardY += 5;
-  setText(11, false, COLORS.text);
-  pdf.text(input.assessment.title, cardX, cardY);
-  cardY += 8;
-  setText(10, true, COLORS.muted);
-  pdf.text('SETOR', cardX, cardY);
-  cardY += 5;
-  setText(11, false, COLORS.text);
-  pdf.text(input.selectedDepartment === 'all' ? 'Todos os setores' : input.selectedDepartment, cardX, cardY);
+  setText(10, true, COLORS.muted); pdf.text('EMPRESA', cardX, cardY);
+  cardY += 6; setText(14, true, COLORS.text); pdf.text(input.companyName, cardX, cardY);
+  cardY += 10; setText(10, true, COLORS.muted); pdf.text('AVALIAÇÃO', cardX, cardY);
+  cardY += 5; setText(11, false, COLORS.text); pdf.text(input.assessment.title, cardX, cardY);
+  cardY += 8; setText(10, true, COLORS.muted); pdf.text('ESCOPO DO RELATÓRIO', cardX, cardY);
+  cardY += 5; setText(11, false, COLORS.text);
+  const scopeLabel = input.selectedDepartment === 'all'
+    ? `Consolidado — ${input.departments.length || 1} setor(es)`
+    : `Setor: ${input.selectedDepartment}`;
+  pdf.text(scopeLabel, cardX, cardY);
 
   y = ph - 25;
   setText(9, false, COLORS.muted);
@@ -155,10 +281,9 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     pdf.text(`Elaborado por ${input.sstName}`, pw / 2, y + 5, { align: 'center' });
   }
 
-  // ═══ CONTENT PAGES ═══
-  newPage();
-
-  // Filter responses
+  // ══════════════════════════════════════════
+  // Data
+  // ══════════════════════════════════════════
   const filtered = input.selectedDepartment === 'all'
     ? input.responses
     : input.responses.filter(r => r.departments.includes(input.selectedDepartment));
@@ -166,28 +291,37 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   const overallAverage = calculateOverallAverage(allAnswers);
   const overallRisk = getRiskLevel(overallAverage);
 
-  // Category averages
-  const catAverages: Record<string, number> = {};
-  ALL_CATEGORIES.forEach(cat => { catAverages[cat] = calculateCategoryAverage(allAnswers, cat); });
+  // Per-category averages (with hasData flag)
+  const catData: Record<string, { avg: number; hasData: boolean; level: CellRisk }> = {};
+  ALL_CATEGORIES.forEach(cat => {
+    const catQuestions = COPSOQ_QUESTIONS.filter(q => q.category === cat).map(q => q.number);
+    const catAnswers = allAnswers.filter(a => catQuestions.includes(a.questionNumber));
+    const avg = calculateCategoryAverage(allAnswers, cat);
+    const hasData = catAnswers.length > 0;
+    catData[cat] = { avg, hasData, level: hasData ? getRiskLevel(avg) : 'na' };
+  });
 
-  const criticalCount = Object.values(catAverages).filter(v => getRiskLevel(v) === 'risk').length;
-  const intermediateCount = Object.values(catAverages).filter(v => getRiskLevel(v) === 'intermediate').length;
-  const favorableCount = Object.values(catAverages).filter(v => getRiskLevel(v) === 'favorable').length;
+  const criticalCount = ALL_CATEGORIES.filter(c => catData[c].level === 'risk').length;
+  const intermediateCount = ALL_CATEGORIES.filter(c => catData[c].level === 'intermediate').length;
+  const favorableCount = ALL_CATEGORIES.filter(c => catData[c].level === 'favorable').length;
 
-  // ── 1. Resumo Executivo ──
+  // ══════════════════════════════════════════
+  // PAGE 2 — Executive Summary
+  // ══════════════════════════════════════════
+  newPage();
   drawSectionTitle('1. Resumo Executivo');
   drawParagraph(
     `Este relatório apresenta os resultados da avaliação de riscos psicossociais aplicada aos colaboradores da ${input.companyName} utilizando o instrumento COPSOQ II (Copenhagen Psychosocial Questionnaire), validado internacionalmente para identificação e mensuração de fatores psicossociais no ambiente de trabalho.`
   );
   drawParagraph(
-    `A avaliação contou com ${filtered.length} respostas válidas, com pontuação média geral de ${overallAverage.toFixed(2)} (escala 1-5), classificada como "${RISK_LEVEL_LABELS[overallRisk]}". Das 23 dimensões avaliadas, ${criticalCount} foram classificadas em risco, ${intermediateCount} em nível intermediário e ${favorableCount} como favoráveis.`
+    `A avaliação contou com ${filtered.length} respostas válidas, distribuídas em ${input.departments.length || 1} setor(es). A pontuação média geral foi de ${overallAverage.toFixed(2)} em escala normalizada de 1 a 5, classificada como "${RISK_LEVEL_LABELS[overallRisk]}". Das 23 dimensões avaliadas, ${criticalCount} estão em Risco, ${intermediateCount} em nível Intermediário e ${favorableCount} em condição Favorável.`
   );
 
   // KPI cards
   ensure(30);
   const kpiW = (pw - 2 * margin - 12) / 4;
   const kpiY = y;
-  const kpis = [
+  const kpis: Array<{ label: string; value: string; color: [number, number, number] }> = [
     { label: 'Respostas', value: String(filtered.length), color: COLORS.accent },
     { label: 'Média Geral', value: overallAverage.toFixed(2), color: COLORS.primary },
     { label: 'Classificação', value: RISK_LEVEL_LABELS[overallRisk], color: riskColor(overallRisk) },
@@ -206,21 +340,36 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   });
   y = kpiY + 28;
 
-  // ── 2. Dimensões por Grupo ──
-  drawSectionTitle('2. Resultados por Dimensão');
+  // ══════════════════════════════════════════
+  // 2 — Methodology
+  // ══════════════════════════════════════════
+  drawSectionTitle('2. Metodologia');
+  drawParagraph(
+    'O COPSOQ II (Copenhagen Psychosocial Questionnaire) é um instrumento internacionalmente validado, desenvolvido pelo National Research Centre for the Working Environment (Dinamarca). A versão curta utilizada compreende 41 questões distribuídas em 23 dimensões psicossociais, agrupadas em seis domínios principais.'
+  );
+  drawParagraph(
+    'A pontuação varia de 1 a 5 em escala Likert. Para dimensões que representam riscos (ex.: exigências quantitativas, conflitos, burnout, estresse), a pontuação é invertida — de forma que valores mais altos após normalização sempre representam condições mais favoráveis, e valores mais baixos indicam maior risco psicossocial.'
+  );
+  drawSubTitle('Classificação de Risco:');
+  drawParagraph('• Favorável (≥ 3,67): condição adequada — manter práticas atuais.');
+  drawParagraph('• Intermediário (2,33 – 3,66): atenção necessária — planejar melhorias.');
+  drawParagraph('• Risco (< 2,33): intervenção prioritária.');
+
+  // ══════════════════════════════════════════
+  // 3 — Results by Dimension (all 23, grouped)
+  // ══════════════════════════════════════════
+  drawSectionTitle('3. Resultados por Dimensão');
 
   Object.entries(CATEGORY_GROUPS).forEach(([groupName, cats]) => {
-    ensure(12);
+    ensure(14);
     setText(11, true, COLORS.primary);
     pdf.text(groupName, margin, y);
     y += 5;
 
     (cats as COPSOQCategory[]).forEach(cat => {
-      const avg = catAverages[cat] || 0;
-      const level = getRiskLevel(avg);
-      const rc = riskColor(level);
+      const d = catData[cat];
+      const rc = riskColor(d.level);
       ensure(9);
-      // background bar
       pdf.setFillColor(248, 250, 252);
       pdf.roundedRect(margin, y - 4, pw - 2 * margin, 8, 1.5, 1.5, 'F');
       pdf.setFillColor(rc[0], rc[1], rc[2]);
@@ -228,51 +377,213 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       setText(9.5, false, COLORS.text);
       pdf.text(COPSOQ_CATEGORY_LABELS[cat], margin + 4, y + 1);
       setText(9, true, rc);
-      pdf.text(`${avg.toFixed(2)} — ${RISK_LEVEL_LABELS[level]}`, pw - margin - 2, y + 1, { align: 'right' });
+      const label = d.hasData
+        ? `${d.avg.toFixed(2)} — ${RISK_LEVEL_LABELS[d.level as CopsoqRiskLevel]}`
+        : 'Sem dados';
+      pdf.text(label, pw - margin - 2, y + 1, { align: 'right' });
       y += 9;
     });
     y += 3;
   });
 
-  // ── 3. Top 10 Questões Críticas ──
+  // ══════════════════════════════════════════
+  // 4 — Results by Sector (per department)
+  // ══════════════════════════════════════════
+  if (input.departments.length > 0 && input.selectedDepartment === 'all') {
+    newPage();
+    drawSectionTitle('4. Resultados por Setor');
+    drawParagraph(
+      'Detalhamento das 23 dimensões avaliadas em cada setor. Colaboradores que atuam em mais de um setor (avaliação multisetorial) são contabilizados em cada setor selecionado.'
+    );
+
+    input.departments.forEach(dept => {
+      const deptResponses = input.responses.filter(r => r.departments.includes(dept));
+      const deptAnswers = deptResponses.flatMap(r => r.answers);
+
+      ensure(20);
+      // Sector header block
+      pdf.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+      pdf.roundedRect(margin, y, pw - 2 * margin, 10, 1.5, 1.5, 'F');
+      setText(11, true, [255, 255, 255]);
+      pdf.text(dept, margin + 4, y + 6.5);
+      setText(9, false, [255, 255, 255]);
+      pdf.text(`${deptResponses.length} respondente(s)`, pw - margin - 3, y + 6.5, { align: 'right' });
+      y += 13;
+
+      // Sector-level per-category
+      const rows: Array<{ cat: COPSOQCategory; avg: number; level: CellRisk; hasData: boolean }> = ALL_CATEGORIES.map(cat => {
+        const catQs = COPSOQ_QUESTIONS.filter(q => q.category === cat).map(q => q.number);
+        const catAns = deptAnswers.filter(a => catQs.includes(a.questionNumber));
+        const avg = calculateCategoryAverage(deptAnswers, cat);
+        const hasData = catAns.length > 0;
+        return { cat, avg, hasData, level: hasData ? getRiskLevel(avg) : 'na' };
+      });
+
+      // Sector overall
+      const sectorOverall = calculateOverallAverage(deptAnswers);
+      const sectorLevel: CellRisk = deptAnswers.length > 0 ? getRiskLevel(sectorOverall) : 'na';
+      const sectorRc = riskColor(sectorLevel);
+      const sCritical = rows.filter(r => r.level === 'risk').length;
+      const sInter = rows.filter(r => r.level === 'intermediate').length;
+      const sFav = rows.filter(r => r.level === 'favorable').length;
+
+      ensure(14);
+      pdf.setFillColor(COLORS.bg[0], COLORS.bg[1], COLORS.bg[2]);
+      pdf.roundedRect(margin, y, pw - 2 * margin, 11, 1.5, 1.5, 'F');
+      setText(9, true, COLORS.muted);
+      pdf.text('MÉDIA GERAL DO SETOR', margin + 4, y + 5);
+      setText(11, true, sectorRc);
+      pdf.text(
+        deptAnswers.length > 0
+          ? `${sectorOverall.toFixed(2)} — ${RISK_LEVEL_LABELS[sectorLevel as CopsoqRiskLevel]}`
+          : 'Sem dados',
+        margin + 4, y + 9.5,
+      );
+      setText(9, false, COLORS.text);
+      pdf.text(
+        `Risco: ${sCritical}   Intermediário: ${sInter}   Favorável: ${sFav}`,
+        pw - margin - 3, y + 7.5, { align: 'right' },
+      );
+      y += 14;
+
+      // Per-category dot list (2 columns to save space)
+      const colGap = 4;
+      const colW = (pw - 2 * margin - colGap) / 2;
+      const half = Math.ceil(rows.length / 2);
+      const leftCol = rows.slice(0, half);
+      const rightCol = rows.slice(half);
+      const rowH = 5.5;
+      const blockH = leftCol.length * rowH;
+      ensure(blockH + 4);
+      const startY = y;
+
+      const drawRow = (r: typeof rows[number], x: number, yy: number) => {
+        const rc = riskColor(r.level);
+        pdf.setFillColor(rc[0], rc[1], rc[2]);
+        pdf.circle(x + 1.5, yy - 1.4, 1.4, 'F');
+        setText(8.5, false, COLORS.text);
+        const label = COPSOQ_CATEGORY_LABELS[r.cat];
+        const val = r.hasData
+          ? `${r.avg.toFixed(2)} · ${RISK_LEVEL_LABELS[r.level as CopsoqRiskLevel]}`
+          : 'sem dados';
+        const maxLabelW = colW - 6 - pdf.getTextWidth(val) - 2;
+        const clipped = pdf.splitTextToSize(label, Math.max(20, maxLabelW))[0];
+        pdf.text(clipped, x + 5, yy);
+        setText(8.5, true, rc);
+        pdf.text(val, x + colW - 1, yy, { align: 'right' });
+      };
+
+      leftCol.forEach((r, i) => drawRow(r, margin, startY + i * rowH));
+      rightCol.forEach((r, i) => drawRow(r, margin + colW + colGap, startY + i * rowH));
+      y = startY + blockH + 4;
+    });
+  }
+
+  // ══════════════════════════════════════════
+  // 5 — Top Critical Questions
+  // ══════════════════════════════════════════
+  newPage();
   const questionAverages = COPSOQ_QUESTIONS.map(q => {
-    const values = allAnswers.filter(a => a.questionNumber === q.number).map(a => normalizeScore(a.value, q.isInverted));
-    const avg = values.length > 0 ? values.reduce((s, v) => s + v, 0) / values.length : 0;
-    return { number: q.number, text: q.text, category: COPSOQ_CATEGORY_LABELS[q.category], average: avg, level: getRiskLevel(avg) };
-  }).sort((a, b) => a.average - b.average).slice(0, 10);
+    const values = allAnswers.filter(a => a.questionNumber === q.number)
+      .map(a => normalizeScore(a.value, q.isInverted));
+    const avg = values.length > 0 ? values.reduce((s, v) => s + v, 0) / values.length : NaN;
+    return {
+      number: q.number,
+      text: q.text,
+      category: COPSOQ_CATEGORY_LABELS[q.category],
+      average: avg,
+      level: !isNaN(avg) ? getRiskLevel(avg) : null,
+      responseCount: values.length,
+    };
+  })
+    .filter(q => !isNaN(q.average))
+    .sort((a, b) => a.average - b.average)
+    .slice(0, 15);
 
-  drawSectionTitle('3. Questões Mais Críticas');
-  drawParagraph('As 10 questões com menor pontuação normalizada (1-5) — valores mais baixos indicam maior necessidade de intervenção.');
+  drawSectionTitle('5. Questões Mais Críticas');
+  drawParagraph(
+    'As 15 questões com menor pontuação normalizada (1-5). Valores mais baixos indicam maior necessidade de intervenção. Cada questão exibe também o número de respondentes considerados.'
+  );
 
-  questionAverages.forEach((q, i) => {
-    ensure(14);
-    const rc = riskColor(q.level);
+  questionAverages.forEach(q => {
+    ensure(16);
+    const rc = riskColor(q.level as CopsoqRiskLevel);
     pdf.setFillColor(250, 250, 252);
-    pdf.roundedRect(margin, y - 3, pw - 2 * margin, 13, 1.5, 1.5, 'F');
+    pdf.roundedRect(margin, y - 3, pw - 2 * margin, 15, 1.5, 1.5, 'F');
     pdf.setFillColor(rc[0], rc[1], rc[2]);
-    pdf.rect(margin, y - 3, 1.5, 13, 'F');
+    pdf.rect(margin, y - 3, 1.5, 15, 'F');
     setText(8.5, true, COLORS.muted);
     pdf.text(`#${q.number}`, margin + 4, y + 1);
     setText(8.5, true, rc);
-    pdf.text(`${q.average.toFixed(2)} · ${RISK_LEVEL_LABELS[q.level]}`, pw - margin - 2, y + 1, { align: 'right' });
+    pdf.text(
+      `${q.average.toFixed(2)} · ${RISK_LEVEL_LABELS[q.level as CopsoqRiskLevel]}`,
+      pw - margin - 2, y + 1, { align: 'right' },
+    );
     setText(9, false, COLORS.text);
     const lines = pdf.splitTextToSize(q.text, pw - 2 * margin - 8);
     pdf.text(lines[0] || '', margin + 4, y + 6);
+    if (lines[1]) pdf.text(lines[1], margin + 4, y + 9.5);
     setText(7.5, false, COLORS.muted);
-    pdf.text(q.category, margin + 4, y + 9.5);
-    y += 15;
+    pdf.text(`${q.category} · ${q.responseCount} resposta(s)`, margin + 4, y + (lines[1] ? 12.5 : 10));
+    y += 17;
   });
 
-  // ── 4. Metodologia ──
-  drawSectionTitle('4. Metodologia');
-  drawParagraph(
-    'O COPSOQ II (Copenhagen Psychosocial Questionnaire) é um instrumento internacionalmente validado, desenvolvido pelo National Research Centre for the Working Environment (Dinamarca). A versão curta utilizada compreende 41 questões distribuídas em 23 dimensões psicossociais, agrupadas em cinco domínios principais.'
-  );
-  drawParagraph(
-    'A pontuação varia de 1 a 5 em escala Likert. Para dimensões que representam riscos (ex.: exigências, conflitos), a pontuação é invertida — de forma que valores mais altos após normalização sempre representam condições mais favoráveis. Classificação: 1,00–2,66 (Risco); 2,67–3,66 (Intermediário); 3,67–5,00 (Favorável).'
-  );
+  // ══════════════════════════════════════════
+  // 6 — Action Plan
+  // ══════════════════════════════════════════
+  newPage();
+  drawSectionTitle('6. Plano de Ação Recomendado');
 
+  const criticalCats = ALL_CATEGORIES.filter(c => catData[c].level === 'risk');
+  const intermediateCats = ALL_CATEGORIES.filter(c => catData[c].level === 'intermediate');
+
+  if (criticalCats.length > 0) {
+    drawSubTitle('Ações Imediatas — Dimensões em Risco');
+    criticalCats.forEach((cat, i) => {
+      ensure(14);
+      setText(10, true, COLORS.risk);
+      pdf.text(`${i + 1}. ${COPSOQ_CATEGORY_LABELS[cat]}`, margin, y);
+      y += 5;
+      const rec = RECOMMENDATIONS[cat].risk;
+      setText(9.5, false, COLORS.text);
+      const lines = pdf.splitTextToSize(rec, pw - 2 * margin - 5);
+      lines.forEach((line: string) => { ensure(5); pdf.text(line, margin + 5, y); y += 4.5; });
+      y += 2;
+    });
+    y += 3;
+  }
+
+  if (intermediateCats.length > 0) {
+    drawSubTitle('Ações de Médio Prazo — Dimensões em Atenção');
+    intermediateCats.forEach((cat, i) => {
+      ensure(14);
+      setText(10, true, COLORS.intermediate);
+      pdf.text(`${i + 1}. ${COPSOQ_CATEGORY_LABELS[cat]}`, margin, y);
+      y += 5;
+      const rec = RECOMMENDATIONS[cat].intermediate;
+      setText(9.5, false, COLORS.text);
+      const lines = pdf.splitTextToSize(rec, pw - 2 * margin - 5);
+      lines.forEach((line: string) => { ensure(5); pdf.text(line, margin + 5, y); y += 4.5; });
+      y += 2;
+    });
+    y += 3;
+  }
+
+  if (criticalCats.length === 0 && intermediateCats.length === 0) {
+    drawParagraph('Todas as dimensões avaliadas encontram-se em condição favorável. Recomenda-se manter as práticas atuais e reaplicar a avaliação em 6-12 meses para monitoramento.');
+  }
+
+  ensure(10);
+  drawSubTitle('Cronograma Sugerido');
+  drawParagraph('• Semanas 1-2: comunicar resultados à liderança e equipes.');
+  drawParagraph('• Semanas 3-4: elaborar planos de ação específicos para as dimensões críticas.');
+  drawParagraph('• Meses 2-3: implementar primeiras intervenções e apoio profissional quando indicado.');
+  drawParagraph('• Meses 4-6: monitorar indicadores, ajustar ações e coletar feedback.');
+  drawParagraph('• Mês 6: reaplicar avaliação para medir progresso.');
+
+  // ══════════════════════════════════════════
   // Footer with page numbers
+  // ══════════════════════════════════════════
   const totalPages = (pdf as any).internal.getNumberOfPages();
   for (let p = 2; p <= totalPages; p++) {
     pdf.setPage(p);

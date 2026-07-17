@@ -113,6 +113,12 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
         validity_end: form.validity_end || null,
         rural_area_hectares:
           parsedHectares === null || Number.isNaN(parsedHectares) ? null : parsedHectares,
+        conclusion_intro: form.conclusion_intro.trim() || null,
+        engineering_measures: form.engineering_measures.trim() || null,
+        administrative_controls: form.administrative_controls.trim() || null,
+        trainings: form.trainings.trim() || null,
+        monitoring_text: form.monitoring_text.trim() || null,
+        epi_text: form.epi_text.trim() || null,
       };
       const { error } = await supabase
         .from("pgr_documents")

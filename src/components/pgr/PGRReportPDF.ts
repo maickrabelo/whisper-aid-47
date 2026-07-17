@@ -888,9 +888,9 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   doc.setDrawColor(80, 80, 80);
   doc.setLineWidth(0.4);
   doc.line(MARGIN + 20, state.y, MARGIN + 110, state.y);
-  setText(9.5, false, COLORS.text);
+  setText(TYPE.body, false, COLORS.text);
   doc.text(placeholder(input.pgr.responsible_name), MARGIN + 65, state.y + 5, { align: 'center' });
-  setText(8.5, false, COLORS.muted);
+  setText(TYPE.caption, false, COLORS.muted);
   doc.text(
     `CPF: ${placeholder(input.pgr.responsible_cpf)}  •  Registro: ${placeholder(input.pgr.responsible_registration)}`,
     MARGIN + 65, state.y + 10, { align: 'center' }

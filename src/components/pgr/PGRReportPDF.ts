@@ -209,7 +209,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const sectionTitle = (text: string) => {
     ensure(14);
     state.y += 4;
-    setText(TYPE.section, false, COLORS.primary);
+    setText(TYPE.section, true, COLORS.primary);
     doc.text(text, MARGIN, state.y);
     const w = textWidth(text);
     doc.setDrawColor(...COLORS.primary);
@@ -221,9 +221,9 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const subTitle = (text: string) => {
     ensure(10);
     state.y += 2;
-    setText(TYPE.subtitle, false, COLORS.text);
+    setText(TYPE.subtitle, true, COLORS.text);
     doc.text(text, MARGIN, state.y);
-    state.y += 5.5;
+    state.y += 6.5;
   };
 
   const paragraph = (text: string, opts: { size?: number; gap?: number; align?: 'left' | 'justify'; width?: number; x?: number } = {}) => {
@@ -259,15 +259,15 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   };
 
   const bullets = (items: string[]) => {
-    setText(TYPE.bullet, false, COLORS.text);
+    setText(TYPE.body, false, COLORS.text);
     for (const item of items) {
       const lines = doc.splitTextToSize(item, CONTENT_W - 5);
-      ensure(lines.length * 4.5 + 1);
+      ensure(lines.length * 4.8 + 1);
       doc.setFillColor(...COLORS.accent);
       doc.circle(MARGIN + 1.2, state.y - 1.2, 0.7, 'F');
-      setText(TYPE.bullet, false, COLORS.text);
+      setText(TYPE.body, false, COLORS.text);
       doc.text(lines, MARGIN + 4, state.y);
-      state.y += lines.length * 4.3 + 1;
+      state.y += lines.length * 4.6 + 1;
     }
     state.y += 2;
   };

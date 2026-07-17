@@ -70,7 +70,31 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
     has_lodging: pgr.has_lodging ?? false,
     lodging_description: pgr.lodging_description || "",
     worker_transport: pgr.worker_transport || "",
+    conclusion_intro: pgr.conclusion_intro ?? "",
+    engineering_measures: pgr.engineering_measures ?? "",
+    administrative_controls: pgr.administrative_controls ?? "",
+    trainings: pgr.trainings ?? "",
+    monitoring_text: pgr.monitoring_text ?? "",
+    epi_text: pgr.epi_text ?? "",
   });
+
+  const DEFAULT_INTRO = 'Os propósitos da avaliação de exposição a agentes de risco ocupacionais foram cumpridos: determinaram-se os riscos a que os trabalhadores estão expostos, diferenciaram-se exposições aceitáveis das inaceitáveis e foram propostas medidas de controle. A organização deve prosseguir com seus programas de controle, introduzindo melhorias contínuas.';
+  const DEFAULT_ENG = [
+    'Realizar estudos de engenharia para tratamento acústico em equipamentos ruidosos das áreas produtivas e de utilidades.',
+    'Avaliar a necessidade de sistemas de exaustão localizada em postos com emissão de agentes químicos.',
+    'Implementar proteções coletivas contra quedas em altura, quando aplicável.',
+  ].join('\n');
+  const DEFAULT_ADM = [
+    'Reavaliar anualmente o PGR conforme exigência legal (NR-01).',
+    'Solicitar dos fornecedores as FDS (Fichas de Dados de Segurança) das matérias-primas e divulgá-las aos empregados.',
+    'Minimizar o tempo de execução em atividades de alto potencial de risco e manter distância segura de fontes emissoras.',
+  ].join('\n');
+  const DEFAULT_TR = [
+    'Saúde / Higiene Ocupacional: PGR, resultados das avaliações quantitativas, aspectos toxicológicos, primeiros socorros.',
+    'Segurança Industrial: utilização de EPIs, FDS e melhores práticas de trabalho.',
+  ].join('\n');
+  const DEFAULT_MON = `${companyName || '(EMPRESA)'} deverá continuar com a estratégia de avaliação quantitativa para os agentes priorizados, conforme o Programa de Monitoramento Ambiental.`;
+  const DEFAULT_EPI = 'Quando os procedimentos de trabalho e os controles coletivos não forem suficientes para reduzir a exposição a níveis aceitáveis, deve-se adotar o EPI como último recurso, garantindo treinamento, fornecimento, troca e fiscalização do uso.';
 
   const save = async () => {
     setSaving(true);

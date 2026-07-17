@@ -106,13 +106,11 @@ const COLORS = {
 
 const FONT = 'helvetica';
 const TYPE = {
-  body: 9.5,
-  bodySmall: 8.5,
-  bullet: 9.2,
-  table: 8.1,
-  caption: 7.5,
-  subtitle: 10.5,
-  section: 13,
+  body: 10,       // único tamanho de corpo (parágrafos, bullets, metadados, listas)
+  table: 8.1,     // exclusivo de tabelas
+  caption: 8,     // rodapé, cabeçalho de página, legenda da matriz
+  subtitle: 11,   // todos os subtítulos — sempre negrito
+  section: 13,    // todos os títulos de seção — sempre negrito + azul
 };
 
 const todayBR = () => new Date().toLocaleDateString('pt-BR');
@@ -178,9 +176,9 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     if (state.skipChrome) return;
     doc.setFillColor(...COLORS.headerBg);
     doc.rect(0, 0, PAGE_W, MARGIN + 6, 'F');
-    setText(TYPE.bodySmall, true, COLORS.primary);
+    setText(TYPE.caption, true, COLORS.primary);
     doc.text(`${shortName} – ${fullName.toUpperCase()}`, MARGIN, MARGIN);
-    setText(TYPE.bodySmall, false, COLORS.muted);
+    setText(TYPE.caption, false, COLORS.muted);
     const rev = `Revisão ${String(input.pgr.version).padStart(2, '0')}  •  ${todayBR()}`;
     doc.text(rev, PAGE_W - MARGIN, MARGIN, { align: 'right' });
     doc.setDrawColor(...COLORS.accent);
@@ -211,7 +209,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const sectionTitle = (text: string) => {
     ensure(14);
     state.y += 4;
-    setText(TYPE.section, false, COLORS.primary);
+    setText(TYPE.section, true, COLORS.primary);
     doc.text(text, MARGIN, state.y);
     const w = textWidth(text);
     doc.setDrawColor(...COLORS.primary);
@@ -223,9 +221,9 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const subTitle = (text: string) => {
     ensure(10);
     state.y += 2;
-    setText(TYPE.subtitle, false, COLORS.text);
+    setText(TYPE.subtitle, true, COLORS.text);
     doc.text(text, MARGIN, state.y);
-    state.y += 5.5;
+    state.y += 6.5;
   };
 
   const paragraph = (text: string, opts: { size?: number; gap?: number; align?: 'left' | 'justify'; width?: number; x?: number } = {}) => {
@@ -261,15 +259,15 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   };
 
   const bullets = (items: string[]) => {
-    setText(TYPE.bullet, false, COLORS.text);
+    setText(TYPE.body, false, COLORS.text);
     for (const item of items) {
       const lines = doc.splitTextToSize(item, CONTENT_W - 5);
-      ensure(lines.length * 4.5 + 1);
+      ensure(lines.length * 4.8 + 1);
       doc.setFillColor(...COLORS.accent);
       doc.circle(MARGIN + 1.2, state.y - 1.2, 0.7, 'F');
-      setText(TYPE.bullet, false, COLORS.text);
+      setText(TYPE.body, false, COLORS.text);
       doc.text(lines, MARGIN + 4, state.y);
-      state.y += lines.length * 4.3 + 1;
+      state.y += lines.length * 4.6 + 1;
     }
     state.y += 2;
   };
@@ -709,7 +707,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   paragraph('A seguir, o inventário dos riscos identificados, agrupados por Grupo Homogêneo de Exposição (GHE).');
 
   if (input.ghes.length === 0) {
-    paragraph('Nenhum GHE cadastrado até o momento.', { size: 9 });
+    paragraph('Nenhum GHE cadastrado até o momento.');
   } else {
     for (const ghe of input.ghes) {
       subTitle(`GHE: ${ghe.name}`);
@@ -719,7 +717,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
         `Trabalhadores: ${ghe.worker_count ?? 0}`,
         `Jornada: ${ghe.work_schedule || '—'}`,
       ].join('   •   ');
-      paragraph(meta, { size: TYPE.bodySmall, align: 'left' });
+      paragraph(meta, { align: 'left' });
       if (ghe.activities_description) {
         const raw = ghe.activities_description.trim();
         // Divide por quebras de linha, ";" ou "•" para separar atividades por função
@@ -728,11 +726,11 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
           .map(s => s.trim())
           .filter(s => s.length > 2);
         if (parts.length > 1) {
-          setText(TYPE.bodySmall, false, COLORS.text);
+          setText(TYPE.body, true, COLORS.text);
           ensure(5);
           doc.text('Atividades por função:', MARGIN, state.y);
-          state.y += 4;
-          // Detecta cabeçalhos de função (linhas curtas em MAIÚSCULAS) e renderiza em negrito, sem bullet.
+          state.y += 5;
+          // Detecta cabeçalhos de função (linhas curtas em MAIÚSCULAS) e renderiza como subtítulo.
           const isFunctionHeader = (s: string) =>
             s.length <= 60 &&
             /[A-ZÁÉÍÓÚÂÊÔÃÕÇ]/.test(s) &&
@@ -743,25 +741,25 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
           for (const p of parts) {
             if (isFunctionHeader(p)) {
               flush();
-              ensure(6);
+              ensure(8);
               state.y += 1;
-              setText(TYPE.bodySmall, true, COLORS.primary);
+              setText(TYPE.subtitle, true, COLORS.text);
               doc.text(p, MARGIN, state.y);
-              state.y += 4.5;
+              state.y += 6;
             } else {
               buffer.push(p);
             }
           }
           flush();
         } else {
-          paragraph(`Atividades: ${raw}`, { size: TYPE.bodySmall });
+          paragraph(`Atividades: ${raw}`);
         }
       }
 
 
       const gheRisks = input.risks.filter(r => r.ghe_id === ghe.id);
       if (gheRisks.length === 0) {
-        paragraph('— Sem riscos cadastrados para este GHE —', { size: TYPE.bodySmall, align: 'left' });
+        paragraph('— Sem riscos cadastrados para este GHE —', { align: 'left' });
         continue;
       }
 
@@ -816,7 +814,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
       table(
         ['Cat.', 'Agente', 'Fonte', 'Medição', 'Limite', 'Risco', 'Magnitude', 'Controles'],
         rows,
-        [14, 32, 20, 18, 16, 20, 22, CONTENT_W - 14 - 32 - 20 - 18 - 16 - 20 - 22]
+        [26, 30, 18, 16, 14, 20, 22, CONTENT_W - 26 - 30 - 18 - 16 - 14 - 20 - 22]
       );
     }
   }
@@ -826,7 +824,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   paragraph('Conjunto de ações para eliminação, mitigação e controle dos riscos identificados, respeitando a hierarquia de controle estabelecida na Parte III.');
 
   if (input.actions.length === 0) {
-    paragraph('Nenhuma ação cadastrada até o momento.', { size: 9 });
+    paragraph('Nenhuma ação cadastrada até o momento.');
   } else {
     const statusLabel = (s: string) =>
       ({ pending: 'Pendente', in_progress: 'Em andamento', done: 'Concluída', cancelled: 'Cancelada' } as any)[s] || s;
@@ -890,9 +888,9 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   doc.setDrawColor(80, 80, 80);
   doc.setLineWidth(0.4);
   doc.line(MARGIN + 20, state.y, MARGIN + 110, state.y);
-  setText(9.5, false, COLORS.text);
+  setText(TYPE.body, false, COLORS.text);
   doc.text(placeholder(input.pgr.responsible_name), MARGIN + 65, state.y + 5, { align: 'center' });
-  setText(8.5, false, COLORS.muted);
+  setText(TYPE.caption, false, COLORS.muted);
   doc.text(
     `CPF: ${placeholder(input.pgr.responsible_cpf)}  •  Registro: ${placeholder(input.pgr.responsible_registration)}`,
     MARGIN + 65, state.y + 10, { align: 'center' }

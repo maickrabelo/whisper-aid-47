@@ -1,79 +1,84 @@
-
 ## Objetivo
-Permitir que uma AEP cubra vários GHEs mas com **avaliação separada por GHE**: cada item do escopo passa a ter sua própria situação de trabalho, seus fatores e seus participantes. O PDF passa a mostrar uma seção por GHE, e AEPs antigas ganham um botão "Dividir por GHE".
 
-## Estrutura de dados
+Padronizar a tipografia do PDF do PGR (`src/components/pgr/PGRReportPDF.ts`) para atender às regras solicitadas e corrigir a quebra de palavra na primeira coluna das tabelas de riscos.
 
-Não é preciso criar tabela nova. Vamos usar as colunas já existentes:
+## Regras tipográficas a aplicar
 
-- `aep_avaliacoes.escopo_json` — passa a guardar por item do escopo também `situacao_trabalho` e `tempId` (identificador estável do bloco).
-- `aep_fatores_avaliados` — nova coluna `escopo_ref` (text, nullable). Recebe o `tempId` do bloco de escopo ao qual o fator pertence. Null = fator geral (comportamento antigo).
-- `aep_participantes` — nova coluna `escopo_ref` (text, nullable), mesma lógica.
+Três estilos únicos que valem para todo o miolo do documento (capa e chrome de cabeçalho/rodapé permanecem como estão — são elementos de display, não fazem parte do "corpo"):
 
-Migração adiciona só as duas colunas nullable + índices simples. Sem quebra de compatibilidade.
+- **Título de seção** — 13pt, **negrito**, azul-escuro (`COLORS.primary`, RGB 30/58/138). Aplicado a `PARTE I…VI`, `Identificação da Empresa`, `Resumo Executivo`.
+- **Subtítulo** — 11pt, **negrito**, cor do texto padrão. Aplicado a todos os `subTitle(...)`: `1.1 Introdução`, `Empregador`, `SESMT`, `GHE: …`, `Matriz N×N`, `6.1 …`, etc.
+- **Corpo** — 10pt, regular, cor do texto padrão. Vale para parágrafos, bullets, metadados de GHE ("Setor: … • Cargo: …"), rótulo "Atividades por função:", legendas de assinatura, texto vazio ("Nenhum GHE cadastrado…"). Tudo unificado.
 
-## Wizard (`src/components/aep/AEPWizard.tsx`)
+Exceções mantidas (não fazem parte do corpo textual):
+- **Tabelas** — mantêm 8.1pt para caber o conteúdo denso (esta é a única concessão; caso contrário nenhum inventário caberia). É o padrão único de "texto de tabela".
+- **Matriz de risco / eixos / legenda** — visual próprio (mantém 7.5–8pt e 10pt no número da célula).
+- **Rodapé/cabeçalho de página e capa** — mantêm seus tamanhos atuais (elementos de chrome/display).
 
-Reestruturação do passo 1 e passo 3/4:
+## Mudanças no arquivo
 
-- **Passo 1 — Identificação**
-  - Cada item do escopo agora expõe: setor, função, CBO, nº trab., GHE vinculado (já existem) **+ campo "Situação de trabalho avaliada"** (textarea) por item.
-  - Removemos o textarea único global `situacaoTrabalho`. No submit, gravamos em `escopo_json[i].situacao_trabalho`. Para compatibilidade com o resto do app, `aep_avaliacoes.situacao_trabalho` recebe a concatenação (`"[GHE X] ... \n\n[GHE Y] ..."`).
-  - Validação de passo: cada item precisa ter setor, função e situação preenchidos.
+### 1. Substituir o objeto `TYPE` (linhas 108–116)
 
-- **Passo 3 — Fatores**
-  - Acima da lista, um seletor "Bloco (GHE)" com os itens do escopo + opção "Geral (todos)".
-  - Cada fator adicionado recebe `escopo_ref` = tempId do bloco atualmente selecionado (ou null se "Geral").
-  - Lista de fatores agrupada visualmente por bloco, cada grupo com título "GHE X — Setor / Função".
-  - Importações HSE-IT/COPSOQ herdam o bloco atualmente selecionado.
-
-- **Passo 4 — Participantes**
-  - Mesma lógica: seletor de bloco + `escopo_ref` gravado por participante.
-
-- **Passo 5 — Revisão**
-  - Resumo passa a listar, por bloco: nº fatores, nº participantes, situação avaliada.
-
-## Detalhe (`src/pages/AEPDetail.tsx`) e badges
-- Abas "Fatores" e "Participantes" agrupam por bloco de escopo. Fatores sem `escopo_ref` aparecem em "Geral".
-- Adicionar/editar fator manualmente também expõe o seletor de bloco.
-
-## PDF
-
-- **`src/components/aep/AEPReportPDF.ts`** — em vez de imprimir uma única "Situação avaliada" e uma lista flat de fatores, iterar o `escopo_json`: para cada bloco, seção com título ("GHE X — Setor / Função / Nº trab."), situação avaliada, fatores desse bloco e participantes desse bloco. Fatores/participantes com `escopo_ref` null caem em uma seção final "Geral".
-- **`src/components/aep/AEPConsolidatedReportPDF.ts`** — mesma reorganização por bloco dentro de cada AEP.
-
-## Dividir AEP antiga por GHE
-
-Novo botão "Dividir por GHE" no cabeçalho do `AEPDetail`, visível apenas quando `escopo_json.length > 1`. Fluxo:
-
-1. Diálogo de confirmação listando quantas AEPs serão criadas (uma por item do escopo) e avisando que a AEP original será marcada como `superseded` (status novo permitido: já usamos `revised`; usaremos `revised` + adicionamos texto "dividida em N AEPs" em `methodology_details`).
-2. Para cada item do `escopo_json`:
-   - Insere nova linha em `aep_avaliacoes` copiando todos os campos gerais, com `escopo_json = [item]`, `ghe_id = item.ghe_id`, `setor_nome/funcao_nome` do próprio item, `situacao_trabalho` = a situação daquele bloco (ou a original se ainda não migrada), `parent_version_id` = id da AEP original, `version = 1`.
-   - Copia `aep_fatores_avaliados` cujo `escopo_ref` bata com o `tempId` do item (ou todos, se a AEP antiga não tiver `escopo_ref`).
-   - Copia `aep_participantes` com a mesma regra.
-   - Evidências permanecem apenas na AEP original (comportamento igual ao "Nova versão").
-3. Vínculos com PGR (`aep_pgr_vinculo`) permanecem apontando para a AEP original — não são reatribuídos, para não quebrar histórico.
-4. Ao concluir, redireciona o usuário para o `AEPDashboard` mostrando as novas AEPs.
-
-Componente novo: `src/components/aep/SplitAEPByGHEDialog.tsx`. Chamado pelo `AEPDetail`.
-
-## Migração
+```ts
+const TYPE = {
+  body: 10,       // único tamanho de corpo (parágrafos, bullets, metadados, listas)
+  table: 8.1,     // exclusivo de tabelas
+  caption: 8,     // rodapé, cabeçalho de página, legenda da matriz
+  subtitle: 11,   // todos os subtítulos — sempre negrito
+  section: 13,    // todos os títulos de seção — sempre negrito + azul
+};
 ```
-ALTER TABLE public.aep_fatores_avaliados ADD COLUMN escopo_ref text;
-ALTER TABLE public.aep_participantes ADD COLUMN escopo_ref text;
-CREATE INDEX IF NOT EXISTS idx_aep_fatores_escopo_ref ON public.aep_fatores_avaliados(aep_id, escopo_ref);
-CREATE INDEX IF NOT EXISTS idx_aep_participantes_escopo_ref ON public.aep_participantes(aep_id, escopo_ref);
+
+Remover as chaves `bodySmall` e `bullet` para eliminar a possibilidade de variação.
+
+### 2. Forçar negrito nos títulos e subtítulos (linhas 211–229)
+
+- `sectionTitle`: trocar `setText(TYPE.section, false, COLORS.primary)` → `setText(TYPE.section, true, COLORS.primary)`.
+- `subTitle`: trocar `setText(TYPE.subtitle, false, COLORS.text)` → `setText(TYPE.subtitle, true, COLORS.text)`. Ajustar o `state.y += 5.5` para `6.5` para respirar o negrito 11pt.
+
+### 3. Bullets no tamanho do corpo (linhas 263–275)
+
+Substituir `TYPE.bullet` por `TYPE.body` nos dois `setText` da função `bullets`. Recalibrar `lineH` (`4.5 → 4.8`) para ficar consistente com o parágrafo 10pt.
+
+### 4. Remover overrides pontuais de tamanho no miolo
+
+Todas essas chamadas deixam de passar `size`, herdando o corpo padrão de 10pt:
+- Linha 712: `paragraph('Nenhum GHE cadastrado até o momento.', { size: 9 })` → sem `size`.
+- Linha 722: `paragraph(meta, { size: TYPE.bodySmall, align: 'left' })` → `paragraph(meta, { align: 'left' })`.
+- Linha 731: `setText(TYPE.bodySmall, false, COLORS.text)` (rótulo "Atividades por função:") → `setText(TYPE.body, true, COLORS.text)` (mini-rótulo em negrito, mesmo tamanho do corpo).
+- Linha 748: cabeçalho UPPERCASE de função dentro do GHE (`setText(TYPE.bodySmall, true, COLORS.primary)`) → passa a usar o estilo de subtítulo: `setText(TYPE.subtitle, true, COLORS.text)` para respeitar a regra "1 tamanho de subtítulo, negrito". Ajustar o `state.y += 4.5` para `6`.
+- Linha 757: `paragraph(..., { size: TYPE.bodySmall })` → sem `size`.
+- Linha 764: `paragraph('— Sem riscos… —', { size: TYPE.bodySmall, align: 'left' })` → sem `size`, mantendo `align: 'left'`.
+- Linha 829: `paragraph('Nenhuma ação cadastrada até o momento.', { size: 9 })` → sem `size`.
+
+### 5. Assinatura (linhas 893–900)
+
+- Linha 893 (nome): `setText(9.5, ...)` → `setText(TYPE.body, false, COLORS.text)`.
+- Linha 895 (CPF/registro): `setText(8.5, ..., COLORS.muted)` → `setText(TYPE.caption, false, COLORS.muted)` (caption 8pt para caber; é rodapé de assinatura).
+- Linha 900 ("Responsável Técnico"): idem — usa caption.
+
+### 6. Corrigir quebra de palavra na 1ª coluna das tabelas de riscos (linha 819)
+
+Categoria com valor mais longo é `psicossocial` (12 caracteres). Com 14mm − 3mm de padding sobra 11mm, forçando quebra. Ajustar larguras somando 174mm (= `CONTENT_W`):
+
+```ts
+[26, 30, 18, 16, 14, 20, 22, CONTENT_W - 26 - 30 - 18 - 16 - 14 - 20 - 22]
+// = [26, 30, 18, 16, 14, 20, 22, 28]
 ```
-Sem alteração em RLS/GRANTs (colunas nullable em tabelas já existentes).
 
-## Arquivos tocados
-- `supabase/migrations/<novo>.sql`
-- `src/components/aep/AEPWizard.tsx`
-- `src/components/aep/AEPReportPDF.ts`
-- `src/components/aep/AEPConsolidatedReportPDF.ts`
-- `src/pages/AEPDetail.tsx`
-- `src/components/aep/SplitAEPByGHEDialog.tsx` (novo)
+- 1ª col. sobe de 14 → **26mm** (garante `psicossocial` numa linha só a 8.1pt, com folga).
+- `Agente` mantido em 30mm (era 32); `Fonte` mantida em 18mm (era 20); `Medição` 16mm (era 18); `Limite` 14mm (era 16); coluna `Controles` fica com 28mm.
+- Somatório final = 174mm = `CONTENT_W`. ✅
 
-## Fora do escopo
-- Não vamos criar tabelas separadas por bloco nem alterar contratos com o PGR.
-- Não vamos re-mapear vínculos antigos AEP→PGR automaticamente na divisão.
+Nenhuma outra tabela precisa mudar.
+
+## Fora do escopo (mantido)
+
+- Capa (tipografia de display: 36/18/14/13/10/9pt) — permanece como está.
+- Cabeçalho e rodapé de página — permanecem em `TYPE.caption`.
+- Matriz de risco (rótulos dos eixos, números das células, legenda) — permanece como está.
+- Nenhuma alteração em cores fora dos títulos.
+
+## Verificação
+
+Após aplicar, revisar visualmente: capa → identificação → parte I → subtítulos ("Empregador", "SESMT" etc.) → parte IV com tabelas de riscos (checar 1ª coluna com "Psicossocial", "Ergonômico", "Biológico") → assinatura. Todos os textos de corpo devem estar num único tamanho; todos os títulos em negrito + azul; todos os subtítulos em negrito.

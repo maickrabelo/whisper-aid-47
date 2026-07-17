@@ -54,9 +54,7 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
     return (g.role || "").split(",").map(r => r.trim()).filter(Boolean).map(r => ({ role: r }));
   };
 
-  const buildActivitiesDescription = (roles: RoleMeta[], fallback: string): string => {
-    const hasPerRole = roles.some(r => (r.activities || "").trim().length > 0);
-    if (!hasPerRole) return fallback;
+  const buildBlocks = (roles: RoleMeta[]): string => {
     const blocks = roles
       .filter(r => (r.activities || "").trim().length > 0)
       .map(r => {
@@ -68,8 +66,26 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
           .join("\n");
         return `${r.role.toUpperCase()}\n${lines}`;
       });
+    return blocks.join("\n\n");
+  };
+
+  const buildActivitiesDescription = (roles: RoleMeta[], fallback: string): string => {
+    const blocks = buildBlocks(roles);
     const extra = fallback.trim();
-    return extra ? `${blocks.join("\n\n")}\n\n${extra}` : blocks.join("\n\n");
+    if (!blocks) return extra;
+    return extra ? `${blocks}\n\n${extra}` : blocks;
+  };
+
+  // Extrai apenas as observações gerais do texto armazenado, removendo os blocos auto-gerados por função
+  const extractObservations = (roles: RoleMeta[], stored: string): string => {
+    if (!stored) return "";
+    const blocks = buildBlocks(roles);
+    if (blocks && stored.startsWith(blocks)) {
+      return stored.slice(blocks.length).replace(/^\s+/, "");
+    }
+    // Se não bater exatamente (formatação antiga), e há atividades por função, não repopular observações
+    if (roles.some(r => (r.activities || "").trim().length > 0)) return "";
+    return stored;
   };
 
   const load = async () => {
@@ -94,11 +110,12 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
   };
   const openEdit = (g: GHE) => {
     setEditing(g);
+    const roles = parseRolesMeta(g);
     setForm({
       name: g.name,
       sector: g.sector || "",
-      roles_meta: parseRolesMeta(g),
-      activities_description: g.activities_description || "",
+      roles_meta: roles,
+      activities_description: extractObservations(roles, g.activities_description || ""),
       worker_count: g.worker_count || 0,
       work_schedule: g.work_schedule || "",
     });

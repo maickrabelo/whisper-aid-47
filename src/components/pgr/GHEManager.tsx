@@ -12,7 +12,7 @@ import { Plus, Trash2, Pencil, Loader2, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 
-interface RoleMeta { role: string; cbo?: string }
+interface RoleMeta { role: string; cbo?: string; activities?: string }
 interface GHE {
   id: string;
   name: string;

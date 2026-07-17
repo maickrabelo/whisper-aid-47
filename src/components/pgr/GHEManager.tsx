@@ -40,15 +40,36 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
     const v = roleInput.trim();
     if (!v) return;
     if (rolesArr.some(r => r.role.toLowerCase() === v.toLowerCase())) { setRoleInput(""); setCboInput(""); return; }
-    setForm({ ...form, roles_meta: [...rolesArr, { role: v, cbo: cboInput.trim() || undefined }] });
+    setForm({ ...form, roles_meta: [...rolesArr, { role: v, cbo: cboInput.trim() || undefined, activities: "" }] });
     setRoleInput(""); setCboInput("");
   };
   const removeRole = (r: string) => {
     setForm({ ...form, roles_meta: rolesArr.filter(x => x.role !== r) });
   };
+  const updateRoleActivities = (roleName: string, activities: string) => {
+    setForm({ ...form, roles_meta: rolesArr.map(r => r.role === roleName ? { ...r, activities } : r) });
+  };
   const parseRolesMeta = (g: GHE): RoleMeta[] => {
     if (Array.isArray(g.roles_meta) && g.roles_meta.length) return g.roles_meta;
     return (g.role || "").split(",").map(r => r.trim()).filter(Boolean).map(r => ({ role: r }));
+  };
+
+  const buildActivitiesDescription = (roles: RoleMeta[], fallback: string): string => {
+    const hasPerRole = roles.some(r => (r.activities || "").trim().length > 0);
+    if (!hasPerRole) return fallback;
+    const blocks = roles
+      .filter(r => (r.activities || "").trim().length > 0)
+      .map(r => {
+        const lines = (r.activities || "")
+          .split("\n")
+          .map(l => l.trim())
+          .filter(Boolean)
+          .map(l => l.startsWith("-") || l.startsWith("•") ? l : `- ${l}`)
+          .join("\n");
+        return `${r.role.toUpperCase()}\n${lines}`;
+      });
+    const extra = fallback.trim();
+    return extra ? `${blocks.join("\n\n")}\n\n${extra}` : blocks.join("\n\n");
   };
 
   const load = async () => {

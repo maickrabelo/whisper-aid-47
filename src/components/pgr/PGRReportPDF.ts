@@ -176,9 +176,9 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     if (state.skipChrome) return;
     doc.setFillColor(...COLORS.headerBg);
     doc.rect(0, 0, PAGE_W, MARGIN + 6, 'F');
-    setText(TYPE.bodySmall, true, COLORS.primary);
+    setText(TYPE.caption, true, COLORS.primary);
     doc.text(`${shortName} – ${fullName.toUpperCase()}`, MARGIN, MARGIN);
-    setText(TYPE.bodySmall, false, COLORS.muted);
+    setText(TYPE.caption, false, COLORS.muted);
     const rev = `Revisão ${String(input.pgr.version).padStart(2, '0')}  •  ${todayBR()}`;
     doc.text(rev, PAGE_W - MARGIN, MARGIN, { align: 'right' });
     doc.setDrawColor(...COLORS.accent);

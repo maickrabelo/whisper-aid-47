@@ -379,7 +379,7 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
               <div>
                 <Label className="text-sm font-semibold">Escopo da AEP *</Label>
                 <p className="text-xs text-muted-foreground">
-                  Cadastre cada GHE / função avaliada. <strong>Cada bloco tem sua própria descrição da situação de trabalho</strong> — depois, no passo 3, você poderá lançar fatores separadamente por bloco.
+                  Cadastre cada função avaliada. <strong>Você pode adicionar várias funções separadamente dentro do mesmo setor</strong> — o setor e o GHE ficam preenchidos após clicar em "+", basta trocar a função e clicar novamente. Cada bloco tem sua própria situação de trabalho.
                 </p>
               </div>
               <div className="grid grid-cols-[1fr_1fr_110px_90px_auto] gap-2 items-end">
@@ -404,6 +404,13 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
+              {(escopoDraft.setor || escopoDraft.ghe_id) && escopo.length > 0 && (
+                <div className="flex justify-end">
+                  <Button type="button" size="sm" variant="ghost" className="text-xs h-7" onClick={clearEscopoDraft}>
+                    Limpar setor / trocar de setor
+                  </Button>
+                </div>
+              )}
               {ghes.length > 0 && (
                 <div className="space-y-1">
                   <Label className="text-xs">GHE do PGR (opcional)</Label>

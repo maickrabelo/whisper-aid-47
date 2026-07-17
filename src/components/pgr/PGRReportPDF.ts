@@ -814,7 +814,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
       table(
         ['Cat.', 'Agente', 'Fonte', 'Medição', 'Limite', 'Risco', 'Magnitude', 'Controles'],
         rows,
-        [14, 32, 20, 18, 16, 20, 22, CONTENT_W - 14 - 32 - 20 - 18 - 16 - 20 - 22]
+        [26, 30, 18, 16, 14, 20, 22, CONTENT_W - 26 - 30 - 18 - 16 - 14 - 20 - 22]
       );
     }
   }

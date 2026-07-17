@@ -106,13 +106,11 @@ const COLORS = {
 
 const FONT = 'helvetica';
 const TYPE = {
-  body: 9.5,
-  bodySmall: 8.5,
-  bullet: 9.2,
-  table: 8.1,
-  caption: 7.5,
-  subtitle: 10.5,
-  section: 13,
+  body: 10,       // único tamanho de corpo (parágrafos, bullets, metadados, listas)
+  table: 8.1,     // exclusivo de tabelas
+  caption: 8,     // rodapé, cabeçalho de página, legenda da matriz
+  subtitle: 11,   // todos os subtítulos — sempre negrito
+  section: 13,    // todos os títulos de seção — sempre negrito + azul
 };
 
 const todayBR = () => new Date().toLocaleDateString('pt-BR');

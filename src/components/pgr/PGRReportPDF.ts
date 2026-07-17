@@ -731,7 +731,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
         `Trabalhadores: ${ghe.worker_count ?? 0}`,
         `Jornada: ${ghe.work_schedule || '—'}`,
       ].join('   •   ');
-      paragraph(meta, { align: 'left' });
+      paragraph(meta);
       if (ghe.activities_description) {
         const raw = ghe.activities_description.trim();
         // Divide por quebras de linha, ";" ou "•" para separar atividades por função

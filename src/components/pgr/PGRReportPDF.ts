@@ -868,14 +868,14 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   subTitle('6.2 Procedimentos e Controles Administrativos');
   bullets([
     'Reavaliar anualmente o PGR conforme exigência legal (NR-01).',
-    'Solicitar dos fornecedores as FISPQs das matérias-primas e divulgá-las aos empregados.',
+    'Solicitar dos fornecedores as FDS (Fichas de Dados de Segurança) das matérias-primas e divulgá-las aos empregados.',
     'Minimizar o tempo de execução em atividades de alto potencial de risco e manter distância segura de fontes emissoras.',
   ]);
 
   subTitle('6.3 Treinamentos');
   bullets([
     'Saúde / Higiene Ocupacional: PGR, resultados das avaliações quantitativas, aspectos toxicológicos, primeiros socorros.',
-    'Segurança Industrial: utilização de EPIs, FISPQ e melhores práticas de trabalho.',
+    'Segurança Industrial: utilização de EPIs, FDS e melhores práticas de trabalho.',
   ]);
 
   subTitle('6.4 Monitoramento');

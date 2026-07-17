@@ -305,6 +305,46 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   const intermediateCount = ALL_CATEGORIES.filter(c => catData[c].level === 'intermediate').length;
   const favorableCount = ALL_CATEGORIES.filter(c => catData[c].level === 'favorable').length;
 
+  // ─── Agregação setorizada (para consolidar riscos por setor no resumo) ───
+  const isConsolidated = input.selectedDepartment === 'all' && input.departments.length > 0;
+  const dimensionsAtRiskInAnySector = new Set<COPSOQCategory>();
+  let sectorRiskOccurrences = 0;
+  let sectorAttentionOccurrences = 0;
+  let sectorsWithRisk = 0;
+  let sectorsWithAttention = 0;
+
+  if (isConsolidated) {
+    input.departments.forEach(dept => {
+      const deptAnswers = input.responses
+        .filter(r => r.departments.includes(dept))
+        .flatMap(r => r.answers);
+      let deptHasRisk = false;
+      let deptHasAttention = false;
+      ALL_CATEGORIES.forEach(cat => {
+        const catQs = COPSOQ_QUESTIONS.filter(q => q.category === cat).map(q => q.number);
+        const catAns = deptAnswers.filter(a => catQs.includes(a.questionNumber));
+        if (catAns.length === 0) return;
+        const lvl = getRiskLevel(calculateCategoryAverage(deptAnswers, cat));
+        if (lvl === 'risk') {
+          sectorRiskOccurrences++;
+          deptHasRisk = true;
+          dimensionsAtRiskInAnySector.add(cat);
+        } else if (lvl === 'intermediate') {
+          sectorAttentionOccurrences++;
+          deptHasAttention = true;
+        }
+      });
+      if (deptHasRisk) sectorsWithRisk++;
+      if (deptHasAttention) sectorsWithAttention++;
+    });
+    // União com riscos observados no consolidado geral
+    ALL_CATEGORIES.forEach(c => {
+      if (catData[c].level === 'risk') dimensionsAtRiskInAnySector.add(c);
+    });
+  }
+
+  const unionRiskCount = isConsolidated ? dimensionsAtRiskInAnySector.size : criticalCount;
+
   // ══════════════════════════════════════════
   // PAGE 2 — Executive Summary
   // ══════════════════════════════════════════
@@ -314,18 +354,27 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     `Este relatório apresenta os resultados da avaliação de riscos psicossociais aplicada aos colaboradores da ${input.companyName} utilizando o instrumento COPSOQ II (Copenhagen Psychosocial Questionnaire), validado internacionalmente para identificação e mensuração de fatores psicossociais no ambiente de trabalho.`
   );
   drawParagraph(
-    `A avaliação contou com ${filtered.length} respostas válidas, distribuídas em ${input.departments.length || 1} setor(es). A pontuação média geral foi de ${overallAverage.toFixed(2)} em escala normalizada de 1 a 5, classificada como "${RISK_LEVEL_LABELS[overallRisk]}". Das 23 dimensões avaliadas, ${criticalCount} estão em Risco, ${intermediateCount} em nível Intermediário e ${favorableCount} em condição Favorável.`
+    `A avaliação contou com ${filtered.length} respostas válidas, distribuídas em ${input.departments.length || 1} setor(es). A pontuação média geral foi de ${overallAverage.toFixed(2)} em escala normalizada de 1 a 5, classificada como "${RISK_LEVEL_LABELS[overallRisk]}". Das 23 dimensões avaliadas, ${criticalCount} estão em Risco, ${intermediateCount} em nível Intermediário e ${favorableCount} em condição Favorável no consolidado geral da empresa.`
   );
+  if (isConsolidated) {
+    drawParagraph(
+      `Considerando também a análise setorizada, ${dimensionsAtRiskInAnySector.size} dimensão(ões) apresentam Risco em pelo menos um setor — totalizando ${sectorRiskOccurrences} ocorrência(s) de risco em ${sectorsWithRisk} setor(es). Foram ainda identificadas ${sectorAttentionOccurrences} ocorrência(s) em nível Intermediário distribuídas em ${sectorsWithAttention} setor(es). Estas informações complementam a visão geral e evidenciam focos localizados de atenção mesmo quando o consolidado da empresa é favorável.`
+    );
+  }
 
   // KPI cards
   ensure(30);
   const kpiW = (pw - 2 * margin - 12) / 4;
   const kpiY = y;
+  const kpiRiskLabel = isConsolidated ? 'Risco (Geral / Setores)' : 'Dimensões em Risco';
+  const kpiRiskValue = isConsolidated
+    ? `${criticalCount} / ${unionRiskCount}`
+    : String(criticalCount);
   const kpis: Array<{ label: string; value: string; color: [number, number, number] }> = [
     { label: 'Respostas', value: String(filtered.length), color: COLORS.accent },
     { label: 'Média Geral', value: overallAverage.toFixed(2), color: COLORS.primary },
     { label: 'Classificação', value: RISK_LEVEL_LABELS[overallRisk], color: riskColor(overallRisk) },
-    { label: 'Dimensões em Risco', value: String(criticalCount), color: COLORS.risk },
+    { label: kpiRiskLabel, value: kpiRiskValue, color: COLORS.risk },
   ];
   kpis.forEach((k, i) => {
     const x = margin + i * (kpiW + 4);
@@ -335,7 +384,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     pdf.rect(x, kpiY, 2, 22, 'F');
     setText(8, true, COLORS.muted);
     pdf.text(k.label.toUpperCase(), x + 5, kpiY + 6);
-    setText(13, true, k.color);
+    setText(11, true, k.color);
     pdf.text(k.value, x + 5, kpiY + 15);
   });
   y = kpiY + 28;

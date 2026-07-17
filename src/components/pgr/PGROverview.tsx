@@ -306,6 +306,74 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Conclusão e Recomendações (Parte VI do PDF)</CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Personalize os textos das seções finais do relatório PGR conforme a realidade da empresa (ex.: comércio, indústria, área rural). Deixe em branco para usar o texto padrão. Nos campos de bullets, coloque <strong>uma recomendação por linha</strong>. Para ocultar uma seção inteira, apague todas as linhas e digite apenas um espaço.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Parágrafo de introdução da Parte VI</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, conclusion_intro: "" })}>Restaurar padrão</Button>
+            </div>
+            <Textarea rows={4} value={form.conclusion_intro} onChange={e => setForm({ ...form, conclusion_intro: e.target.value })} placeholder={DEFAULT_INTRO} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>6.1 Medidas de Engenharia (Coletivas) — uma por linha</Label>
+              <div className="flex gap-1">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, engineering_measures: DEFAULT_ENG })}>Preencher padrão</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, engineering_measures: "" })}>Restaurar padrão</Button>
+              </div>
+            </div>
+            <Textarea rows={5} value={form.engineering_measures} onChange={e => setForm({ ...form, engineering_measures: e.target.value })} placeholder={DEFAULT_ENG} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>6.2 Procedimentos e Controles Administrativos — uma por linha</Label>
+              <div className="flex gap-1">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, administrative_controls: DEFAULT_ADM })}>Preencher padrão</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, administrative_controls: "" })}>Restaurar padrão</Button>
+              </div>
+            </div>
+            <Textarea rows={5} value={form.administrative_controls} onChange={e => setForm({ ...form, administrative_controls: e.target.value })} placeholder={DEFAULT_ADM} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>6.3 Treinamentos — uma por linha</Label>
+              <div className="flex gap-1">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, trainings: DEFAULT_TR })}>Preencher padrão</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, trainings: "" })}>Restaurar padrão</Button>
+              </div>
+            </div>
+            <Textarea rows={4} value={form.trainings} onChange={e => setForm({ ...form, trainings: e.target.value })} placeholder={DEFAULT_TR} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>6.4 Monitoramento</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, monitoring_text: "" })}>Restaurar padrão</Button>
+            </div>
+            <Textarea rows={3} value={form.monitoring_text} onChange={e => setForm({ ...form, monitoring_text: e.target.value })} placeholder={DEFAULT_MON} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>6.5 Equipamentos de Proteção Individual</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, epi_text: "" })}>Restaurar padrão</Button>
+            </div>
+            <Textarea rows={3} value={form.epi_text} onChange={e => setForm({ ...form, epi_text: e.target.value })} placeholder={DEFAULT_EPI} />
+          </div>
+        </CardContent>
+      </Card>
+
+
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving} className="gap-2">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

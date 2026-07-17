@@ -229,22 +229,39 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
                   <Button type="button" variant="outline" size="sm" onClick={addRole}>Adicionar</Button>
                 </div>
                 {rolesArr.length > 0 && (
-                  <div className="flex flex-wrap gap-1 pt-1">
+                  <div className="space-y-2 pt-2">
                     {rolesArr.map(r => (
-                      <Badge key={r.role} variant="secondary" className="text-xs font-normal gap-1 pr-1">
-                        {r.role}{r.cbo ? ` · CBO ${r.cbo}` : ''}
-                        <button type="button" onClick={() => removeRole(r.role)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
-                      </Badge>
+                      <div key={r.role} className="border rounded-md p-3 space-y-2 bg-muted/30">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-sm font-medium">
+                            {r.role}
+                            {r.cbo && <span className="text-xs text-muted-foreground font-normal"> · CBO {r.cbo}</span>}
+                          </div>
+                          <Button type="button" size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeRole(r.role)}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <Textarea
+                          rows={3}
+                          value={r.activities || ""}
+                          onChange={e => updateRoleActivities(r.role, e.target.value)}
+                          placeholder={`Descreva as atividades de ${r.role} (uma por linha)`}
+                          className="text-sm bg-background"
+                        />
+                      </div>
                     ))}
                   </div>
                 )}
-                <p className="text-[10px] text-muted-foreground">Adicione vários cargos, cada um com seu CBO (ex.: Encanador · CBO 7241-10).</p>
+                <p className="text-[10px] text-muted-foreground">Adicione vários cargos, cada um com seu CBO e descrição de atividades individual.</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>Nº trabalhadores</Label><Input type="number" min={0} value={form.worker_count} onChange={e => setForm({ ...form, worker_count: parseInt(e.target.value) || 0 })} /></div>
                 <div className="space-y-2"><Label>Jornada</Label><Input value={form.work_schedule} onChange={e => setForm({ ...form, work_schedule: e.target.value })} placeholder="Ex: 8h/dia 5x2" /></div>
               </div>
-              <div className="space-y-2"><Label>Descrição das atividades</Label><Textarea rows={3} value={form.activities_description} onChange={e => setForm({ ...form, activities_description: e.target.value })} /></div>
+              <div className="space-y-2">
+                <Label>Observações gerais (opcional)</Label>
+                <Textarea rows={2} value={form.activities_description} onChange={e => setForm({ ...form, activities_description: e.target.value })} placeholder="Observações que se aplicam a todas as funções deste GHE" />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>

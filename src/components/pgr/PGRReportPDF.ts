@@ -773,7 +773,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
 
       const gheRisks = input.risks.filter(r => r.ghe_id === ghe.id);
       if (gheRisks.length === 0) {
-        paragraph('— Sem riscos cadastrados para este GHE —', { align: 'left' });
+        paragraph('— Sem riscos cadastrados para este GHE —');
         continue;
       }
 

@@ -12,7 +12,7 @@ import { Plus, Trash2, Pencil, Loader2, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 
-interface RoleMeta { role: string; cbo?: string }
+interface RoleMeta { role: string; cbo?: string; activities?: string }
 interface GHE {
   id: string;
   name: string;
@@ -40,15 +40,36 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
     const v = roleInput.trim();
     if (!v) return;
     if (rolesArr.some(r => r.role.toLowerCase() === v.toLowerCase())) { setRoleInput(""); setCboInput(""); return; }
-    setForm({ ...form, roles_meta: [...rolesArr, { role: v, cbo: cboInput.trim() || undefined }] });
+    setForm({ ...form, roles_meta: [...rolesArr, { role: v, cbo: cboInput.trim() || undefined, activities: "" }] });
     setRoleInput(""); setCboInput("");
   };
   const removeRole = (r: string) => {
     setForm({ ...form, roles_meta: rolesArr.filter(x => x.role !== r) });
   };
+  const updateRoleActivities = (roleName: string, activities: string) => {
+    setForm({ ...form, roles_meta: rolesArr.map(r => r.role === roleName ? { ...r, activities } : r) });
+  };
   const parseRolesMeta = (g: GHE): RoleMeta[] => {
     if (Array.isArray(g.roles_meta) && g.roles_meta.length) return g.roles_meta;
     return (g.role || "").split(",").map(r => r.trim()).filter(Boolean).map(r => ({ role: r }));
+  };
+
+  const buildActivitiesDescription = (roles: RoleMeta[], fallback: string): string => {
+    const hasPerRole = roles.some(r => (r.activities || "").trim().length > 0);
+    if (!hasPerRole) return fallback;
+    const blocks = roles
+      .filter(r => (r.activities || "").trim().length > 0)
+      .map(r => {
+        const lines = (r.activities || "")
+          .split("\n")
+          .map(l => l.trim())
+          .filter(Boolean)
+          .map(l => l.startsWith("-") || l.startsWith("•") ? l : `- ${l}`)
+          .join("\n");
+        return `${r.role.toUpperCase()}\n${lines}`;
+      });
+    const extra = fallback.trim();
+    return extra ? `${blocks.join("\n\n")}\n\n${extra}` : blocks.join("\n\n");
   };
 
   const load = async () => {
@@ -89,12 +110,13 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
     setSaving(true);
     try {
+      const activitiesDesc = buildActivitiesDescription(form.roles_meta, form.activities_description);
       const payload: any = {
         name: form.name,
         sector: form.sector,
         role: form.roles_meta.map(r => r.role).join(", "),
         roles_meta: form.roles_meta,
-        activities_description: form.activities_description,
+        activities_description: activitiesDesc,
         worker_count: form.worker_count,
         work_schedule: form.work_schedule,
       };
@@ -181,7 +203,7 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
         )}
 
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Novo'} {term.gheLabel}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2"><Label>Nome do {term.gheLabel} *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={term.isRural ? "Ex: Aplicadores de defensivos — talhão A" : "Ex: Operadores de máquina linha 1"} /></div>
@@ -207,22 +229,39 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
                   <Button type="button" variant="outline" size="sm" onClick={addRole}>Adicionar</Button>
                 </div>
                 {rolesArr.length > 0 && (
-                  <div className="flex flex-wrap gap-1 pt-1">
+                  <div className="space-y-2 pt-2">
                     {rolesArr.map(r => (
-                      <Badge key={r.role} variant="secondary" className="text-xs font-normal gap-1 pr-1">
-                        {r.role}{r.cbo ? ` · CBO ${r.cbo}` : ''}
-                        <button type="button" onClick={() => removeRole(r.role)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
-                      </Badge>
+                      <div key={r.role} className="border rounded-md p-3 space-y-2 bg-muted/30">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-sm font-medium">
+                            {r.role}
+                            {r.cbo && <span className="text-xs text-muted-foreground font-normal"> · CBO {r.cbo}</span>}
+                          </div>
+                          <Button type="button" size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeRole(r.role)}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <Textarea
+                          rows={3}
+                          value={r.activities || ""}
+                          onChange={e => updateRoleActivities(r.role, e.target.value)}
+                          placeholder={`Descreva as atividades de ${r.role} (uma por linha)`}
+                          className="text-sm bg-background"
+                        />
+                      </div>
                     ))}
                   </div>
                 )}
-                <p className="text-[10px] text-muted-foreground">Adicione vários cargos, cada um com seu CBO (ex.: Encanador · CBO 7241-10).</p>
+                <p className="text-[10px] text-muted-foreground">Adicione vários cargos, cada um com seu CBO e descrição de atividades individual.</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>Nº trabalhadores</Label><Input type="number" min={0} value={form.worker_count} onChange={e => setForm({ ...form, worker_count: parseInt(e.target.value) || 0 })} /></div>
                 <div className="space-y-2"><Label>Jornada</Label><Input value={form.work_schedule} onChange={e => setForm({ ...form, work_schedule: e.target.value })} placeholder="Ex: 8h/dia 5x2" /></div>
               </div>
-              <div className="space-y-2"><Label>Descrição das atividades</Label><Textarea rows={3} value={form.activities_description} onChange={e => setForm({ ...form, activities_description: e.target.value })} /></div>
+              <div className="space-y-2">
+                <Label>Observações gerais (opcional)</Label>
+                <Textarea rows={2} value={form.activities_description} onChange={e => setForm({ ...form, activities_description: e.target.value })} placeholder="Observações que se aplicam a todas as funções deste GHE" />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>

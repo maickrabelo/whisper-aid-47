@@ -28,6 +28,12 @@ export interface PGRReportInput {
     has_lodging?: boolean | null;
     lodging_description?: string | null;
     worker_transport?: string | null;
+    conclusion_intro?: string | null;
+    engineering_measures?: string | null;
+    administrative_controls?: string | null;
+    trainings?: string | null;
+    monitoring_text?: string | null;
+    epi_text?: string | null;
   };
   company: {
     name: string;

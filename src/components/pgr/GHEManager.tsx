@@ -110,11 +110,12 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
   };
   const openEdit = (g: GHE) => {
     setEditing(g);
+    const roles = parseRolesMeta(g);
     setForm({
       name: g.name,
       sector: g.sector || "",
-      roles_meta: parseRolesMeta(g),
-      activities_description: g.activities_description || "",
+      roles_meta: roles,
+      activities_description: extractObservations(roles, g.activities_description || ""),
       worker_count: g.worker_count || 0,
       work_schedule: g.work_schedule || "",
     });

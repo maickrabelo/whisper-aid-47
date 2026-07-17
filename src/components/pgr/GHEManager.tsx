@@ -203,7 +203,7 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
         )}
 
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Novo'} {term.gheLabel}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2"><Label>Nome do {term.gheLabel} *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={term.isRural ? "Ex: Aplicadores de defensivos — talhão A" : "Ex: Operadores de máquina linha 1"} /></div>

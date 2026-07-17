@@ -874,33 +874,66 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
 
   // ─── PARTE VI — Conclusão ────────────────────────────────
   sectionTitle('PARTE VI — Conclusão e Recomendações');
-  paragraph('Os propósitos da avaliação de exposição a agentes de risco ocupacionais foram cumpridos: determinaram-se os riscos a que os trabalhadores estão expostos, diferenciaram-se exposições aceitáveis das inaceitáveis e foram propostas medidas de controle. A organização deve prosseguir com seus programas de controle, introduzindo melhorias contínuas.');
 
-  subTitle('6.1 Medidas de Engenharia (Coletivas)');
-  bullets([
+  const DEFAULT_CONCLUSION_INTRO = 'Os propósitos da avaliação de exposição a agentes de risco ocupacionais foram cumpridos: determinaram-se os riscos a que os trabalhadores estão expostos, diferenciaram-se exposições aceitáveis das inaceitáveis e foram propostas medidas de controle. A organização deve prosseguir com seus programas de controle, introduzindo melhorias contínuas.';
+  const DEFAULT_ENGINEERING = [
     'Realizar estudos de engenharia para tratamento acústico em equipamentos ruidosos das áreas produtivas e de utilidades.',
     'Avaliar a necessidade de sistemas de exaustão localizada em postos com emissão de agentes químicos.',
     'Implementar proteções coletivas contra quedas em altura, quando aplicável.',
-  ]);
-
-  subTitle('6.2 Procedimentos e Controles Administrativos');
-  bullets([
+  ];
+  const DEFAULT_ADMINISTRATIVE = [
     'Reavaliar anualmente o PGR conforme exigência legal (NR-01).',
     'Solicitar dos fornecedores as FDS (Fichas de Dados de Segurança) das matérias-primas e divulgá-las aos empregados.',
     'Minimizar o tempo de execução em atividades de alto potencial de risco e manter distância segura de fontes emissoras.',
-  ]);
-
-  subTitle('6.3 Treinamentos');
-  bullets([
+  ];
+  const DEFAULT_TRAININGS = [
     'Saúde / Higiene Ocupacional: PGR, resultados das avaliações quantitativas, aspectos toxicológicos, primeiros socorros.',
     'Segurança Industrial: utilização de EPIs, FDS e melhores práticas de trabalho.',
-  ]);
+  ];
+  const DEFAULT_MONITORING = `${input.company.name || '(EMPRESA)'} deverá continuar com a estratégia de avaliação quantitativa para os agentes priorizados, conforme o Programa de Monitoramento Ambiental.`;
+  const DEFAULT_EPI = 'Quando os procedimentos de trabalho e os controles coletivos não forem suficientes para reduzir a exposição a níveis aceitáveis, deve-se adotar o EPI como último recurso, garantindo treinamento, fornecimento, troca e fiscalização do uso.';
 
-  subTitle('6.4 Monitoramento');
-  paragraph(`${input.company.name || '(EMPRESA)'} deverá continuar com a estratégia de avaliação quantitativa para os agentes priorizados, conforme o Programa de Monitoramento Ambiental.`);
+  const splitLines = (raw?: string | null): string[] =>
+    (raw || '').split('\n').map(l => l.replace(/^[-•\s]+/, '').trim()).filter(Boolean);
 
-  subTitle('6.5 Equipamentos de Proteção Individual');
-  paragraph('Quando os procedimentos de trabalho e os controles coletivos não forem suficientes para reduzir a exposição a níveis aceitáveis, deve-se adotar o EPI como último recurso, garantindo treinamento, fornecimento, troca e fiscalização do uso.');
+  const introText = (input.pgr.conclusion_intro && input.pgr.conclusion_intro.trim()) || DEFAULT_CONCLUSION_INTRO;
+  paragraph(introText);
+
+  const engItems = input.pgr.engineering_measures != null
+    ? splitLines(input.pgr.engineering_measures)
+    : DEFAULT_ENGINEERING;
+  if (engItems.length > 0) {
+    subTitle('6.1 Medidas de Engenharia (Coletivas)');
+    bullets(engItems);
+  }
+
+  const admItems = input.pgr.administrative_controls != null
+    ? splitLines(input.pgr.administrative_controls)
+    : DEFAULT_ADMINISTRATIVE;
+  if (admItems.length > 0) {
+    subTitle('6.2 Procedimentos e Controles Administrativos');
+    bullets(admItems);
+  }
+
+  const trItems = input.pgr.trainings != null
+    ? splitLines(input.pgr.trainings)
+    : DEFAULT_TRAININGS;
+  if (trItems.length > 0) {
+    subTitle('6.3 Treinamentos');
+    bullets(trItems);
+  }
+
+  const monText = (input.pgr.monitoring_text != null ? input.pgr.monitoring_text.trim() : DEFAULT_MONITORING);
+  if (monText) {
+    subTitle('6.4 Monitoramento');
+    paragraph(monText);
+  }
+
+  const epiText = (input.pgr.epi_text != null ? input.pgr.epi_text.trim() : DEFAULT_EPI);
+  if (epiText) {
+    subTitle('6.5 Equipamentos de Proteção Individual');
+    paragraph(epiText);
+  }
 
   // ─── Assinatura ───────────────────────────────────────────
   ensure(50);

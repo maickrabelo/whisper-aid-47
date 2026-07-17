@@ -110,12 +110,13 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
     setSaving(true);
     try {
+      const activitiesDesc = buildActivitiesDescription(form.roles_meta, form.activities_description);
       const payload: any = {
         name: form.name,
         sector: form.sector,
         role: form.roles_meta.map(r => r.role).join(", "),
         roles_meta: form.roles_meta,
-        activities_description: form.activities_description,
+        activities_description: activitiesDesc,
         worker_count: form.worker_count,
         work_schedule: form.work_schedule,
       };

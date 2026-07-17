@@ -1937,16 +1937,21 @@ export type Database = {
         Row: {
           activity_branch: string | null
           address: string | null
+          administrative_controls: string | null
           cnae: string | null
           company_id: string
+          conclusion_intro: string | null
           created_at: string
           created_by: string | null
           document_type: string
+          engineering_measures: string | null
+          epi_text: string | null
           executive_summary: string | null
           has_lodging: boolean | null
           id: string
           last_review_at: string | null
           lodging_description: string | null
+          monitoring_text: string | null
           responsible_cpf: string | null
           responsible_name: string | null
           responsible_registration: string | null
@@ -1956,6 +1961,7 @@ export type Database = {
           sst_manager_id: string | null
           status: string
           title: string
+          trainings: string | null
           updated_at: string
           validity_end: string | null
           validity_start: string | null
@@ -1966,16 +1972,21 @@ export type Database = {
         Insert: {
           activity_branch?: string | null
           address?: string | null
+          administrative_controls?: string | null
           cnae?: string | null
           company_id: string
+          conclusion_intro?: string | null
           created_at?: string
           created_by?: string | null
           document_type?: string
+          engineering_measures?: string | null
+          epi_text?: string | null
           executive_summary?: string | null
           has_lodging?: boolean | null
           id?: string
           last_review_at?: string | null
           lodging_description?: string | null
+          monitoring_text?: string | null
           responsible_cpf?: string | null
           responsible_name?: string | null
           responsible_registration?: string | null
@@ -1985,6 +1996,7 @@ export type Database = {
           sst_manager_id?: string | null
           status?: string
           title?: string
+          trainings?: string | null
           updated_at?: string
           validity_end?: string | null
           validity_start?: string | null
@@ -1995,16 +2007,21 @@ export type Database = {
         Update: {
           activity_branch?: string | null
           address?: string | null
+          administrative_controls?: string | null
           cnae?: string | null
           company_id?: string
+          conclusion_intro?: string | null
           created_at?: string
           created_by?: string | null
           document_type?: string
+          engineering_measures?: string | null
+          epi_text?: string | null
           executive_summary?: string | null
           has_lodging?: boolean | null
           id?: string
           last_review_at?: string | null
           lodging_description?: string | null
+          monitoring_text?: string | null
           responsible_cpf?: string | null
           responsible_name?: string | null
           responsible_registration?: string | null
@@ -2014,6 +2031,7 @@ export type Database = {
           sst_manager_id?: string | null
           status?: string
           title?: string
+          trainings?: string | null
           updated_at?: string
           validity_end?: string | null
           validity_start?: string | null

@@ -70,7 +70,31 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
     has_lodging: pgr.has_lodging ?? false,
     lodging_description: pgr.lodging_description || "",
     worker_transport: pgr.worker_transport || "",
+    conclusion_intro: pgr.conclusion_intro ?? "",
+    engineering_measures: pgr.engineering_measures ?? "",
+    administrative_controls: pgr.administrative_controls ?? "",
+    trainings: pgr.trainings ?? "",
+    monitoring_text: pgr.monitoring_text ?? "",
+    epi_text: pgr.epi_text ?? "",
   });
+
+  const DEFAULT_INTRO = 'Os propósitos da avaliação de exposição a agentes de risco ocupacionais foram cumpridos: determinaram-se os riscos a que os trabalhadores estão expostos, diferenciaram-se exposições aceitáveis das inaceitáveis e foram propostas medidas de controle. A organização deve prosseguir com seus programas de controle, introduzindo melhorias contínuas.';
+  const DEFAULT_ENG = [
+    'Realizar estudos de engenharia para tratamento acústico em equipamentos ruidosos das áreas produtivas e de utilidades.',
+    'Avaliar a necessidade de sistemas de exaustão localizada em postos com emissão de agentes químicos.',
+    'Implementar proteções coletivas contra quedas em altura, quando aplicável.',
+  ].join('\n');
+  const DEFAULT_ADM = [
+    'Reavaliar anualmente o PGR conforme exigência legal (NR-01).',
+    'Solicitar dos fornecedores as FDS (Fichas de Dados de Segurança) das matérias-primas e divulgá-las aos empregados.',
+    'Minimizar o tempo de execução em atividades de alto potencial de risco e manter distância segura de fontes emissoras.',
+  ].join('\n');
+  const DEFAULT_TR = [
+    'Saúde / Higiene Ocupacional: PGR, resultados das avaliações quantitativas, aspectos toxicológicos, primeiros socorros.',
+    'Segurança Industrial: utilização de EPIs, FDS e melhores práticas de trabalho.',
+  ].join('\n');
+  const DEFAULT_MON = `${companyName || '(EMPRESA)'} deverá continuar com a estratégia de avaliação quantitativa para os agentes priorizados, conforme o Programa de Monitoramento Ambiental.`;
+  const DEFAULT_EPI = 'Quando os procedimentos de trabalho e os controles coletivos não forem suficientes para reduzir a exposição a níveis aceitáveis, deve-se adotar o EPI como último recurso, garantindo treinamento, fornecimento, troca e fiscalização do uso.';
 
   const save = async () => {
     setSaving(true);
@@ -89,6 +113,12 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
         validity_end: form.validity_end || null,
         rural_area_hectares:
           parsedHectares === null || Number.isNaN(parsedHectares) ? null : parsedHectares,
+        conclusion_intro: form.conclusion_intro.trim() || null,
+        engineering_measures: form.engineering_measures.trim() || null,
+        administrative_controls: form.administrative_controls.trim() || null,
+        trainings: form.trainings.trim() || null,
+        monitoring_text: form.monitoring_text.trim() || null,
+        epi_text: form.epi_text.trim() || null,
       };
       const { error } = await supabase
         .from("pgr_documents")
@@ -275,6 +305,74 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
           />
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Conclusão e Recomendações (Parte VI do PDF)</CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Personalize os textos das seções finais do relatório PGR conforme a realidade da empresa (ex.: comércio, indústria, área rural). Deixe em branco para usar o texto padrão. Nos campos de bullets, coloque <strong>uma recomendação por linha</strong>. Para ocultar uma seção inteira, apague todas as linhas e digite apenas um espaço.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Parágrafo de introdução da Parte VI</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, conclusion_intro: "" })}>Restaurar padrão</Button>
+            </div>
+            <Textarea rows={4} value={form.conclusion_intro} onChange={e => setForm({ ...form, conclusion_intro: e.target.value })} placeholder={DEFAULT_INTRO} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>6.1 Medidas de Engenharia (Coletivas) — uma por linha</Label>
+              <div className="flex gap-1">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, engineering_measures: DEFAULT_ENG })}>Preencher padrão</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, engineering_measures: "" })}>Restaurar padrão</Button>
+              </div>
+            </div>
+            <Textarea rows={5} value={form.engineering_measures} onChange={e => setForm({ ...form, engineering_measures: e.target.value })} placeholder={DEFAULT_ENG} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>6.2 Procedimentos e Controles Administrativos — uma por linha</Label>
+              <div className="flex gap-1">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, administrative_controls: DEFAULT_ADM })}>Preencher padrão</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, administrative_controls: "" })}>Restaurar padrão</Button>
+              </div>
+            </div>
+            <Textarea rows={5} value={form.administrative_controls} onChange={e => setForm({ ...form, administrative_controls: e.target.value })} placeholder={DEFAULT_ADM} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>6.3 Treinamentos — uma por linha</Label>
+              <div className="flex gap-1">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, trainings: DEFAULT_TR })}>Preencher padrão</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, trainings: "" })}>Restaurar padrão</Button>
+              </div>
+            </div>
+            <Textarea rows={4} value={form.trainings} onChange={e => setForm({ ...form, trainings: e.target.value })} placeholder={DEFAULT_TR} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>6.4 Monitoramento</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, monitoring_text: "" })}>Restaurar padrão</Button>
+            </div>
+            <Textarea rows={3} value={form.monitoring_text} onChange={e => setForm({ ...form, monitoring_text: e.target.value })} placeholder={DEFAULT_MON} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>6.5 Equipamentos de Proteção Individual</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, epi_text: "" })}>Restaurar padrão</Button>
+            </div>
+            <Textarea rows={3} value={form.epi_text} onChange={e => setForm({ ...form, epi_text: e.target.value })} placeholder={DEFAULT_EPI} />
+          </div>
+        </CardContent>
+      </Card>
+
 
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving} className="gap-2">

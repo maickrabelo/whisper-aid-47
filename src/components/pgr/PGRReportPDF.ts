@@ -824,7 +824,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   paragraph('Conjunto de ações para eliminação, mitigação e controle dos riscos identificados, respeitando a hierarquia de controle estabelecida na Parte III.');
 
   if (input.actions.length === 0) {
-    paragraph('Nenhuma ação cadastrada até o momento.', { size: 9 });
+    paragraph('Nenhuma ação cadastrada até o momento.');
   } else {
     const statusLabel = (s: string) =>
       ({ pending: 'Pendente', in_progress: 'Em andamento', done: 'Concluída', cancelled: 'Cancelada' } as any)[s] || s;

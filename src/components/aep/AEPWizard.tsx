@@ -142,8 +142,18 @@ export function AEPWizard({ open, onOpenChange, companyId, pgrDocumentId, onCrea
       toast.error('Informe setor e função'); return;
     }
     setEscopo(prev => [...prev, { ...escopoDraft, tempId: crypto.randomUUID(), worker_count: escopoDraft.worker_count || 1 }]);
-    setEscopoDraft({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: escopoDraft.ghe_id, situacao_trabalho: '' });
+    // Mantém setor e GHE preenchidos para facilitar o lançamento de várias funções no mesmo setor
+    setEscopoDraft({
+      tempId: '',
+      setor: escopoDraft.setor,
+      funcao: '',
+      cbo: '',
+      worker_count: 1,
+      ghe_id: escopoDraft.ghe_id,
+      situacao_trabalho: '',
+    });
   };
+  const clearEscopoDraft = () => setEscopoDraft({ tempId: '', setor: '', funcao: '', cbo: '', worker_count: 1, ghe_id: '', situacao_trabalho: '' });
   const removeEscopoItem = (id: string) => {
     setEscopo(prev => prev.filter(i => i.tempId !== id));
     // Fatores/participantes vinculados voltam para "geral"

@@ -231,7 +231,6 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     const align = opts.align ?? 'justify';
     const width = opts.width ?? CONTENT_W;
     const x = opts.x ?? MARGIN;
-    setText(size, false, COLORS.text);
     const source = String(text || '')
       .replace(/\r/g, '')
       .replace(/\n(?=\s*\d+[.)]\s+)/g, '\n\n')
@@ -241,11 +240,14 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
       .map(p => p.replace(/\s*\n\s*/g, ' ').replace(/\s{2,}/g, ' ').trim())
       .filter(Boolean);
     const lineH = size * 0.45 + 1.2;
+    setText(size, false, COLORS.text);
     blocks.forEach((block, blockIndex) => {
       const lines = doc.splitTextToSize(block, width) as string[];
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         ensure(lineH);
+        // Reforce font/size/color after each ensure() — a page break resets the state via addHeader().
+        setText(size, false, COLORS.text);
         if (align === 'justify' && i < lines.length - 1) {
           drawJustifiedLine(line, x, state.y, width, size);
         } else {
@@ -259,17 +261,29 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   };
 
   const bullets = (items: string[]) => {
-    setText(TYPE.body, false, COLORS.text);
+    const size = TYPE.body;
+    const bulletX = MARGIN + 4;
+    const bulletW = CONTENT_W - 4;
+    const lineH = size * 0.45 + 1.2;
     for (const item of items) {
-      const lines = doc.splitTextToSize(item, CONTENT_W - 5);
-      ensure(lines.length * 4.8 + 1);
-      doc.setFillColor(...COLORS.accent);
-      doc.circle(MARGIN + 1.2, state.y - 1.2, 0.7, 'F');
-      setText(TYPE.body, false, COLORS.text);
-      doc.text(lines, MARGIN + 4, state.y);
-      state.y += lines.length * 4.6 + 1;
+      const lines = doc.splitTextToSize(item, bulletW) as string[];
+      for (let i = 0; i < lines.length; i++) {
+        ensure(lineH);
+        setText(size, false, COLORS.text);
+        if (i === 0) {
+          doc.setFillColor(...COLORS.accent);
+          doc.circle(MARGIN + 1.2, state.y - 1.2, 0.7, 'F');
+        }
+        if (i < lines.length - 1) {
+          drawJustifiedLine(lines[i], bulletX, state.y, bulletW, size);
+        } else {
+          doc.text(lines[i], bulletX, state.y);
+        }
+        state.y += lineH;
+      }
+      state.y += 0.6;
     }
-    state.y += 2;
+    state.y += 1.4;
   };
 
   // Tabela com larguras de coluna (em mm). Quebra linhas e páginas.

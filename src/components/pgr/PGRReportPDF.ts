@@ -707,7 +707,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   paragraph('A seguir, o inventário dos riscos identificados, agrupados por Grupo Homogêneo de Exposição (GHE).');
 
   if (input.ghes.length === 0) {
-    paragraph('Nenhum GHE cadastrado até o momento.', { size: 9 });
+    paragraph('Nenhum GHE cadastrado até o momento.');
   } else {
     for (const ghe of input.ghes) {
       subTitle(`GHE: ${ghe.name}`);
@@ -717,7 +717,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
         `Trabalhadores: ${ghe.worker_count ?? 0}`,
         `Jornada: ${ghe.work_schedule || '—'}`,
       ].join('   •   ');
-      paragraph(meta, { size: TYPE.bodySmall, align: 'left' });
+      paragraph(meta, { align: 'left' });
       if (ghe.activities_description) {
         const raw = ghe.activities_description.trim();
         // Divide por quebras de linha, ";" ou "•" para separar atividades por função
@@ -726,11 +726,11 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
           .map(s => s.trim())
           .filter(s => s.length > 2);
         if (parts.length > 1) {
-          setText(TYPE.bodySmall, false, COLORS.text);
+          setText(TYPE.body, true, COLORS.text);
           ensure(5);
           doc.text('Atividades por função:', MARGIN, state.y);
-          state.y += 4;
-          // Detecta cabeçalhos de função (linhas curtas em MAIÚSCULAS) e renderiza em negrito, sem bullet.
+          state.y += 5;
+          // Detecta cabeçalhos de função (linhas curtas em MAIÚSCULAS) e renderiza como subtítulo.
           const isFunctionHeader = (s: string) =>
             s.length <= 60 &&
             /[A-ZÁÉÍÓÚÂÊÔÃÕÇ]/.test(s) &&
@@ -741,25 +741,25 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
           for (const p of parts) {
             if (isFunctionHeader(p)) {
               flush();
-              ensure(6);
+              ensure(8);
               state.y += 1;
-              setText(TYPE.bodySmall, true, COLORS.primary);
+              setText(TYPE.subtitle, true, COLORS.text);
               doc.text(p, MARGIN, state.y);
-              state.y += 4.5;
+              state.y += 6;
             } else {
               buffer.push(p);
             }
           }
           flush();
         } else {
-          paragraph(`Atividades: ${raw}`, { size: TYPE.bodySmall });
+          paragraph(`Atividades: ${raw}`);
         }
       }
 
 
       const gheRisks = input.risks.filter(r => r.ghe_id === ghe.id);
       if (gheRisks.length === 0) {
-        paragraph('— Sem riscos cadastrados para este GHE —', { size: TYPE.bodySmall, align: 'left' });
+        paragraph('— Sem riscos cadastrados para este GHE —', { align: 'left' });
         continue;
       }
 

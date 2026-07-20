@@ -21,6 +21,7 @@ export interface PGRReportInput {
     risk_grade: string | null;
     activity_branch?: string | null;
     address: string | null;
+    additional_addresses?: string[] | null;
     document_type?: 'pgr' | 'pgtr' | null;
     rural_activity?: string | null;
     rural_area_hectares?: number | null;

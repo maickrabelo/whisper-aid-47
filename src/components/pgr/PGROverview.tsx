@@ -64,6 +64,7 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
     risk_grade: pgr.risk_grade || "",
     activity_branch: pgr.activity_branch || "",
     address: pgr.address || "",
+    additional_addresses: (pgr.additional_addresses || []).join("\n"),
     rural_activity: pgr.rural_activity || "",
     rural_area_hectares: pgr.rural_area_hectares ?? "",
     work_regime: pgr.work_regime || "",

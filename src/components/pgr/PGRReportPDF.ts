@@ -21,6 +21,7 @@ export interface PGRReportInput {
     risk_grade: string | null;
     activity_branch?: string | null;
     address: string | null;
+    additional_addresses?: string[] | null;
     document_type?: 'pgr' | 'pgtr' | null;
     rural_activity?: string | null;
     rural_area_hectares?: number | null;
@@ -536,6 +537,13 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     ['Vigência', `${fmtDate(input.pgr.validity_start)} a ${fmtDate(input.pgr.validity_end)}`, 'Revisão', String(input.pgr.version).padStart(2, '0')],
   ];
   table(['Campo', 'Valor', 'Campo', 'Valor'], idRows, [35, 60, 35, CONTENT_W - 35 - 60 - 35]);
+
+  const extras = (input.pgr.additional_addresses || []).filter(a => a && a.trim());
+  if (extras.length > 0) {
+    subTitle('Unidades / Endereços adicionais (mesmo CNPJ)');
+    paragraph('Esta empresa possui mais de uma unidade sob o mesmo CNPJ. Os endereços abaixo integram o escopo deste PGR:');
+    extras.forEach((addr, i) => paragraph(`Unidade ${i + 2}: ${addr}`));
+  }
 
   subTitle('Regime de Trabalho');
   paragraph('O regime de trabalho é em horário comercial, de cunho administrativo/operacional, com jornadas conforme escala definida em cada GHE (Grupo Homogêneo de Exposição) detalhado neste documento.');

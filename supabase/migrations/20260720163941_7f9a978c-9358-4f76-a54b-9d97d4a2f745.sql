@@ -1,0 +1,1 @@
+ALTER TABLE public.pgr_documents ADD COLUMN IF NOT EXISTS additional_addresses text[] NOT NULL DEFAULT '{}';

@@ -1936,6 +1936,7 @@ export type Database = {
       pgr_documents: {
         Row: {
           activity_branch: string | null
+          additional_addresses: string[]
           address: string | null
           administrative_controls: string | null
           cnae: string | null
@@ -1971,6 +1972,7 @@ export type Database = {
         }
         Insert: {
           activity_branch?: string | null
+          additional_addresses?: string[]
           address?: string | null
           administrative_controls?: string | null
           cnae?: string | null
@@ -2006,6 +2008,7 @@ export type Database = {
         }
         Update: {
           activity_branch?: string | null
+          additional_addresses?: string[]
           address?: string | null
           administrative_controls?: string | null
           cnae?: string | null

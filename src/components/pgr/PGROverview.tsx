@@ -222,8 +222,18 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
             <Input value={form.activity_branch} onChange={e => setForm({ ...form, activity_branch: e.target.value })} placeholder="Ex: Construção civil de edifícios" />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label>Endereço completo</Label>
+            <Label>Endereço principal</Label>
             <Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Rua, número, bairro, cidade - UF" />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label>Unidades / endereços adicionais (mesmo CNPJ)</Label>
+            <Textarea
+              rows={3}
+              value={form.additional_addresses}
+              onChange={e => setForm({ ...form, additional_addresses: e.target.value })}
+              placeholder={"Um endereço por linha. Ex:\nUnidade 2 — Av. Brasil, 100, Centro, São Paulo - SP\nUnidade 3 — Rua X, 50, Rio de Janeiro - RJ"}
+            />
+            <p className="text-xs text-muted-foreground">Use uma linha por unidade. Todos os endereços serão listados no PDF do PGR.</p>
           </div>
           <div className="space-y-2">
             <Label>Vigência início</Label>

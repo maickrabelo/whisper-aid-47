@@ -358,17 +358,25 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>6.4 Monitoramento</Label>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, monitoring_text: "" })}>Restaurar padrão</Button>
+              <div className="flex gap-2">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, monitoring_text: DEFAULT_MON })}>Preencher padrão</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, monitoring_text: "" })}>Restaurar padrão</Button>
+              </div>
             </div>
-            <Textarea rows={3} value={form.monitoring_text} onChange={e => setForm({ ...form, monitoring_text: e.target.value })} placeholder={DEFAULT_MON} />
+            <p className="text-xs text-muted-foreground">Edite livremente ou deixe em branco para usar o texto padrão no PDF.</p>
+            <Textarea rows={4} value={form.monitoring_text} onChange={e => setForm({ ...form, monitoring_text: e.target.value })} placeholder={DEFAULT_MON} />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>6.5 Equipamentos de Proteção Individual</Label>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, epi_text: "" })}>Restaurar padrão</Button>
+              <div className="flex gap-2">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, epi_text: DEFAULT_EPI })}>Preencher padrão</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, epi_text: "" })}>Restaurar padrão</Button>
+              </div>
             </div>
-            <Textarea rows={3} value={form.epi_text} onChange={e => setForm({ ...form, epi_text: e.target.value })} placeholder={DEFAULT_EPI} />
+            <p className="text-xs text-muted-foreground">Edite livremente ou deixe em branco para usar o texto padrão no PDF.</p>
+            <Textarea rows={4} value={form.epi_text} onChange={e => setForm({ ...form, epi_text: e.target.value })} placeholder={DEFAULT_EPI} />
           </div>
         </CardContent>
       </Card>

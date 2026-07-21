@@ -62,7 +62,7 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
     doc.setFont('helvetica', 'normal');
     const wrapped = doc.splitTextToSize(value || '—', CONTENT_W - 45);
     doc.text(wrapped, MARGIN + 45, y);
-    y += Math.max(5, wrapped.length * 4.5);
+    y += Math.max(5, wrapped.length * 4.5) + 0.5;
   };
 
   doc.setFontSize(12); doc.setFont('helvetica', 'bold');
@@ -75,9 +75,10 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
     doc.setFont('helvetica', 'bold'); doc.text('Escopo avaliado:', MARGIN, y); y += 5;
     doc.setFont('helvetica', 'normal');
     escopo.forEach((it: any, idx: number) => {
-      if (y > 275) { doc.addPage(); y = 20; }
+      if (y > 273) { doc.addPage(); y = 20; }
       const t = `${idx + 1}. ${it.setor || '—'} — ${it.funcao || '—'}${it.cbo ? ` (CBO ${it.cbo})` : ''} · ${it.worker_count || 1} trab.`;
-      doc.text(t, MARGIN + 3, y); y += 4.5;
+      const w = doc.splitTextToSize(t, CONTENT_W - 3);
+      doc.text(w, MARGIN + 3, y); y += w.length * 4.5;
     });
     const total = escopo.reduce((s: number, i: any) => s + (i.worker_count || 0), 0);
     doc.setFont('helvetica', 'bold');

@@ -53,11 +53,12 @@ function drawWrappedText(
   x: number,
   maxWidth: number,
   lineHeight = 4.2,
-  options?: Parameters<jsPDF['text']>[2]
+  options?: any
 ): number {
   const wrapped = doc.splitTextToSize(text || '—', maxWidth);
   y = ensureSpace(doc, y, wrapped.length * lineHeight + 1.5);
-  doc.text(wrapped, x, y, options);
+  if (options) doc.text(wrapped, x, y, options);
+  else doc.text(wrapped, x, y);
   return y + wrapped.length * lineHeight + 0.8;
 }
 

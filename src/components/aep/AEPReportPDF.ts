@@ -62,7 +62,7 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
     doc.setFont('helvetica', 'normal');
     const wrapped = doc.splitTextToSize(value || '—', CONTENT_W - 45);
     doc.text(wrapped, MARGIN + 45, y);
-    y += Math.max(5, wrapped.length * 4.5);
+    y += Math.max(5, wrapped.length * 4.5) + 0.5;
   };
 
   doc.setFontSize(12); doc.setFont('helvetica', 'bold');
@@ -75,9 +75,10 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
     doc.setFont('helvetica', 'bold'); doc.text('Escopo avaliado:', MARGIN, y); y += 5;
     doc.setFont('helvetica', 'normal');
     escopo.forEach((it: any, idx: number) => {
-      if (y > 275) { doc.addPage(); y = 20; }
+      if (y > 273) { doc.addPage(); y = 20; }
       const t = `${idx + 1}. ${it.setor || '—'} — ${it.funcao || '—'}${it.cbo ? ` (CBO ${it.cbo})` : ''} · ${it.worker_count || 1} trab.`;
-      doc.text(t, MARGIN + 3, y); y += 4.5;
+      const w = doc.splitTextToSize(t, CONTENT_W - 3);
+      doc.text(w, MARGIN + 3, y); y += w.length * 4.5;
     });
     const total = escopo.reduce((s: number, i: any) => s + (i.worker_count || 0), 0);
     doc.setFont('helvetica', 'bold');
@@ -110,43 +111,42 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
 
   // Avaliação por bloco (GHE)
   const renderFator = (f: any, idx: number) => {
-    if (y > 260) { doc.addPage(); y = 20; }
+    if (y > 258) { doc.addPage(); y = 20; }
     doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-    doc.text(`${idx + 1}. ${f.fator_nome}`, MARGIN, y); y += 4;
+    const titleLines = doc.splitTextToSize(`${idx + 1}. ${f.fator_nome}`, CONTENT_W);
+    doc.text(titleLines, MARGIN, y); y += titleLines.length * 4.5 + 0.5;
     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
     doc.text(`Categoria: ${AEP_CATEGORIAS[f.categoria as keyof typeof AEP_CATEGORIAS] || f.categoria}`, MARGIN, y); y += 4;
     const level = classifyRisk(5, f.severity, f.probability);
     doc.text(`Severidade: ${f.severity}  |  Probabilidade: ${f.probability}  |  Nível: ${LEVEL_LABELS[level]}`, MARGIN, y); y += 4;
-    if (f.fonte_causa) {
-      const w = doc.splitTextToSize(`Fonte/causa: ${f.fonte_causa}`, CONTENT_W);
-      doc.text(w, MARGIN, y); y += w.length * 4;
-    }
-    if (f.grupos_expostos) {
-      const w = doc.splitTextToSize(`Grupos expostos: ${f.grupos_expostos}`, CONTENT_W);
-      doc.text(w, MARGIN, y); y += w.length * 4;
-    }
-    if (f.evidencia_texto) {
-      const w = doc.splitTextToSize(`Evidência: ${f.evidencia_texto}`, CONTENT_W);
-      doc.text(w, MARGIN, y); y += w.length * 4;
-    }
+    const bullet = (label: string, val: string) => {
+      const w = doc.splitTextToSize(`${label}: ${val}`, CONTENT_W);
+      if (y + w.length * 3.8 > 285) { doc.addPage(); y = 20; }
+      doc.text(w, MARGIN, y); y += w.length * 3.8 + 0.5;
+    };
+    if (f.fonte_causa) bullet('Fonte/causa', f.fonte_causa);
+    if (f.grupos_expostos) bullet('Grupos expostos', f.grupos_expostos);
+    if (f.evidencia_texto) bullet('Evidência', f.evidencia_texto);
     y += 3;
   };
 
   const renderParticipante = (p: any) => {
     if (y > 275) { doc.addPage(); y = 20; }
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal');
     const nome = p.anonimizado ? '(Anonimizado)' : (p.nome || '—');
     const t = `• ${nome}${p.funcao ? ' — ' + p.funcao : ''} [${p.tipo_participacao || 'outro'}]`;
-    doc.text(t, MARGIN, y); y += 4.5;
+    const w = doc.splitTextToSize(t, CONTENT_W);
+    doc.text(w, MARGIN, y); y += w.length * 4.2;
   };
 
   if (hasBlocos) {
     if (y > 220) { doc.addPage(); y = 20; }
     doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-    doc.text('3. Avaliação por bloco (GHE)', MARGIN, y); y += 6;
+    doc.text('3. Avaliação por bloco (GHE)', MARGIN, y); y += 7;
 
     const blocos = [
       ...escopo.map((e: any, i: number) => ({ key: e.tempId, label: `${i + 1}. ${e.setor || '—'} / ${e.funcao || '—'}${e.cbo ? ` · CBO ${e.cbo}` : ''}`, item: e })),
-      { key: '__geral__', label: 'Geral (aplicável a todos os GHEs)', item: null },
+      { key: '__geral__', label: 'Geral (aplicável a todos os GHEs)', item: null as any },
     ];
 
     blocos.forEach(b => {
@@ -155,24 +155,31 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
       if (fats.length === 0 && parts.length === 0 && !b.item?.situacao_trabalho) return;
 
       if (y > 250) { doc.addPage(); y = 20; }
-      // Barra do bloco
-      doc.setFillColor(30, 64, 175);
-      doc.rect(MARGIN, y - 4, CONTENT_W, 6, 'F');
-      doc.setTextColor(255, 255, 255);
+      // Barra do bloco — largura ajustada e texto quebrado em várias linhas
+      const workerTxt = b.item?.worker_count ? `${b.item.worker_count} trab.` : '';
       doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-      doc.text(b.label, MARGIN + 2, y);
-      if (b.item?.worker_count) doc.text(`${b.item.worker_count} trab.`, PAGE_W - MARGIN - 2, y, { align: 'right' });
-      doc.setTextColor(0); y += 6;
+      const workerW = workerTxt ? doc.getTextWidth(workerTxt) + 4 : 0;
+      const labelMaxW = CONTENT_W - 4 - workerW;
+      const labelLines = doc.splitTextToSize(b.label, labelMaxW);
+      const barH = Math.max(6, labelLines.length * 4.5 + 1.5);
+      doc.setFillColor(30, 64, 175);
+      doc.rect(MARGIN, y - 3.5, CONTENT_W, barH, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.text(labelLines, MARGIN + 2, y);
+      if (workerTxt) doc.text(workerTxt, PAGE_W - MARGIN - 2, y, { align: 'right' });
+      doc.setTextColor(0);
+      y += barH + 1;
 
       if (b.item?.situacao_trabalho) {
         doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-        doc.text('Situação de trabalho avaliada:', MARGIN, y); y += 4;
+        doc.text('Situação de trabalho avaliada:', MARGIN, y); y += 4.5;
         doc.setFont('helvetica', 'normal');
         const wrapped = doc.splitTextToSize(b.item.situacao_trabalho, CONTENT_W);
-        doc.text(wrapped, MARGIN, y); y += wrapped.length * 4 + 2;
+        doc.text(wrapped, MARGIN, y); y += wrapped.length * 4.2 + 2;
       }
 
       if (fats.length) {
+        if (y > 265) { doc.addPage(); y = 20; }
         doc.setFontSize(9); doc.setFont('helvetica', 'bold');
         doc.text(`Fatores levantados (${fats.length}):`, MARGIN, y); y += 5;
         fats.forEach((f, i) => renderFator(f, i));
@@ -181,11 +188,11 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
       if (parts.length) {
         if (y > 260) { doc.addPage(); y = 20; }
         doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-        doc.text(`Participantes ouvidos (${parts.length}):`, MARGIN, y); y += 4;
+        doc.text(`Participantes ouvidos (${parts.length}):`, MARGIN, y); y += 4.5;
         doc.setFont('helvetica', 'normal');
         parts.forEach(renderParticipante);
       }
-      y += 4;
+      y += 5;
     });
 
     // Renumerar as próximas seções mantendo compatibilidade — usamos 4./5./6.

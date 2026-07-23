@@ -460,8 +460,9 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             });
 
             const currentPath = window.location.pathname;
-            if (hasInitializedRef.current && !hasRedirectedRef.current && isPublicEntryPage(currentPath)) {
+            if (!hasRedirectedRef.current && isPublicEntryPage(currentPath)) {
               hasRedirectedRef.current = true;
+              hasInitializedRef.current = true;
               navigateByRole(userRole, userProfile, userCompanies);
             }
           }, 0);

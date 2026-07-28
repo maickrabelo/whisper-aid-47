@@ -21,6 +21,7 @@ import FormLeadsTab from '@/components/admin/FormLeadsTab';
 import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { WebhooksTab } from '@/components/admin/WebhooksTab';
+import { SubscriptionReconciliationTab } from '@/components/admin/SubscriptionReconciliationTab';
 import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
 import { ImportUserDataDialog } from '@/components/admin/ImportUserDataDialog';
 import { useNavigate } from "react-router-dom";

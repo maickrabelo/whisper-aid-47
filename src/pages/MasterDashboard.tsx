@@ -2035,6 +2035,10 @@ const MasterDashboard = () => {
             <TabsContent value="webhooks" className="space-y-6">
               <WebhooksTab />
             </TabsContent>
+
+            <TabsContent value="reconciliation" className="space-y-6">
+              <SubscriptionReconciliationTab />
+            </TabsContent>
           </Tabs>
         </div>
       </main>

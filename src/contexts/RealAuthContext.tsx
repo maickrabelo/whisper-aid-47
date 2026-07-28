@@ -367,8 +367,12 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       navigate('/sales-dashboard');
     } else if ((userRole as string) === 'sector_viewer') {
       navigate('/setor/dashboard');
+    } else {
+      // Fallback: nunca deixar o usuário preso na tela de login
+      navigate('/');
     }
   };
+
 
   const isPublicEntryPage = (path: string) => {
     return (

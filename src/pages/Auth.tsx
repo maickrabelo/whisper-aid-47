@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, AlertCircle } from "lucide-react";
 import ForgotPasswordDialog from "@/components/auth/ForgotPasswordDialog";
+import { resolvePostLoginPath } from "@/lib/postLoginRedirect";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);

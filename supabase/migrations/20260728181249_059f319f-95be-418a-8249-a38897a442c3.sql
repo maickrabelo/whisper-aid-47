@@ -1,0 +1,1 @@
+update public.profiles set must_change_password = false, password_reset_reason = null where id in ('9684a6cf-ccbf-43ec-90b0-31379f660881','2038554a-0b88-45b1-a5fc-8485044a1895');

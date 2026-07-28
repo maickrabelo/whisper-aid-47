@@ -3541,6 +3541,131 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_reconciliation_items: {
+        Row: {
+          action: string
+          applied: boolean
+          created_at: string
+          email: string
+          id: string
+          new_period_end: string | null
+          new_plan: string | null
+          new_status: string | null
+          payment_confirmed_at: string | null
+          previous_period_end: string | null
+          previous_plan: string | null
+          previous_status: string | null
+          purchase_amount_cents: number | null
+          reason: string | null
+          reconciliation_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          applied?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          new_period_end?: string | null
+          new_plan?: string | null
+          new_status?: string | null
+          payment_confirmed_at?: string | null
+          previous_period_end?: string | null
+          previous_plan?: string | null
+          previous_status?: string | null
+          purchase_amount_cents?: number | null
+          reason?: string | null
+          reconciliation_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          applied?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          new_period_end?: string | null
+          new_plan?: string | null
+          new_status?: string | null
+          payment_confirmed_at?: string | null
+          previous_period_end?: string | null
+          previous_plan?: string | null
+          previous_status?: string | null
+          purchase_amount_cents?: number | null
+          reason?: string | null
+          reconciliation_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_reconciliation_items_reconciliation_id_fkey"
+            columns: ["reconciliation_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_reconciliations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_reconciliations: {
+        Row: {
+          count_activated: number
+          count_blocked: number
+          count_divergent: number
+          count_no_account: number
+          count_renewed: number
+          count_trial: number
+          count_unchanged: number
+          created_at: string
+          executed_by: string | null
+          executed_by_email: string | null
+          file_name: string
+          id: string
+          notes: string | null
+          status: string
+          total_emails: number
+          total_rows: number
+          updated_at: string
+        }
+        Insert: {
+          count_activated?: number
+          count_blocked?: number
+          count_divergent?: number
+          count_no_account?: number
+          count_renewed?: number
+          count_trial?: number
+          count_unchanged?: number
+          created_at?: string
+          executed_by?: string | null
+          executed_by_email?: string | null
+          file_name: string
+          id?: string
+          notes?: string | null
+          status?: string
+          total_emails?: number
+          total_rows?: number
+          updated_at?: string
+        }
+        Update: {
+          count_activated?: number
+          count_blocked?: number
+          count_divergent?: number
+          count_no_account?: number
+          count_renewed?: number
+          count_trial?: number
+          count_unchanged?: number
+          created_at?: string
+          executed_by?: string | null
+          executed_by_email?: string | null
+          file_name?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          total_emails?: number
+          total_rows?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           amount_cents: number

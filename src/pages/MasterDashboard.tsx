@@ -21,6 +21,7 @@ import FormLeadsTab from '@/components/admin/FormLeadsTab';
 import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { WebhooksTab } from '@/components/admin/WebhooksTab';
+import { SubscriptionReconciliationTab } from '@/components/admin/SubscriptionReconciliationTab';
 import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
 import { ImportUserDataDialog } from '@/components/admin/ImportUserDataDialog';
 import { useNavigate } from "react-router-dom";
@@ -1268,6 +1269,7 @@ const MasterDashboard = () => {
                 <TabsTrigger value="trials">Contas em Teste</TabsTrigger>
                 <TabsTrigger value="stats">Estatísticas</TabsTrigger>
                 <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+                <TabsTrigger value="reconciliation">Conciliação</TabsTrigger>
               </TabsList>
               
               <div className="flex gap-4">
@@ -2032,6 +2034,10 @@ const MasterDashboard = () => {
 
             <TabsContent value="webhooks" className="space-y-6">
               <WebhooksTab />
+            </TabsContent>
+
+            <TabsContent value="reconciliation" className="space-y-6">
+              <SubscriptionReconciliationTab />
             </TabsContent>
           </Tabs>
         </div>

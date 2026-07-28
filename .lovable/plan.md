@@ -1,41 +1,39 @@
-## Problema
+## Objetivo
 
-O texto das seções finais do PGR ("PARTE VI — Conclusão e Recomendações": 6.1 Medidas de Engenharia, 6.2 Procedimentos Administrativos, 6.3 Treinamentos, 6.4 Monitoramento, 6.5 EPIs) está **fixo no código** (`src/components/pgr/PGRReportPDF.ts` linhas 870–897). Usuários de setores como comércio recebem bullets que não se aplicam (ex.: "tratamento acústico em equipamentos ruidosos", "exaustão localizada de agentes químicos", "FDS de matérias-primas").
+Criar no painel administrativo master uma área para conciliar manualmente as assinaturas a partir do relatório de vendas da Hotmart (.xls), com prévia, aplicação controlada e histórico de todas as conciliações.
 
-## Solução: tornar essas seções editáveis por PGR
+## Como vai funcionar
 
-### 1. Banco (migration)
-Adicionar colunas de texto opcionais em `pgr_documents`:
-- `conclusion_intro` (text) — parágrafo introdutório da Parte VI
-- `engineering_measures` (text) — bullets 6.1 (uma por linha)
-- `administrative_controls` (text) — bullets 6.2
-- `trainings` (text) — bullets 6.3
-- `monitoring_text` (text) — parágrafo 6.4
-- `epi_text` (text) — parágrafo 6.5
-
-Todas nullable. Quando `null`/vazio, o PDF usa o texto padrão atual (retrocompatível).
-
-### 2. UI — nova aba/card em `PGROverview.tsx`
-Novo card "Conclusão e Recomendações (Parte VI do PDF)" com 6 campos `Textarea` pré-preenchidos com os textos padrão atuais. Cada bloco terá uma dica curta ("uma recomendação por linha", "deixe em branco para usar o texto padrão", "não se aplica ao meu setor? apague as linhas que não fazem sentido"). Botão "Restaurar padrão" por campo.
-
-Salvamento no mesmo fluxo do form de identificação já existente (update em `pgr_documents`).
-
-### 3. PDF — `PGRReportPDF.ts`
-- Aceitar os novos campos no input do documento.
-- Nas seções 6.1–6.3: se o campo estiver preenchido, quebrar por linha (ignorando vazias) e renderizar como bullets. Se vazio, usar os defaults atuais.
-- Nas seções 6.4/6.5 e intro: usar texto customizado se houver; senão, default.
-- Se o usuário salvar uma seção como string única com apenas um espaço (para "esconder"), não renderizar o subtítulo. (Regra: seção sem itens = não imprime o subtítulo.)
-
-### 4. Retrocompatibilidade
-PGRs antigos sem esses campos preenchidos continuam saindo idênticos ao modelo definitivo atual.
+1. Aba **Conciliação** no Master Dashboard.
+2. Você sobe o arquivo (mesma estrutura do enviado: 63 colunas).
+3. O sistema lê apenas:
+   - **Confirmação do pagamento** (coluna D) → data base de vigência
+   - **Valor de compra com impostos** (coluna L) → 9,90 = teste 7 dias; 97,90 = mensal completo
+   - **Email do(a) Comprador(a)** (coluna AN) → chave de conciliação
+   - **Status da transação** → Reembolsado/Cancelado bloqueia
+4. Regras aplicadas por e-mail (considerando a transação **mais recente**):
+   - 9,90 e menos de 7 dias desde o pagamento → plano **Teste SMS**, trial ativo até D+7
+   - 9,90 e mais de 7 dias → **bloqueado**, com aviso para assinar o mensal
+   - 97,90 → plano **Sr.SMS** mensal ativo, vigência até D+30 (renovada a cada novo pagamento na planilha)
+   - Reembolsado/Cancelado → assinatura cancelada e acesso bloqueado
+   - E-mail sem conta no sistema → listado como "sem conta" (nenhuma ação)
+   - Conta ativa no sistema que **não** aparece na planilha → listada como **divergente para revisão** (nenhuma alteração automática)
+5. **Prévia**: tabela com e-mail, situação atual, situação proposta e motivo, com contadores por tipo de mudança. Nada é gravado nessa etapa.
+6. **Confirmar conciliação**: aplica as mudanças e grava o lote no histórico.
+7. **Histórico**: lista de conciliações (data, admin, arquivo, totais) e, ao abrir um lote, todas as linhas alteradas com valor anterior → novo.
 
 ## Detalhes técnicos
 
-- Migration adiciona colunas com `DEFAULT NULL`; sem alterações em GRANT/RLS (herda de `pgr_documents`).
-- `types.ts` (auto-gerado) será atualizado automaticamente pela Cloud após migration.
-- Reaproveita o helper `bullets()` e `paragraph()` já justificados/tipografados no PDF.
-- Nenhuma alteração no restante do documento — apenas a Parte VI passa a ser data-driven.
+**Banco (migração)**
+- `subscription_reconciliations`: arquivo, data, admin, total de linhas, contadores (ativados / renovados / bloqueados / sem conta / divergentes), status.
+- `subscription_reconciliation_items`: e-mail, user_id, ação, plano anterior/novo, status anterior/novo, vigência anterior/nova, motivo.
+- RLS: leitura/escrita apenas para `admin` (via `has_role`), + GRANTs para `authenticated` e `service_role`.
 
-## Fora do escopo
+**Edge function `reconcile-subscriptions`** (service role, registrada no `config.toml`)
+- Modo `preview`: recebe as linhas normalizadas, cruza com `profiles` / `sst_managers` / `companies` / `subscriptions` e devolve o diff — sem gravar.
+- Modo `apply`: repete a checagem, atualiza `subscriptions` (status, plan_id, período), `sst_managers`/`companies` (`subscription_status`, `trial_ends_at`) e grava lote + itens.
 
-- Não vou tornar editáveis as demais partes do PGR (I–V) nesta iteração — apenas a Parte VI, que é a que traz o texto reclamado. Posso estender se você quiser depois.
+**Frontend**
+- Nova dependência `xlsx` (SheetJS) para ler o .xls no navegador e normalizar as colunas pelo nome do cabeçalho (não pela posição), evitando quebra se a Hotmart mudar a ordem.
+- Novo componente `src/components/admin/SubscriptionReconciliationTab.tsx` (upload + prévia + confirmação + histórico), plugado como nova aba em `MasterDashboard.tsx`.
+- Bloqueio reaproveita o fluxo já existente (`TrialExpiredOverlay` / `PaymentBlockedOverlay`), sem criar telas novas.

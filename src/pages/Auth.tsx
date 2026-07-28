@@ -73,8 +73,19 @@ const Auth = () => {
         description: "Você será redirecionado...",
       });
 
-      // Redirect will be handled by the AuthContext
+      // Safety net: o AuthContext normalmente redireciona, mas se por qualquer
+      // motivo isso falhar (perfil/role indisponível, erro de rede), resolvemos
+      // o destino aqui para o usuário nunca ficar preso na tela de login.
+      if (!invitationToken && data?.user) {
+        const target = await resolvePostLoginPath(data.user.id).catch(() => '/dashboard');
+        setTimeout(() => {
+          if (window.location.pathname === '/auth' || window.location.pathname === '/sms/auth') {
+            navigate(target, { replace: true });
+          }
+        }, 1200);
+      }
     } catch (error: any) {
+
       toast({
         title: "Erro ao fazer login",
         description: error.message,

@@ -1269,6 +1269,7 @@ const MasterDashboard = () => {
                 <TabsTrigger value="trials">Contas em Teste</TabsTrigger>
                 <TabsTrigger value="stats">Estatísticas</TabsTrigger>
                 <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+                <TabsTrigger value="reconciliation">Conciliação</TabsTrigger>
               </TabsList>
               
               <div className="flex gap-4">

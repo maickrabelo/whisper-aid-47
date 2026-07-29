@@ -171,6 +171,15 @@ serve(async (req) => {
 
     if (insertRoleError) throw insertRoleError;
 
+    if (role === 'sst' && sst_manager_id) {
+      await supabaseAdmin
+        .from("user_sst_managers")
+        .upsert(
+          { user_id: userId, sst_manager_id, is_default: true },
+          { onConflict: "user_id,sst_manager_id" },
+        );
+    }
+
     await sendWelcomeEmail(supabaseAdmin, {
       email: normalizedEmail,
       password,

@@ -340,6 +340,10 @@ async function upgradeExistingAccount(supabase: any, ctx: {
 
   if ((plan.category === 'manager' || plan.category === 'sst') && existingManager?.id) {
     await supabase.from('profiles').update({ sst_manager_id: existingManager.id }).eq('id', userId!);
+    await supabase.from('user_sst_managers').upsert(
+      { user_id: userId!, sst_manager_id: existingManager.id, is_default: true },
+      { onConflict: 'user_id,sst_manager_id' },
+    );
   }
   if (plan.category === 'company' && existingCompany?.id) {
     await supabase.from('profiles').update({ company_id: existingCompany.id }).eq('id', userId!);
@@ -433,6 +437,10 @@ async function upgradeExistingAccount(supabase: any, ctx: {
         max_companies: plan.max_companies || 9999,
         pgr_module_enabled: plan.pgr_enabled === true,
       }).eq('id', profile.sst_manager_id);
+      await supabase.from('user_sst_managers').upsert(
+        { user_id: userId!, sst_manager_id: profile.sst_manager_id, is_default: true },
+        { onConflict: 'user_id,sst_manager_id' },
+      );
     } else {
       const { data: mgr } = await supabase.from('sst_managers').insert({
         name: buyerName, email: buyerEmail,
@@ -443,6 +451,10 @@ async function upgradeExistingAccount(supabase: any, ctx: {
       }).select('id').single();
       if (mgr) {
         await supabase.from('profiles').update({ sst_manager_id: mgr.id }).eq('id', userId);
+        await supabase.from('user_sst_managers').upsert(
+          { user_id: userId!, sst_manager_id: mgr.id, is_default: true },
+          { onConflict: 'user_id,sst_manager_id' },
+        );
       }
     }
   } else if (plan.category === 'company') {
@@ -881,6 +893,10 @@ Deno.serve(async (req) => {
           .single();
         if (mgr) {
           await supabase.from('profiles').update({ sst_manager_id: mgr.id }).eq('id', userId!);
+          await supabase.from('user_sst_managers').upsert(
+            { user_id: userId!, sst_manager_id: mgr.id, is_default: true },
+            { onConflict: 'user_id,sst_manager_id' },
+          );
         }
       }
 

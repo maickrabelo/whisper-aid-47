@@ -128,6 +128,13 @@ Deno.serve(async (req) => {
       await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "sst" });
     }
 
+    await supabaseAdmin
+      .from("user_sst_managers")
+      .upsert(
+        { user_id: userId, sst_manager_id: sstManager.id, is_default: true },
+        { onConflict: "user_id,sst_manager_id" }
+      );
+
     // 5. Optional manual plan + trial
     let subscriptionId: string | null = null;
     if (plan_id) {

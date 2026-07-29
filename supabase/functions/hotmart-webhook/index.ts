@@ -187,6 +187,31 @@ function normalizeEmail(email: string | null | undefined) {
   return String(email || '').trim().toLowerCase();
 }
 
+function normalizeDigits(value: unknown) {
+  const digits = String(value ?? '').replace(/\D/g, '');
+  return digits.length > 0 ? digits : null;
+}
+
+function getBuyerPhone(buyer: any) {
+  return normalizeDigits(buyer?.checkout_phone ?? buyer?.phone ?? buyer?.phone_number);
+}
+
+function getBuyerDocument(buyer: any) {
+  return normalizeDigits(buyer?.document ?? buyer?.doc ?? buyer?.document_number);
+}
+
+function getBuyerAddress(buyer: any) {
+  const address = buyer?.address;
+  if (!address || typeof address !== 'object') return null;
+  const street = [address.address, address.number].filter(Boolean).join(', ');
+  const complement = address.complement ? ` - ${address.complement}` : '';
+  const neighborhood = address.neighborhood ? ` - ${address.neighborhood}` : '';
+  const cityState = [address.city, address.state].filter(Boolean).join('/');
+  const zip = address.zipcode ? `, CEP ${address.zipcode}` : '';
+  const formatted = `${street}${complement}${neighborhood}${cityState ? `, ${cityState}` : ''}${zip}`.trim();
+  return formatted || null;
+}
+
 async function findSstManagersByEmail(supabase: any, email: string) {
   const normalized = normalizeEmail(email);
   if (!normalized) return [];
@@ -293,6 +318,7 @@ async function upgradeExistingAccount(supabase: any, ctx: {
   plan: any;
   productId?: string;
   product: any;
+  buyer: any;
   transactionId?: string;
   subscriberCode?: string;
   subscriptionInfo: any;
@@ -302,8 +328,11 @@ async function upgradeExistingAccount(supabase: any, ctx: {
   const {
     existingAuthUser, existingCompany, existingManager,
     buyerEmail, buyerName, plan, productId, product,
-    transactionId, subscriberCode, subscriptionInfo, purchase, eventType,
+    buyer, transactionId, subscriberCode, subscriptionInfo, purchase, eventType,
   } = ctx;
+  const buyerDocument = getBuyerDocument(buyer);
+  const buyerPhone = getBuyerPhone(buyer);
+  const buyerAddress = getBuyerAddress(buyer);
 
   // Localiza user_id
   let userId: string | null = existingAuthUser?.id ?? null;
@@ -436,6 +465,9 @@ async function upgradeExistingAccount(supabase: any, ctx: {
         trial_ends_at: trialEndsAt,
         max_companies: plan.max_companies || 9999,
         pgr_module_enabled: plan.pgr_enabled === true,
+        ...(buyerDocument ? { cnpj: buyerDocument } : {}),
+        ...(buyerPhone ? { phone: buyerPhone } : {}),
+        ...(buyerAddress ? { address: buyerAddress } : {}),
       }).eq('id', profile.sst_manager_id);
       await supabase.from('user_sst_managers').upsert(
         { user_id: userId!, sst_manager_id: profile.sst_manager_id, is_default: true },
@@ -444,6 +476,9 @@ async function upgradeExistingAccount(supabase: any, ctx: {
     } else {
       const { data: mgr } = await supabase.from('sst_managers').insert({
         name: buyerName, email: buyerEmail,
+        cnpj: buyerDocument,
+        phone: buyerPhone,
+        address: buyerAddress,
         max_companies: plan.max_companies || 9999,
         subscription_status: entityStatus,
         trial_ends_at: trialEndsAt,
@@ -465,11 +500,17 @@ async function upgradeExistingAccount(supabase: any, ctx: {
         trial_ends_at: trialEndsAt,
         parent_subscription_id: subId,
         max_employees: plan.max_employees,
+        ...(buyerDocument ? { cnpj: buyerDocument } : {}),
+        ...(buyerPhone ? { phone: buyerPhone } : {}),
+        ...(buyerAddress ? { address: buyerAddress } : {}),
       }).eq('id', companyId);
     } else {
       const slugBase = buyerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50);
       const { data: company } = await supabase.from('companies').insert({
         name: buyerName, email: buyerEmail,
+        cnpj: buyerDocument,
+        phone: buyerPhone,
+        address: buyerAddress,
         slug: `${slugBase}-${Date.now().toString(36)}`,
         subscription_status: entityStatus,
         trial_ends_at: trialEndsAt,
@@ -731,6 +772,7 @@ Deno.serve(async (req) => {
         plan,
         productId,
         product,
+          buyer,
         transactionId,
         subscriberCode,
         subscriptionInfo,
@@ -768,6 +810,7 @@ Deno.serve(async (req) => {
             existingCompany: null,
             existingManager: null,
             buyerEmail, buyerName, plan, productId, product,
+          buyer,
             transactionId, subscriberCode, subscriptionInfo, purchase, eventType,
           });
           if (raceResult) {
@@ -852,6 +895,9 @@ Deno.serve(async (req) => {
           .insert({
             name: buyerName,
             email: buyerEmail,
+            cnpj: getBuyerDocument(buyer),
+            phone: getBuyerPhone(buyer),
+            address: getBuyerAddress(buyer),
             slug: `${slugBase}-${Date.now().toString(36)}`,
             subscription_status: entityStatus,
             trial_ends_at: trialEndsAt,
@@ -884,6 +930,9 @@ Deno.serve(async (req) => {
           .insert({
             name: buyerName,
             email: buyerEmail,
+            cnpj: getBuyerDocument(buyer),
+            phone: getBuyerPhone(buyer),
+            address: getBuyerAddress(buyer),
             max_companies: plan.max_companies || 10,
             subscription_status: entityStatus,
             trial_ends_at: trialEndsAt,

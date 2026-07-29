@@ -3,8 +3,6 @@ project_id = "nqdodoqtozvgvpcmwwsd"
 [functions.migrate-sms-export]
 verify_jwt = false
 
-[functions.reset-password-esantos]
-verify_jwt = false
 
 [functions.reset-password-jsf]
 verify_jwt = false

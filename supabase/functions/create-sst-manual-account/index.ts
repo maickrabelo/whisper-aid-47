@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendWelcomeEmail } from "../_shared/welcome-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -161,6 +162,14 @@ Deno.serve(async (req) => {
       if (subErr) log("Subscription error (non-fatal)", subErr);
       else subscriptionId = sub?.id ?? null;
     }
+
+    await sendWelcomeEmail(supabaseAdmin, {
+      email: cleanEmail,
+      password: tempPassword,
+      name: responsible_name,
+      accountType: "sst",
+      context: "create-sst-manual-account",
+    });
 
     return new Response(
       JSON.stringify({

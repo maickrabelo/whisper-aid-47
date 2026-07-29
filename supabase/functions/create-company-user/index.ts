@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendWelcomeEmail } from "../_shared/welcome-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -123,6 +124,14 @@ Deno.serve(async (req) => {
         .update({ company_id: company_id })
         .eq("id", existingUser.id);
 
+      await sendWelcomeEmail(supabaseAdmin, {
+        email: normalizedEmail,
+        name: company_name || "Empresa",
+        accountType: "company",
+        existingUser: true,
+        context: "create-company-user",
+      });
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -185,6 +194,14 @@ Deno.serve(async (req) => {
         company_id: company_id,
         is_default: true,
       });
+
+    await sendWelcomeEmail(supabaseAdmin, {
+      email: normalizedEmail,
+      password: cnpjDigits,
+      name: company_name || "Empresa",
+      accountType: "company",
+      context: "create-company-user",
+    });
 
     return new Response(
       JSON.stringify({

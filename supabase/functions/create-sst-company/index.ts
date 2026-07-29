@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendWelcomeEmail } from "../_shared/welcome-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,6 +53,15 @@ const ensureCompanyAccess = async (
     if (createUserErr) throw createUserErr;
     companyUserId = createdUser.user!.id;
   }
+
+  await sendWelcomeEmail(supabase, {
+    email: normalizedEmail,
+    password: initialPassword,
+    name: company.name,
+    accountType: "company",
+    existingUser: !!existingAuth,
+    context: "create-sst-company",
+  });
 
   const { data: currentProfile } = await supabase
     .from("profiles")

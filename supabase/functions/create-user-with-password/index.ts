@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { sendWelcomeEmail } from "../_shared/welcome-email.ts";
 
 // Error sanitization utility
 function getSafeErrorMessage(error: any): string {
@@ -169,6 +170,14 @@ serve(async (req) => {
       .insert({ user_id: userId, role });
 
     if (insertRoleError) throw insertRoleError;
+
+    await sendWelcomeEmail(supabaseAdmin, {
+      email: normalizedEmail,
+      password,
+      name: full_name,
+      accountType: (role === "sst" || role === "company" || role === "admin") ? role : "user",
+      context: "create-user-with-password",
+    });
 
     return jsonResponse({
       success: true,

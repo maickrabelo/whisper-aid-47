@@ -65,8 +65,12 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
   };
 
   const handleColorChange = async (color: BrandColorTheme) => {
-    await setBrandColorDB(color);
-    toast.success('Esquema de cores atualizado!');
+    try {
+      await setBrandColorDB(color);
+      toast.success('Esquema de cores atualizado!');
+    } catch {
+      toast.error('Cor aplicada, mas não foi possível salvar sua preferência.');
+    }
   };
 
   const getDashboardPath = () => {

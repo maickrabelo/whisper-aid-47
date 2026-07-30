@@ -32,6 +32,7 @@ const InviteCollaboratorDialog: React.FC<Props> = ({
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [acceptUrl, setAcceptUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,12 +49,14 @@ const InviteCollaboratorDialog: React.FC<Props> = ({
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
+      setAcceptUrl((data as any)?.accept_url ?? null);
       toast({
         title: "Convite enviado!",
-        description: `${trimmed} receberá um e-mail com o link de aceite.`,
+        description: (data as any)?.email_sent
+          ? `${trimmed} receberá um e-mail com o link de aceite.`
+          : `Convite criado, mas o e-mail não pôde ser enviado. Copie o link abaixo e envie manualmente.`,
       });
       setEmail("");
-      onOpenChange(false);
       onInvited?.();
     } catch (e: any) {
       toast({
@@ -65,6 +68,13 @@ const InviteCollaboratorDialog: React.FC<Props> = ({
       setLoading(false);
     }
   };
+
+  const copyLink = async () => {
+    if (!acceptUrl) return;
+    await navigator.clipboard.writeText(acceptUrl);
+    toast({ title: "Link copiado!" });
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

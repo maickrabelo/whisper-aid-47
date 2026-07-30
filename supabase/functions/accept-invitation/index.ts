@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendWelcomeEmail } from "../_shared/welcome-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -138,6 +139,29 @@ Deno.serve(async (req) => {
         accepted_by: userId,
       })
       .eq("id", inv.id);
+
+    // E-mail de boas-vindas ao colaborador que acabou de aceitar o convite
+    try {
+      let accountName: string | null = null;
+      if (inv.account_type === "sst" && inv.sst_manager_id) {
+        const { data } = await admin.from("sst_managers").select("name").eq("id", inv.sst_manager_id).maybeSingle();
+        accountName = (data as any)?.name ?? null;
+      } else if (inv.company_id) {
+        const { data } = await admin.from("companies").select("name").eq("id", inv.company_id).maybeSingle();
+        accountName = (data as any)?.name ?? null;
+      }
+      const { data: prof } = await admin.from("profiles").select("full_name").eq("id", userId).maybeSingle();
+      await sendWelcomeEmail(admin, {
+        email: userEmail,
+        name: (prof as any)?.full_name ?? null,
+        accountType: inv.account_type === "sst" ? "sst" : "company",
+        planName: accountName,
+        existingUser: true,
+        context: "collaborator-invitation",
+      });
+    } catch (e) {
+      console.error("welcome email (collaborator) failed", e);
+    }
 
     return new Response(
       JSON.stringify({

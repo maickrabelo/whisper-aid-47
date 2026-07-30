@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, UserPlus, Trash2, Mail, Crown } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Mail, Crown, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import InviteCollaboratorDialog from "./InviteCollaboratorDialog";
@@ -35,6 +35,7 @@ const TeamManagementCard: React.FC<Props> = ({ accountType, accountId, accountNa
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [pending, setPending] = useState<PendingInvitation[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [resending, setResending] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -70,6 +71,28 @@ const TeamManagementCard: React.FC<Props> = ({ accountType, accountId, accountNa
     }
     toast({ title: "Convite revogado" });
     load();
+  };
+
+  const handleResend = async (email: string) => {
+    setResending(email);
+    try {
+      const { data, error } = await supabase.functions.invoke("invite-collaborator", {
+        body: { email, account_type: accountType, account_id: accountId, resend: true },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({
+        title: "Convite reenviado",
+        description: (data as any)?.email_sent
+          ? `Novo link enviado para ${email}.`
+          : `Convite atualizado, mas o e-mail falhou. Link: ${(data as any)?.accept_url ?? ""}`,
+      });
+      load();
+    } catch (e: any) {
+      toast({ title: "Erro ao reenviar", description: e.message, variant: "destructive" });
+    } finally {
+      setResending(null);
+    }
   };
 
   const handleRemoveCollaborator = async (userId: string) => {
@@ -189,9 +212,24 @@ const TeamManagementCard: React.FC<Props> = ({ accountType, accountId, accountNa
                             </p>
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => handleRevoke(p.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleResend(p.email)}
+                            disabled={resending === p.email}
+                            title="Reenviar convite"
+                          >
+                            {resending === p.email ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleRevoke(p.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

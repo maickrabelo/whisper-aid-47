@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendWelcomeEmail } from "../_shared/welcome-email.ts";
+import { linkInvitedUser, markInvitationAccepted } from "../_shared/link-invitation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -83,62 +84,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const targetRole = inv.account_type === "sst" ? "sst" : "company";
-
-    // Atualizar role
-    const { data: existingRoles } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-
-    const hasTargetRole = existingRoles?.some((r: any) => r.role === targetRole);
-    if (!hasTargetRole) {
-      // Remove pending se existir
-      await admin.from("user_roles").delete().eq("user_id", userId).eq("role", "pending");
-      await admin.from("user_roles").insert({ user_id: userId, role: targetRole });
-    }
-
-    // Inserir vínculo
-    if (inv.account_type === "sst") {
-      await admin
-        .from("user_sst_managers")
-        .insert({ user_id: userId, sst_manager_id: inv.sst_manager_id, is_default: false })
-        .select();
-
-      // Se profile não tem sst_manager_id, define como ativa
-      const { data: prof } = await admin
-        .from("profiles")
-        .select("sst_manager_id")
-        .eq("id", userId)
-        .maybeSingle();
-      if (!prof?.sst_manager_id) {
-        await admin.from("profiles").update({ sst_manager_id: inv.sst_manager_id }).eq("id", userId);
-      }
-    } else {
-      await admin
-        .from("user_companies")
-        .insert({ user_id: userId, company_id: inv.company_id, is_default: false })
-        .select();
-
-      const { data: prof } = await admin
-        .from("profiles")
-        .select("company_id")
-        .eq("id", userId)
-        .maybeSingle();
-      if (!prof?.company_id) {
-        await admin.from("profiles").update({ company_id: inv.company_id }).eq("id", userId);
-      }
-    }
-
-    // Marcar como aceito
-    await admin
-      .from("account_invitations")
-      .update({
-        status: "accepted",
-        accepted_at: new Date().toISOString(),
-        accepted_by: userId,
-      })
-      .eq("id", inv.id);
+    // Vínculo completo (profile + role + user_sst_managers/user_companies)
+    await linkInvitedUser(admin, userId, inv as any, (claims.claims as any)?.user_metadata?.full_name ?? null);
+    await markInvitationAccepted(admin, inv.id, userId);
 
     // E-mail de boas-vindas ao colaborador que acabou de aceitar o convite
     try {

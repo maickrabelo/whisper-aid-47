@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { linkInvitedUser, markInvitationAccepted } from "../_shared/link-invitation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -90,6 +91,8 @@ Deno.serve(async (req) => {
       if (existing) {
         // User already exists — just update password so they can sign in
         await admin.auth.admin.updateUserById(existing.id, { password });
+        await linkInvitedUser(admin, existing.id, inv as any, fullName);
+        await markInvitationAccepted(admin, inv.id, existing.id);
         return new Response(JSON.stringify({ success: true, already_existed: true, email: inv.email }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -106,6 +109,11 @@ Deno.serve(async (req) => {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+
+      if (created.user?.id) {
+        await linkInvitedUser(admin, created.user.id, inv as any, fullName);
+        await markInvitationAccepted(admin, inv.id, created.user.id);
       }
 
       return new Response(JSON.stringify({ success: true, email: inv.email, user_id: created.user?.id }), {

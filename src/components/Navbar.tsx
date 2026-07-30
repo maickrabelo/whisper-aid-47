@@ -24,6 +24,11 @@ import {
 
 const COLOR_OPTIONS: { value: BrandColorTheme; label: string; color: string }[] = [
   { value: 'green', label: 'Verde', color: '#166534' },
+  { value: 'navy', label: 'Azul', color: '#1e40af' },
+  { value: 'teal', label: 'Petróleo', color: '#0891b2' },
+  { value: 'purple', label: 'Roxo', color: '#7c3aed' },
+  { value: 'orange', label: 'Laranja', color: '#ea580c' },
+  { value: 'wine', label: 'Vinho', color: '#be123c' },
 ];
 
 const SMS_LOGO_URL = '/__l5e/assets-v1/86052a62-59f9-47bf-af09-bc2d67c91278/sr-sms-logo.png';
@@ -60,8 +65,12 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
   };
 
   const handleColorChange = async (color: BrandColorTheme) => {
-    await setBrandColorDB(color);
-    toast.success('Esquema de cores atualizado!');
+    try {
+      await setBrandColorDB(color);
+      toast.success('Esquema de cores atualizado!');
+    } catch {
+      toast.error('Cor aplicada, mas não foi possível salvar sua preferência.');
+    }
   };
 
   const getDashboardPath = () => {

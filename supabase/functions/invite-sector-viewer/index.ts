@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildAppUrl, MAIL_FROM } from "../_shared/app-url.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,12 +24,12 @@ function emailHtml(opts: {
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;padding:32px 0;"><tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.06);">
-  <tr><td style="background:linear-gradient(135deg,#1e3a8a,#3b82f6);padding:32px;text-align:center;">
-    <h1 style="color:#fff;margin:0;font-size:26px;">SOIA</h1>
-    <p style="color:#dbeafe;margin:8px 0 0;font-size:14px;">Acesso a dados de setor</p>
+  <tr><td style="background:#0b2f5e;padding:32px;text-align:center;">
+    <h1 style="color:#fff;margin:0;font-size:26px;">Sr. SMS</h1>
+    <p style="color:#cbd5e1;margin:8px 0 0;font-size:14px;">Acesso a dados de setor</p>
   </td></tr>
   <tr><td style="padding:32px;">
-    <h2 style="color:#1e3a8a;margin-top:0;">Você foi convidado(a)!</h2>
+    <h2 style="color:#0b2f5e;margin-top:0;">Você foi convidado(a)!</h2>
     <p style="color:#374151;font-size:16px;line-height:1.6;">
       <strong>${opts.inviterName}</strong> está te dando acesso para visualizar os
       dados da avaliação <strong>${typeLabel}</strong> da empresa
@@ -41,7 +42,7 @@ function emailHtml(opts: {
       Você só verá esses setores — nenhum outro dado da empresa fica disponível.
     </p>
     <div style="text-align:center;margin:32px 0;">
-      <a href="${opts.acceptUrl}" style="background:#3b82f6;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">Aceitar acesso</a>
+      <a href="${opts.acceptUrl}" style="background:#0b2f5e;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">Aceitar acesso</a>
     </div>
     <p style="color:#6b7280;font-size:13px;line-height:1.5;">
       Ou copie este link: <br><span style="color:#3b82f6;word-break:break-all;">${opts.acceptUrl}</span>
@@ -49,7 +50,7 @@ function emailHtml(opts: {
     <p style="color:#9ca3af;font-size:12px;margin-top:24px;">Este convite expira em 7 dias.</p>
   </td></tr>
   <tr><td style="background:#f9fafb;padding:20px;text-align:center;color:#6b7280;font-size:12px;">
-    © ${new Date().getFullYear()} SOIA · soia.app.br
+    © ${new Date().getFullYear()} Sr. SMS · srsms.com.br
   </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -176,20 +177,22 @@ Deno.serve(async (req) => {
     const companyName = comp?.name ?? "sua empresa";
     const inviterName = callerProfile?.full_name || callerEmail || "Sua gestora SST";
 
-    const acceptUrl = `https://soia.app.br/convite-setor/${token}`;
+    const acceptUrl = buildAppUrl(`/convite-setor/${token}`);
 
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (RESEND_API_KEY) {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY_1") ?? Deno.env.get("RESEND_API_KEY");
+    if (LOVABLE_API_KEY && RESEND_API_KEY) {
       try {
         const html = emailHtml({ inviterName, companyName, departments: department_names, assessmentType: assessment_type, acceptUrl });
-        const resp = await fetch("https://api.resend.com/emails", {
+        const resp = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${RESEND_API_KEY}`,
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "X-Connection-Api-Key": RESEND_API_KEY,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "SOIA <onboarding@resend.dev>",
+            from: MAIL_FROM,
             to: [email],
             subject: `Acesso à avaliação ${assessment_type.toUpperCase()} — ${companyName}`,
             html,

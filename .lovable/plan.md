@@ -1,39 +1,32 @@
-## Objetivo
+## Diagnóstico (verificado)
 
-Criar no painel administrativo master uma área para conciliar manualmente as assinaturas a partir do relatório de vendas da Hotmart (.xls), com prévia, aplicação controlada e histórico de todas as conciliações.
+O e-mail de convite de colaborador é gerado em `supabase/functions/invite-collaborator/index.ts` com o link **fixo** `https://soia.app.br/convite/{token}` (linha do `acceptUrl`), remetente "SOIA <noreply@soia.app.br>", cabeçalho "SOIA – Sistema de Gestão NR-01" e rodapé "© SOIA · soia.app.br". Por isso os convidados de `fabio.carette@safetyework.com.br` foram parar no site antigo e nunca chegaram à tela `/convite/:token` do Sr.SMS — os três convites (`deise.duarte@sdafetyework.com.br`, `tamires.oliveira@safetyework.com.br` e um de 30/07) continuam com status `pending` no banco, ou seja, nenhum aceite foi concluído e nenhum vínculo/role foi criado.
 
-## Como vai funcionar
+O mesmo problema de domínio existe em `invite-sector-viewer` (link `https://soia.app.br/convite-setor/{token}`). Consultando `account_invitations`, há **vários outros convites pendentes** de outras contas com o mesmo destino quebrado (ex.: adibsalles, larissacavalcantetst, sandy.gomes, juniormoises414, miguelroaamaral, tanialcrepaldi, nalucristal, antoniocarlos.solucoes, entre outros).
 
-1. Aba **Conciliação** no Master Dashboard.
-2. Você sobe o arquivo (mesma estrutura do enviado: 63 colunas).
-3. O sistema lê apenas:
-   - **Confirmação do pagamento** (coluna D) → data base de vigência
-   - **Valor de compra com impostos** (coluna L) → 9,90 = teste 7 dias; 97,90 = mensal completo
-   - **Email do(a) Comprador(a)** (coluna AN) → chave de conciliação
-   - **Status da transação** → Reembolsado/Cancelado bloqueia
-4. Regras aplicadas por e-mail (considerando a transação **mais recente**):
-   - 9,90 e menos de 7 dias desde o pagamento → plano **Teste SMS**, trial ativo até D+7
-   - 9,90 e mais de 7 dias → **bloqueado**, com aviso para assinar o mensal
-   - 97,90 → plano **Sr.SMS** mensal ativo, vigência até D+30 (renovada a cada novo pagamento na planilha)
-   - Reembolsado/Cancelado → assinatura cancelada e acesso bloqueado
-   - E-mail sem conta no sistema → listado como "sem conta" (nenhuma ação)
-   - Conta ativa no sistema que **não** aparece na planilha → listada como **divergente para revisão** (nenhuma alteração automática)
-5. **Prévia**: tabela com e-mail, situação atual, situação proposta e motivo, com contadores por tipo de mudança. Nada é gravado nessa etapa.
-6. **Confirmar conciliação**: aplica as mudanças e grava o lote no histórico.
-7. **Histórico**: lista de conciliações (data, admin, arquivo, totais) e, ao abrir um lote, todas as linhas alteradas com valor anterior → novo.
+Observação: o e-mail `deise.duarte@sdafetyework.com.br` tem erro de digitação no domínio (`sdafetyework`), então esse convite precisa ser reenviado para o endereço correto.
+
+Também confirmado: hoje o fluxo de aceite (`signup-from-invitation` + `accept-invitation`) **não dispara nenhum e-mail de boas-vindas** — o colaborador cria a senha e fica sem nenhuma confirmação.
+
+## Correções
+
+**1. Link e branding do convite (causa raiz)**
+- Em `invite-collaborator`: trocar o domínio fixo por `https://srsms.com.br/convite/{token}` (com override opcional por `APP_PUBLIC_URL`), e refazer o template com identidade Sr.SMS (cabeçalho, cores, rodapé, assunto e remetente `Sr. SMS <noreply@...>`), no mesmo padrão de `_shared/welcome-email.ts`.
+- Mesma correção em `invite-sector-viewer` (`/convite-setor/{token}`).
+- Centralizar a URL base em um helper compartilhado (`supabase/functions/_shared/app-url.ts`) para não voltar a existir domínio "chumbado" espalhado.
+- Retornar o `accept_url` correto para o front, e exibir no diálogo de convite um botão "Copiar link do convite" como plano B caso o e-mail não chegue.
+
+**2. E-mail de boas-vindas para colaborador convidado**
+- Após o aceite bem-sucedido (`signup-from-invitation` com `action=signup`, e também `accept-invitation` para quem já tinha conta), disparar o e-mail de boas-vindas usando o utilitário existente `_shared/welcome-email.ts`, com contexto "colaborador convidado", nome da conta, link de login e sem expor senha.
+
+**3. Reenvio dos convites quebrados**
+- Criar uma ação de "Reenviar convite" no `TeamManagementCard` (chamando `invite-collaborator` com reenvio, renovando `expires_at` em vez de bloquear com "já existe convite pendente").
+- Reenviar imediatamente, com o link correto, os convites pendentes de Fábio (`tamires.oliveira@safetyework.com.br` e o de 30/07) e reenviar o de Deise para o e-mail corrigido `deise.duarte@safetyework.com.br` (confirmar o endereço com o cliente antes).
+- Fazer uma varredura dos demais convites `pending` criados antes desta correção e reenviá-los com o link novo (via função pontual de reenvio em lote), evitando os já expirados sem interesse.
+
+**4. Verificação pós-correção**
+- Após o aceite de um convite de teste, confirmar no banco que o usuário recebeu a role correta e o vínculo em `user_sst_managers` / `user_companies`, e que ele cai no dashboard certo.
 
 ## Detalhes técnicos
 
-**Banco (migração)**
-- `subscription_reconciliations`: arquivo, data, admin, total de linhas, contadores (ativados / renovados / bloqueados / sem conta / divergentes), status.
-- `subscription_reconciliation_items`: e-mail, user_id, ação, plano anterior/novo, status anterior/novo, vigência anterior/nova, motivo.
-- RLS: leitura/escrita apenas para `admin` (via `has_role`), + GRANTs para `authenticated` e `service_role`.
-
-**Edge function `reconcile-subscriptions`** (service role, registrada no `config.toml`)
-- Modo `preview`: recebe as linhas normalizadas, cruza com `profiles` / `sst_managers` / `companies` / `subscriptions` e devolve o diff — sem gravar.
-- Modo `apply`: repete a checagem, atualiza `subscriptions` (status, plan_id, período), `sst_managers`/`companies` (`subscription_status`, `trial_ends_at`) e grava lote + itens.
-
-**Frontend**
-- Nova dependência `xlsx` (SheetJS) para ler o .xls no navegador e normalizar as colunas pelo nome do cabeçalho (não pela posição), evitando quebra se a Hotmart mudar a ordem.
-- Novo componente `src/components/admin/SubscriptionReconciliationTab.tsx` (upload + prévia + confirmação + histórico), plugado como nova aba em `MasterDashboard.tsx`.
-- Bloqueio reaproveita o fluxo já existente (`TrialExpiredOverlay` / `PaymentBlockedOverlay`), sem criar telas novas.
+Arquivos afetados: `supabase/functions/invite-collaborator/index.ts`, `supabase/functions/invite-sector-viewer/index.ts`, `supabase/functions/signup-from-invitation/index.ts`, `supabase/functions/accept-invitation/index.ts`, novo `supabase/functions/_shared/app-url.ts`, `src/components/collaborators/InviteCollaboratorDialog.tsx` e `src/components/collaborators/TeamManagementCard.tsx`. Sem alteração de schema; apenas atualização de `expires_at`/`token` nos reenvios.

@@ -33,3 +33,7 @@ verify_jwt = true
 
 [functions.send-welcome-email]
 verify_jwt = false
+
+[functions.resend-pending-invitations]
+verify_jwt = false
+

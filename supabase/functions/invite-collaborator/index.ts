@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildAppUrl, MAIL_FROM } from "../_shared/app-url.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,38 +13,41 @@ function generateToken(): string {
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+const escape = (v: unknown) =>
+  String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 function emailTemplate(opts: {
   inviterName: string;
   accountName: string;
   acceptUrl: string;
 }): string {
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;padding:32px 0;">
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 0;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.06);">
-  <tr><td style="background:linear-gradient(135deg,#1e3a8a,#3b82f6);padding:32px;text-align:center;">
-    <h1 style="color:#fff;margin:0;font-size:26px;">SOIA</h1>
-    <p style="color:#dbeafe;margin:8px 0 0;font-size:14px;">Sistema de Gestão NR-01</p>
+  <tr><td style="background:#0b2f5e;padding:32px;text-align:center;">
+    <h1 style="color:#ffffff;margin:0;font-size:26px;">Sr. SMS</h1>
+    <p style="color:#cbd5e1;margin:8px 0 0;font-size:14px;">Plataforma de Gestão SST · NR-01</p>
   </td></tr>
-  <tr><td style="padding:32px;">
-    <h2 style="color:#1e3a8a;margin-top:0;">Você foi convidado(a)!</h2>
-    <p style="color:#374151;font-size:16px;line-height:1.6;">
-      <strong>${opts.inviterName}</strong> convidou você para colaborar na conta
-      <strong>${opts.accountName}</strong> no SOIA.
+  <tr><td style="padding:32px;color:#0f172a;">
+    <h2 style="color:#0b2f5e;margin-top:0;">Você foi convidado(a)!</h2>
+    <p style="font-size:16px;line-height:1.6;">
+      <strong>${escape(opts.inviterName)}</strong> convidou você para colaborar na conta
+      <strong>${escape(opts.accountName)}</strong> no <strong>Sr. SMS</strong>.
     </p>
-    <p style="color:#374151;font-size:16px;line-height:1.6;">
-      Ao aceitar, você terá acesso ao mesmo dashboard e ferramentas da conta.
+    <p style="font-size:16px;line-height:1.6;">
+      Ao aceitar, você terá acesso ao mesmo painel e às mesmas ferramentas da conta.
     </p>
     <div style="text-align:center;margin:32px 0;">
-      <a href="${opts.acceptUrl}" style="background:#3b82f6;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">Aceitar convite</a>
+      <a href="${opts.acceptUrl}" style="background:#0b2f5e;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">Aceitar convite</a>
     </div>
-    <p style="color:#6b7280;font-size:13px;line-height:1.5;">
-      Ou copie este link: <br><span style="color:#3b82f6;word-break:break-all;">${opts.acceptUrl}</span>
+    <p style="color:#64748b;font-size:13px;line-height:1.5;">
+      Ou copie este link: <br><span style="color:#0b2f5e;word-break:break-all;">${opts.acceptUrl}</span>
     </p>
-    <p style="color:#9ca3af;font-size:12px;margin-top:24px;">Este convite expira em 7 dias.</p>
+    <p style="color:#94a3b8;font-size:12px;margin-top:24px;">Este convite expira em 7 dias.</p>
   </td></tr>
-  <tr><td style="background:#f9fafb;padding:20px;text-align:center;color:#6b7280;font-size:12px;">
-    © ${new Date().getFullYear()} SOIA · soia.app.br
+  <tr><td style="background:#f8fafc;padding:20px;text-align:center;color:#64748b;font-size:12px;">
+    © ${new Date().getFullYear()} Sr. SMS · srsms.com.br
   </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -86,6 +90,7 @@ Deno.serve(async (req) => {
     const email = (body.email ?? "").trim().toLowerCase();
     const account_type = body.account_type as "sst" | "company";
     const account_id = body.account_id as string;
+    const resend = !!body.resend;
 
     if (!email || !email.includes("@") || email.length > 255) {
       return new Response(JSON.stringify({ error: "Email inválido" }), {
@@ -125,45 +130,69 @@ Deno.serve(async (req) => {
       }
     }
 
+    const accountColumn = account_type === "sst" ? "sst_manager_id" : "company_id";
+
     // Já existe convite pendente?
     const { data: existing } = await admin
       .from("account_invitations")
       .select("id")
       .eq("email", email)
       .eq("status", "pending")
-      .eq(account_type === "sst" ? "sst_manager_id" : "company_id", account_id)
+      .eq(accountColumn, account_id)
       .maybeSingle();
 
-    if (existing) {
+    if (existing && !resend) {
       return new Response(
-        JSON.stringify({ error: "Já existe um convite pendente para este e-mail." }),
+        JSON.stringify({ error: "Já existe um convite pendente para este e-mail. Use 'Reenviar convite'." }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const inviteToken = generateToken();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const insertPayload: any = {
-      email,
-      account_type,
-      invited_by: callerId,
-      token: inviteToken,
-    };
-    if (account_type === "sst") insertPayload.sst_manager_id = account_id;
-    else insertPayload.company_id = account_id;
+    let inv: any = null;
 
-    const { data: inv, error: iErr } = await admin
-      .from("account_invitations")
-      .insert(insertPayload)
-      .select()
-      .single();
+    if (existing) {
+      // Reenvio: renova token e validade do convite existente
+      const { data, error } = await admin
+        .from("account_invitations")
+        .update({ token: inviteToken, expires_at: expiresAt, invited_by: callerId })
+        .eq("id", existing.id)
+        .select()
+        .single();
+      if (error) {
+        console.error("resend update error", error);
+        return new Response(JSON.stringify({ error: "Erro ao reenviar convite." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      inv = data;
+    } else {
+      const insertPayload: any = {
+        email,
+        account_type,
+        invited_by: callerId,
+        token: inviteToken,
+        expires_at: expiresAt,
+      };
+      insertPayload[accountColumn] = account_id;
 
-    if (iErr) {
-      console.error("insert error", iErr);
-      return new Response(JSON.stringify({ error: "Erro ao criar convite." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const { data, error: iErr } = await admin
+        .from("account_invitations")
+        .insert(insertPayload)
+        .select()
+        .single();
+
+      if (iErr) {
+        console.error("insert error", iErr);
+        return new Response(JSON.stringify({ error: "Erro ao criar convite." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      inv = data;
     }
 
     // Buscar nome da conta
@@ -184,10 +213,13 @@ Deno.serve(async (req) => {
       .maybeSingle();
     const inviterName = inviterProfile?.full_name || callerEmail || "Um colega";
 
-    // Enviar e-mail via Resend (gateway Lovable, mesmo remetente verificado usado no hotmart-webhook)
+    const acceptUrl = buildAppUrl(`/convite/${inviteToken}`);
+
+    // Enviar e-mail via Resend (gateway Lovable)
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY_1") ?? Deno.env.get("RESEND_API_KEY");
-    const acceptUrl = `https://soia.app.br/convite/${inviteToken}`;
+    let emailSent = false;
+    let emailError: string | null = null;
 
     if (LOVABLE_API_KEY && RESEND_API_KEY) {
       try {
@@ -200,27 +232,44 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "SOIA <noreply@soia.app.br>",
+            from: MAIL_FROM,
             to: [email],
-            subject: `${inviterName} convidou você para ${accountName} no SOIA`,
+            subject: `${inviterName} convidou você para ${accountName} no Sr. SMS`,
             html,
           }),
         });
         if (!resp.ok) {
-          console.error("resend gateway failed", resp.status, await resp.text().catch(() => "<no body>"));
+          emailError = `${resp.status} ${await resp.text().catch(() => "")}`;
+          console.error("resend gateway failed", emailError);
+        } else {
+          emailSent = true;
         }
       } catch (e) {
+        emailError = e instanceof Error ? e.message : String(e);
         console.error("email error", e);
       }
     } else {
+      emailError = "Email keys missing";
       console.warn("Email keys missing, skipping invite email send");
     }
+
+    try {
+      await admin.from("email_send_attempts").insert({
+        recipient_email: email,
+        status: emailSent ? "sent" : "failed",
+        error_message: emailError,
+        context: "invite-collaborator",
+        metadata: { account_type, account_id, resend },
+      });
+    } catch (_) { /* logging is best-effort */ }
 
     return new Response(
       JSON.stringify({
         success: true,
         invitation_id: inv.id,
         accept_url: acceptUrl,
+        email_sent: emailSent,
+        resent: !!existing,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

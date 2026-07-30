@@ -100,6 +100,19 @@ const InviteCollaboratorDialog: React.FC<Props> = ({
               autoFocus
             />
           </div>
+          {acceptUrl && (
+            <div className="rounded-md border bg-muted/40 p-3 space-y-2 mb-4">
+              <p className="text-xs text-muted-foreground">
+                Link do convite (envie manualmente caso o e-mail não chegue):
+              </p>
+              <p className="text-xs break-all font-mono">{acceptUrl}</p>
+              <Button type="button" size="sm" variant="outline" onClick={copyLink}>
+                <Copy className="h-4 w-4 mr-2" />
+                Copiar link
+              </Button>
+            </div>
+          )}
+
           <DialogFooter>
             <Button
               type="button"

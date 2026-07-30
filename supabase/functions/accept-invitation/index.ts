@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
         email: userEmail,
         name: (prof as any)?.full_name ?? null,
         accountType: inv.account_type === "sst" ? "sst" : "company",
-        planName: accountName,
+        planName: accountName ? `Colaborador — ${accountName}` : null,
         existingUser: true,
         context: "collaborator-invitation",
       });

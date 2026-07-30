@@ -183,14 +183,31 @@ const SSTDashboard = () => {
         .single();
 
       if (profileError) throw profileError;
-      if (!profileData?.sst_manager_id) {
+
+      let currentSstManagerId = profileData?.sst_manager_id as string | null;
+
+      // Fallback: colaboradores convidados podem ter o vínculo apenas em user_sst_managers
+      if (!currentSstManagerId && user?.id) {
+        const { data: links } = await supabase
+          .from('user_sst_managers')
+          .select('sst_manager_id, is_default')
+          .eq('user_id', user.id)
+          .order('is_default', { ascending: false })
+          .limit(1);
+        currentSstManagerId = (links?.[0] as any)?.sst_manager_id ?? null;
+        if (currentSstManagerId) {
+          await supabase.from('profiles').update({ sst_manager_id: currentSstManagerId }).eq('id', user.id);
+        }
+      }
+
+      if (!currentSstManagerId) {
         toast({ title: "Erro", description: "Seu perfil não está vinculado a uma gestora SST.", variant: "destructive" });
         setIsLoading(false);
         return;
       }
 
-      const currentSstManagerId = profileData.sst_manager_id;
       setSstManagerId(currentSstManagerId);
+
 
       const [sstResult, assignmentsResult] = await Promise.all([
         supabase.from('sst_managers').select('max_companies, slug, extra_company_slots').eq('id', currentSstManagerId).single(),

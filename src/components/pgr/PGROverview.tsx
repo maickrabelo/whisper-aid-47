@@ -101,6 +101,8 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
   ].join('\n');
   const DEFAULT_MON = `${companyName || '(EMPRESA)'} deverá continuar com a estratégia de avaliação quantitativa para os agentes priorizados, conforme o Programa de Monitoramento Ambiental.`;
   const DEFAULT_EPI = 'Quando os procedimentos de trabalho e os controles coletivos não forem suficientes para reduzir a exposição a níveis aceitáveis, deve-se adotar o EPI como último recurso, garantindo treinamento, fornecimento, troca e fiscalização do uso.';
+  const DEFAULT_ORG = `A organização ${companyName || '(EMPRESA)'} declara-se responsável pela implementação, manutenção e custeio das medidas de prevenção previstas neste documento, conforme item 1.4.1 da NR-01, comprometendo-se a: disponibilizar os recursos humanos e financeiros necessários; cumprir os prazos definidos no plano de ação; fornecer, capacitar e fiscalizar o uso dos EPIs; informar os trabalhadores sobre os riscos e as medidas de controle; e manter o PGR atualizado e disponível para consulta dos trabalhadores, de seus representantes e da fiscalização.`;
+
 
   const save = async () => {
     setSaving(true);

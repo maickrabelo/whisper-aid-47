@@ -569,7 +569,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     );
   } else {
     paragraph(
-      `O Documento Base do Programa de Gerenciamento de Riscos (PGR) se insere no contexto da Política de Gestão de SST de ${input.company.name || '(EMPRESA)'} buscando a melhoria contínua do ambiente de trabalho e a preservação da saúde dos seus colaboradores e contratados. Está estruturado conforme disposto na NR-01, Portaria 3.214 de 08 de junho de 1978, com redação atualizada pela Portaria 6.730 de 12 de março de 2020.`
+      `O Documento Base do Programa de Gerenciamento de Riscos (PGR) se insere no contexto da Política de Gestão de SST de ${input.company.name || '(EMPRESA)'} buscando a melhoria contínua do ambiente de trabalho e a preservação da saúde dos seus colaboradores e contratados. Está estruturado conforme disposto na NR-01, aprovada pela Portaria nº 3.214 de 08 de junho de 1978, com redação atualizada pelas Portarias MTE nº 342, nº 344 e nº 1.419, todas de 2024, que sucederam a Portaria SEPRT nº 6.730 de 12 de março de 2020.`
     );
     subTitle('1.2 Objetivo');
     paragraph(

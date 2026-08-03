@@ -35,6 +35,11 @@ export interface PGRReportInput {
     trainings?: string | null;
     monitoring_text?: string | null;
     epi_text?: string | null;
+    org_responsibility_text?: string | null;
+    org_responsible_name?: string | null;
+    org_responsible_role?: string | null;
+    org_responsible_cpf?: string | null;
+
   };
   company: {
     name: string;

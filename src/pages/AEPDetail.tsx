@@ -18,7 +18,7 @@ import { SendToInventoryDialog } from "@/components/aep/SendToInventoryDialog";
 import { SplitAEPByGHEDialog } from "@/components/aep/SplitAEPByGHEDialog";
 import { generateAEPReportPDF } from "@/components/aep/AEPReportPDF";
 import { classifyRisk, LEVEL_LABELS, LEVEL_STYLES, AEP_STATUS_LABELS, AEP_STATUS_STYLES } from "@/lib/aepRiskLevel";
-import { AEP_CATEGORIAS, AEP_CATEGORIA_COLORS } from "@/hooks/useAEPFatoresCatalog";
+import { AEP_CATEGORIAS, AEP_CATEGORIA_COLORS, useAEPFatoresCatalog } from "@/hooks/useAEPFatoresCatalog";
 
 const AEPDetail = () => {
   const { companyId, aepId } = useParams<{ companyId: string; aepId: string }>();

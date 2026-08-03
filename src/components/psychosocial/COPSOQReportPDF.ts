@@ -634,7 +634,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     .sort((a, b) => a.average - b.average)
     .slice(0, 15);
 
-  drawSectionTitle('5. Questões Mais Críticas');
+  drawSectionTitle('6. Questões Mais Críticas');
   drawParagraph(
     'As 15 questões com menor pontuação normalizada (1-5). Valores mais baixos indicam maior necessidade de intervenção. Cada questão exibe também o número de respondentes considerados.'
   );

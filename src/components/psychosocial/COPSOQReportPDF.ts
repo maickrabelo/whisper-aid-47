@@ -603,9 +603,20 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
 
 
   // ══════════════════════════════════════════
-  // 5 — Top Critical Questions
+  // 5 — Todas as perguntas (consolidado)
   // ══════════════════════════════════════════
   newPage();
+  drawSectionTitle('5. Detalhamento de Todas as Perguntas');
+  drawParagraph(
+    'Pontuação média consolidada de cada questão do instrumento, em escala normalizada de 1 a 5. Valores mais baixos indicam condição menos favorável e maior necessidade de intervenção.'
+  );
+  drawAllQuestionsTable(allAnswers);
+
+  // ══════════════════════════════════════════
+  // 6 — Top Critical Questions
+  // ══════════════════════════════════════════
+  newPage();
+
   const questionAverages = COPSOQ_QUESTIONS.map(q => {
     const values = allAnswers.filter(a => a.questionNumber === q.number)
       .map(a => normalizeScore(a.value, q.isInverted));

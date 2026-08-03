@@ -129,6 +129,11 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
         trainings: form.trainings.trim() || null,
         monitoring_text: form.monitoring_text.trim() || null,
         epi_text: form.epi_text.trim() || null,
+        org_responsibility_text: form.org_responsibility_text.trim() || null,
+        org_responsible_name: form.org_responsible_name.trim() || null,
+        org_responsible_role: form.org_responsible_role.trim() || null,
+        org_responsible_cpf: form.org_responsible_cpf.trim() || null,
+
       };
       const { error } = await supabase
         .from("pgr_documents")

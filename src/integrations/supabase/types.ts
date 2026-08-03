@@ -1953,6 +1953,10 @@ export type Database = {
           last_review_at: string | null
           lodging_description: string | null
           monitoring_text: string | null
+          org_responsibility_text: string | null
+          org_responsible_cpf: string | null
+          org_responsible_name: string | null
+          org_responsible_role: string | null
           responsible_cpf: string | null
           responsible_name: string | null
           responsible_registration: string | null
@@ -1989,6 +1993,10 @@ export type Database = {
           last_review_at?: string | null
           lodging_description?: string | null
           monitoring_text?: string | null
+          org_responsibility_text?: string | null
+          org_responsible_cpf?: string | null
+          org_responsible_name?: string | null
+          org_responsible_role?: string | null
           responsible_cpf?: string | null
           responsible_name?: string | null
           responsible_registration?: string | null
@@ -2025,6 +2033,10 @@ export type Database = {
           last_review_at?: string | null
           lodging_description?: string | null
           monitoring_text?: string | null
+          org_responsibility_text?: string | null
+          org_responsible_cpf?: string | null
+          org_responsible_name?: string | null
+          org_responsible_role?: string | null
           responsible_cpf?: string | null
           responsible_name?: string | null
           responsible_registration?: string | null

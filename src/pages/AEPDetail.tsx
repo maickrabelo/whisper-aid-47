@@ -891,12 +891,57 @@ const AEPDetail = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Editar fator */}
+      {/* Editar/Adicionar fator */}
       <Dialog open={editFatorOpen} onOpenChange={setEditFatorOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Editar fator</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{fatorEditing ? 'Editar fator' : 'Adicionar fator'}</DialogTitle></DialogHeader>
           <div className="space-y-3 text-sm">
+            {!fatorEditing && catalogo.length > 0 && (
+              <div className="space-y-1">
+                <Label>Fator do catálogo (opcional)</Label>
+                <Select
+                  value=""
+                  onValueChange={v => {
+                    const c = catalogo.find(x => x.id === v);
+                    if (!c) return;
+                    setFatorForm((prev: any) => ({
+                      ...prev,
+                      categoria: c.categoria,
+                      fator_nome: c.nome,
+                      severity: c.severidade_tipica || prev.severity || 3,
+                      probability: c.probabilidade_tipica || prev.probability || 3,
+                    }));
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecionar do catálogo para preencher" /></SelectTrigger>
+                  <SelectContent>
+                    {catalogo.map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {AEP_CATEGORIAS[c.categoria]} — {c.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {escopoArr.length > 0 && (
+              <div className="space-y-1">
+                <Label>Bloco / GHE</Label>
+                <Select value={fatorForm.escopo_ref || '__geral__'} onValueChange={v => setFatorForm({ ...fatorForm, escopo_ref: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__geral__">Geral (todos os GHEs)</SelectItem>
+                    {escopoArr.map((e: any, i: number) => (
+                      <SelectItem key={e.tempId} value={e.tempId}>
+                        {i + 1}. {e.setor || '—'} / {e.funcao || '—'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-1">
+
               <Label>Categoria</Label>
               <Select value={fatorForm.categoria} onValueChange={v => setFatorForm({ ...fatorForm, categoria: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>

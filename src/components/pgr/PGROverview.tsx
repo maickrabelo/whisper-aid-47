@@ -406,6 +406,34 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader><CardTitle className="text-lg">Responsabilidade de Implementação — Organização</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Termo de responsabilidade da organização</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, org_responsibility_text: DEFAULT_ORG })}>Preencher padrão</Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Edite livremente ou deixe em branco para usar o texto padrão no PDF.</p>
+            <Textarea rows={5} value={form.org_responsibility_text} onChange={e => setForm({ ...form, org_responsibility_text: e.target.value })} placeholder={DEFAULT_ORG} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Nome do representante da organização</Label>
+              <Input value={form.org_responsible_name} onChange={e => setForm({ ...form, org_responsible_name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Cargo / função</Label>
+              <Input value={form.org_responsible_role} onChange={e => setForm({ ...form, org_responsible_role: e.target.value })} placeholder="Ex: Sócio-administrador, Gerente de RH" />
+            </div>
+            <div className="space-y-2">
+              <Label>CPF</Label>
+              <Input value={form.org_responsible_cpf} onChange={e => setForm({ ...form, org_responsible_cpf: e.target.value })} placeholder="000.000.000-00" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
 
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving} className="gap-2">

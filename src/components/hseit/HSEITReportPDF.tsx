@@ -416,18 +416,28 @@ export function HSEITReportPDF({
               yPos += 5;
             }
           });
-          
-          yPos += 8;
+
+          yPos += 4;
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(0, 66, 128);
+          addNewPageIfNeeded(14);
+          pdf.text(`Pontuação de todas as perguntas — ${dept}`, margin, yPos);
+          yPos += 6;
+          addAllQuestionsTable(deptAnswers);
+
+          yPos += 6;
         });
       }
 
-      // ========== PÁGINA 5: QUESTÕES CRÍTICAS ==========
+      // ========== QUESTÕES CRÍTICAS ==========
       pdf.addPage();
       yPos = margin;
 
       addHeader('4. QUESTÕES MAIS CRÍTICAS', 16);
       addText('As 15 questões com menor pontuação (maior risco) que requerem atenção prioritária:');
       yPos += 8;
+
 
       const criticalQuestions = questionAverages.slice(0, 15);
       

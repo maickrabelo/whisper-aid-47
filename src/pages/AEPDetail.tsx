@@ -18,14 +18,16 @@ import { SendToInventoryDialog } from "@/components/aep/SendToInventoryDialog";
 import { SplitAEPByGHEDialog } from "@/components/aep/SplitAEPByGHEDialog";
 import { generateAEPReportPDF } from "@/components/aep/AEPReportPDF";
 import { classifyRisk, LEVEL_LABELS, LEVEL_STYLES, AEP_STATUS_LABELS, AEP_STATUS_STYLES } from "@/lib/aepRiskLevel";
-import { AEP_CATEGORIAS, AEP_CATEGORIA_COLORS } from "@/hooks/useAEPFatoresCatalog";
+import { AEP_CATEGORIAS, AEP_CATEGORIA_COLORS, useAEPFatoresCatalog } from "@/hooks/useAEPFatoresCatalog";
 
 const AEPDetail = () => {
   const { companyId, aepId } = useParams<{ companyId: string; aepId: string }>();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useRealAuth();
   const [loading, setLoading] = useState(true);
+  const { data: catalogo } = useAEPFatoresCatalog();
   const [aep, setAep] = useState<any>(null);
+
   const [fatores, setFatores] = useState<any[]>([]);
   const [participantes, setParticipantes] = useState<any[]>([]);
   const [evidencias, setEvidencias] = useState<any[]>([]);
@@ -309,6 +311,21 @@ const AEPDetail = () => {
     }
   };
 
+  const openNewFator = () => {
+    setFatorEditing(null);
+    setFatorForm({
+      categoria: 'ergonomico_fisico',
+      fator_nome: '',
+      fonte_causa: '',
+      grupos_expostos: '',
+      evidencia_texto: '',
+      severity: 3,
+      probability: 3,
+      observacoes: '',
+      escopo_ref: escopoArr.length === 1 ? (escopoArr[0]?.tempId || '__geral__') : '__geral__',
+    });
+    setEditFatorOpen(true);
+  };
   const openEditFator = (f: any) => {
     setFatorEditing(f);
     setFatorForm({
@@ -320,11 +337,15 @@ const AEPDetail = () => {
       severity: f.severity || 3,
       probability: f.probability || 3,
       observacoes: f.observacoes || '',
+      escopo_ref: f.escopo_ref || '__geral__',
     });
     setEditFatorOpen(true);
   };
   const saveFator = async () => {
-    if (!fatorEditing) return;
+    if (!fatorForm.fator_nome || !String(fatorForm.fator_nome).trim()) {
+      toast.error('Informe o nome do fator');
+      return;
+    }
     try {
       const patch: any = {
         categoria: fatorForm.categoria,
@@ -335,14 +356,22 @@ const AEPDetail = () => {
         severity: Number(fatorForm.severity) || 1,
         probability: Number(fatorForm.probability) || 1,
         observacoes: fatorForm.observacoes || null,
+        escopo_ref: fatorForm.escopo_ref && fatorForm.escopo_ref !== '__geral__' ? fatorForm.escopo_ref : null,
       };
-      const { error } = await supabase.from('aep_fatores_avaliados' as any).update(patch).eq('id', fatorEditing.id);
-      if (error) throw error;
-      toast.success('Fator atualizado');
+      if (fatorEditing) {
+        const { error } = await supabase.from('aep_fatores_avaliados' as any).update(patch).eq('id', fatorEditing.id);
+        if (error) throw error;
+        toast.success('Fator atualizado');
+      } else {
+        const { error } = await supabase.from('aep_fatores_avaliados' as any).insert({ ...patch, aep_id: aep.id } as any);
+        if (error) throw error;
+        toast.success('Fator adicionado');
+      }
       setEditFatorOpen(false);
       load();
     } catch (e: any) {
       toast.error('Erro ao salvar: ' + e.message);
+
     }
   };
   const deleteFator = async (f: any) => {
@@ -619,12 +648,20 @@ const AEPDetail = () => {
 
           <TabsContent value="fatores" className="mt-4">
             <div className="space-y-3">
-              {!isEditable && fatores.length > 0 && (
-                <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
-                  <Lock className="h-3 w-3" /> Crie uma nova versão para alterar os fatores
-                </div>
-              )}
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold">Fatores levantados</span>
+                {isEditable ? (
+                  <Button size="sm" variant="outline" className="gap-1" onClick={openNewFator}>
+                    <Plus className="h-3.5 w-3.5" /> Adicionar
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Lock className="h-3 w-3" /> Crie uma nova versão para alterar os fatores
+                  </span>
+                )}
+              </div>
               {fatores.length === 0 && <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Nenhum fator levantado</CardContent></Card>}
+
               {fatores.map(f => {
                 const level = classifyRisk(5, f.severity, f.probability);
                 const linked = linkedByFator.get(f.id) || [];
@@ -856,12 +893,57 @@ const AEPDetail = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Editar fator */}
+      {/* Editar/Adicionar fator */}
       <Dialog open={editFatorOpen} onOpenChange={setEditFatorOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Editar fator</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{fatorEditing ? 'Editar fator' : 'Adicionar fator'}</DialogTitle></DialogHeader>
           <div className="space-y-3 text-sm">
+            {!fatorEditing && catalogo.length > 0 && (
+              <div className="space-y-1">
+                <Label>Fator do catálogo (opcional)</Label>
+                <Select
+                  value=""
+                  onValueChange={v => {
+                    const c = catalogo.find(x => x.id === v);
+                    if (!c) return;
+                    setFatorForm((prev: any) => ({
+                      ...prev,
+                      categoria: c.categoria,
+                      fator_nome: c.nome,
+                      severity: c.severidade_tipica || prev.severity || 3,
+                      probability: c.probabilidade_tipica || prev.probability || 3,
+                    }));
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecionar do catálogo para preencher" /></SelectTrigger>
+                  <SelectContent>
+                    {catalogo.map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {AEP_CATEGORIAS[c.categoria]} — {c.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {escopoArr.length > 0 && (
+              <div className="space-y-1">
+                <Label>Bloco / GHE</Label>
+                <Select value={fatorForm.escopo_ref || '__geral__'} onValueChange={v => setFatorForm({ ...fatorForm, escopo_ref: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__geral__">Geral (todos os GHEs)</SelectItem>
+                    {escopoArr.map((e: any, i: number) => (
+                      <SelectItem key={e.tempId} value={e.tempId}>
+                        {i + 1}. {e.setor || '—'} / {e.funcao || '—'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-1">
+
               <Label>Categoria</Label>
               <Select value={fatorForm.categoria} onValueChange={v => setFatorForm({ ...fatorForm, categoria: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>

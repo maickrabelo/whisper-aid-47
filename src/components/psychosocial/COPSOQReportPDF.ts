@@ -234,6 +234,72 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     y += 2;
   };
 
+  // Tabela com TODAS as perguntas e suas pontuações (geral ou por setor)
+  const drawAllQuestionsTable = (answers: Answer[]) => {
+    const tableW = pw - 2 * margin;
+    const colNum = 9;
+    const colAvg = 16;
+    const colLevel = 28;
+    const colText = tableW - colNum - colAvg - colLevel - 4;
+    const xText = margin + colNum + 2;
+    const xAvg = margin + colNum + colText + 4;
+    const xLevel = xAvg + colAvg;
+
+    const header = () => {
+      ensure(12);
+      pdf.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+      pdf.rect(margin, y, tableW, 7, 'F');
+      setText(8, true, [255, 255, 255]);
+      pdf.text('#', margin + 2, y + 4.8);
+      pdf.text('Pergunta', xText, y + 4.8);
+      pdf.text('Média', xAvg, y + 4.8);
+      pdf.text('Nível', xLevel, y + 4.8);
+      y += 9;
+    };
+
+    header();
+
+    COPSOQ_QUESTIONS.forEach((q, index) => {
+      const vals = answers.filter(a => a.questionNumber === q.number)
+        .map(a => normalizeScore(a.value, q.isInverted));
+      const avg = vals.length > 0 ? vals.reduce((s, v) => s + v, 0) / vals.length : NaN;
+      const level: CellRisk = vals.length > 0 ? getRiskLevel(avg) : 'na';
+
+      setText(8, false, COLORS.text);
+      const lines: string[] = pdf.splitTextToSize(q.text, colText - 2);
+      const rowH = Math.max(7, lines.length * 3.8 + 3);
+
+      if (y + rowH > ph - 20) {
+        newPage();
+        header();
+      }
+
+      const bg = index % 2 === 0 ? 250 : 242;
+      pdf.setFillColor(bg, bg, bg);
+      pdf.rect(margin, y, tableW, rowH, 'F');
+
+      setText(8, false, COLORS.muted);
+      pdf.text(String(q.number), margin + 2, y + 4.5);
+      setText(8, false, COLORS.text);
+      pdf.text(lines, xText, y + 4.5);
+
+      const rc = riskColor(level);
+      if (vals.length === 0) {
+        setText(8, false, COLORS.neutral);
+        pdf.text('—', xAvg, y + 4.5);
+        pdf.text('sem dados', xLevel, y + 4.5);
+      } else {
+        setText(8, true, rc);
+        pdf.text(avg.toFixed(2), xAvg, y + 4.5);
+        pdf.text(RISK_LEVEL_LABELS[level as CopsoqRiskLevel], xLevel, y + 4.5);
+      }
+
+      y += rowH;
+    });
+    y += 4;
+  };
+
+
   // ══════════════════════════════════════════
   // COVER
   // ══════════════════════════════════════════
@@ -525,13 +591,32 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       leftCol.forEach((r, i) => drawRow(r, margin, startY + i * rowH));
       rightCol.forEach((r, i) => drawRow(r, margin + colW + colGap, startY + i * rowH));
       y = startY + blockH + 4;
+
+      ensure(16);
+      setText(9.5, true, COLORS.primary);
+      pdf.text(`Pontuação de todas as perguntas — ${dept}`, margin, y);
+      y += 5;
+      drawAllQuestionsTable(deptAnswers);
+      y += 3;
     });
   }
 
+
   // ══════════════════════════════════════════
-  // 5 — Top Critical Questions
+  // 5 — Todas as perguntas (consolidado)
   // ══════════════════════════════════════════
   newPage();
+  drawSectionTitle('5. Detalhamento de Todas as Perguntas');
+  drawParagraph(
+    'Pontuação média consolidada de cada questão do instrumento, em escala normalizada de 1 a 5. Valores mais baixos indicam condição menos favorável e maior necessidade de intervenção.'
+  );
+  drawAllQuestionsTable(allAnswers);
+
+  // ══════════════════════════════════════════
+  // 6 — Top Critical Questions
+  // ══════════════════════════════════════════
+  newPage();
+
   const questionAverages = COPSOQ_QUESTIONS.map(q => {
     const values = allAnswers.filter(a => a.questionNumber === q.number)
       .map(a => normalizeScore(a.value, q.isInverted));
@@ -549,7 +634,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     .sort((a, b) => a.average - b.average)
     .slice(0, 15);
 
-  drawSectionTitle('5. Questões Mais Críticas');
+  drawSectionTitle('6. Questões Mais Críticas');
   drawParagraph(
     'As 15 questões com menor pontuação normalizada (1-5). Valores mais baixos indicam maior necessidade de intervenção. Cada questão exibe também o número de respondentes considerados.'
   );
@@ -581,7 +666,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   // 6 — Action Plan
   // ══════════════════════════════════════════
   newPage();
-  drawSectionTitle('6. Plano de Ação Recomendado');
+  drawSectionTitle('7. Plano de Ação Recomendado');
 
   const criticalCats = ALL_CATEGORIES.filter(c => catData[c].level === 'risk');
   const intermediateCats = ALL_CATEGORIES.filter(c => catData[c].level === 'intermediate');

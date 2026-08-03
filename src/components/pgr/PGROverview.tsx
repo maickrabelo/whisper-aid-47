@@ -77,6 +77,11 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
     trainings: pgr.trainings ?? "",
     monitoring_text: pgr.monitoring_text ?? "",
     epi_text: pgr.epi_text ?? "",
+    org_responsibility_text: pgr.org_responsibility_text ?? "",
+    org_responsible_name: pgr.org_responsible_name ?? "",
+    org_responsible_role: pgr.org_responsible_role ?? "",
+    org_responsible_cpf: pgr.org_responsible_cpf ?? "",
+
   });
 
   const DEFAULT_INTRO = 'Os propósitos da avaliação de exposição a agentes de risco ocupacionais foram cumpridos: determinaram-se os riscos a que os trabalhadores estão expostos, diferenciaram-se exposições aceitáveis das inaceitáveis e foram propostas medidas de controle. A organização deve prosseguir com seus programas de controle, introduzindo melhorias contínuas.';
@@ -96,6 +101,8 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
   ].join('\n');
   const DEFAULT_MON = `${companyName || '(EMPRESA)'} deverá continuar com a estratégia de avaliação quantitativa para os agentes priorizados, conforme o Programa de Monitoramento Ambiental.`;
   const DEFAULT_EPI = 'Quando os procedimentos de trabalho e os controles coletivos não forem suficientes para reduzir a exposição a níveis aceitáveis, deve-se adotar o EPI como último recurso, garantindo treinamento, fornecimento, troca e fiscalização do uso.';
+  const DEFAULT_ORG = `A organização ${companyName || '(EMPRESA)'} declara-se responsável pela implementação, manutenção e custeio das medidas de prevenção previstas neste documento, conforme item 1.4.1 da NR-01, comprometendo-se a: disponibilizar os recursos humanos e financeiros necessários; cumprir os prazos definidos no plano de ação; fornecer, capacitar e fiscalizar o uso dos EPIs; informar os trabalhadores sobre os riscos e as medidas de controle; e manter o PGR atualizado e disponível para consulta dos trabalhadores, de seus representantes e da fiscalização.`;
+
 
   const save = async () => {
     setSaving(true);
@@ -124,6 +131,11 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
         trainings: form.trainings.trim() || null,
         monitoring_text: form.monitoring_text.trim() || null,
         epi_text: form.epi_text.trim() || null,
+        org_responsibility_text: form.org_responsibility_text.trim() || null,
+        org_responsible_name: form.org_responsible_name.trim() || null,
+        org_responsible_role: form.org_responsible_role.trim() || null,
+        org_responsible_cpf: form.org_responsible_cpf.trim() || null,
+
       };
       const { error } = await supabase
         .from("pgr_documents")
@@ -392,6 +404,34 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
             </div>
             <p className="text-xs text-muted-foreground">Edite livremente ou deixe em branco para usar o texto padrão no PDF.</p>
             <Textarea rows={4} value={form.epi_text} onChange={e => setForm({ ...form, epi_text: e.target.value })} placeholder={DEFAULT_EPI} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-lg">Responsabilidade de Implementação — Organização</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Termo de responsabilidade da organização</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, org_responsibility_text: DEFAULT_ORG })}>Preencher padrão</Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Edite livremente ou deixe em branco para usar o texto padrão no PDF.</p>
+            <Textarea rows={5} value={form.org_responsibility_text} onChange={e => setForm({ ...form, org_responsibility_text: e.target.value })} placeholder={DEFAULT_ORG} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Nome do representante da organização</Label>
+              <Input value={form.org_responsible_name} onChange={e => setForm({ ...form, org_responsible_name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Cargo / função</Label>
+              <Input value={form.org_responsible_role} onChange={e => setForm({ ...form, org_responsible_role: e.target.value })} placeholder="Ex: Sócio-administrador, Gerente de RH" />
+            </div>
+            <div className="space-y-2">
+              <Label>CPF</Label>
+              <Input value={form.org_responsible_cpf} onChange={e => setForm({ ...form, org_responsible_cpf: e.target.value })} placeholder="000.000.000-00" />
+            </div>
           </div>
         </CardContent>
       </Card>

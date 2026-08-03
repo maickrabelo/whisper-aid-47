@@ -169,6 +169,79 @@ export function HSEITReportPDF({
         }
       };
 
+      // Tabela com TODAS as perguntas e suas pontuações (geral ou por setor)
+      const addAllQuestionsTable = (answers: Answer[], indent: number = 0) => {
+        const tableW = pageWidth - 2 * margin - indent;
+        const x0 = margin + indent;
+        const colNum = 8;
+        const colText = tableW - 8 - 18 - 26;
+        const xText = x0 + colNum + 2;
+        const xAvg = x0 + colNum + colText + 4;
+        const xLevel = xAvg + 18;
+
+        const drawTableHeader = () => {
+          addNewPageIfNeeded(12);
+          pdf.setFillColor(0, 66, 128);
+          pdf.rect(x0, yPos, tableW, 7, 'F');
+          pdf.setFontSize(8);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(255, 255, 255);
+          pdf.text('#', x0 + 2, yPos + 5);
+          pdf.text('Pergunta', xText, yPos + 5);
+          pdf.text('Média', xAvg, yPos + 5);
+          pdf.text('Nível', xLevel, yPos + 5);
+          yPos += 9;
+        };
+
+        drawTableHeader();
+
+        HSEIT_QUESTIONS.forEach((q, index) => {
+          const qAnswers = answers.filter(a => a.questionNumber === q.number);
+          const avg = qAnswers.length > 0
+            ? qAnswers.reduce((s, a) => s + normalizeScore(a.value, q.isInverted), 0) / qAnswers.length
+            : 0;
+          const level = getRiskLevel(avg);
+
+          pdf.setFontSize(8);
+          pdf.setFont('helvetica', 'normal');
+          const textLines: string[] = pdf.splitTextToSize(q.text, colText - 2);
+          const rowH = Math.max(7, textLines.length * 4 + 3);
+
+          if (yPos + rowH > pageHeight - margin) {
+            pdf.addPage();
+            yPos = margin;
+            drawTableHeader();
+          }
+
+          const bg = index % 2 === 0 ? 250 : 241;
+          pdf.setFillColor(bg, bg, bg);
+          pdf.rect(x0, yPos, tableW, rowH, 'F');
+
+          pdf.setTextColor(60, 60, 60);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text(q.number.toString(), x0 + 2, yPos + 4.5);
+          pdf.text(textLines, xText, yPos + 4.5);
+
+          if (qAnswers.length === 0) {
+            pdf.setTextColor(130, 130, 130);
+            pdf.text('—', xAvg, yPos + 4.5);
+            pdf.text('sem dados', xLevel, yPos + 4.5);
+          } else {
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(avg.toFixed(2), xAvg, yPos + 4.5);
+            const rc = getRiskColor(level);
+            pdf.setTextColor(rc[0], rc[1], rc[2]);
+            pdf.text(RISK_LEVEL_LABELS[level as keyof typeof RISK_LEVEL_LABELS] || level, xLevel, yPos + 4.5);
+          }
+
+          yPos += rowH;
+        });
+        pdf.setTextColor(40, 40, 40);
+        pdf.setFont('helvetica', 'normal');
+        yPos += 4;
+      };
+
+
       // ========== CAPA ==========
       pdf.setFillColor(0, 66, 128);
       pdf.rect(0, 0, pageWidth, 60, 'F');
@@ -343,18 +416,28 @@ export function HSEITReportPDF({
               yPos += 5;
             }
           });
-          
-          yPos += 8;
+
+          yPos += 4;
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(0, 66, 128);
+          addNewPageIfNeeded(14);
+          pdf.text(`Pontuação de todas as perguntas — ${dept}`, margin, yPos);
+          yPos += 6;
+          addAllQuestionsTable(deptAnswers);
+
+          yPos += 6;
         });
       }
 
-      // ========== PÁGINA 5: QUESTÕES CRÍTICAS ==========
+      // ========== QUESTÕES CRÍTICAS ==========
       pdf.addPage();
       yPos = margin;
 
       addHeader('4. QUESTÕES MAIS CRÍTICAS', 16);
       addText('As 15 questões com menor pontuação (maior risco) que requerem atenção prioritária:');
       yPos += 8;
+
 
       const criticalQuestions = questionAverages.slice(0, 15);
       
@@ -401,11 +484,21 @@ export function HSEITReportPDF({
         yPos += 10;
       });
 
-      // ========== PÁGINA 6: PLANO DE AÇÃO ==========
+      // ========== DETALHAMENTO DE TODAS AS PERGUNTAS (GERAL) ==========
       pdf.addPage();
       yPos = margin;
 
-      addHeader('5. PLANO DE AÇÃO RECOMENDADO', 16);
+      addHeader('5. DETALHAMENTO DE TODAS AS PERGUNTAS', 16);
+      addText('Pontuação média consolidada (todos os setores) de cada uma das questões do instrumento, em escala normalizada de 1 a 5 — quanto menor a pontuação, maior o risco.');
+      yPos += 6;
+      addAllQuestionsTable(responses.flatMap(r => r.answers));
+
+      // ========== PLANO DE AÇÃO ==========
+      pdf.addPage();
+      yPos = margin;
+
+      addHeader('6. PLANO DE AÇÃO RECOMENDADO', 16);
+
       yPos += 3;
 
       const criticalCats = categories.filter(cat => getHealthImpact(categoryAverages[cat] || 0) === 'risk');

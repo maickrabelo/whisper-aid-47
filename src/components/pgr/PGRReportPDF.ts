@@ -948,20 +948,44 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     paragraph(epiText);
   }
 
-  // ─── Assinatura ───────────────────────────────────────────
-  ensure(50);
+  // ─── 6.6 Responsabilidade de implementação (Organização) ──
+  const DEFAULT_ORG_RESP = `A organização ${input.company.name || '(EMPRESA)'} declara-se responsável pela implementação, manutenção e custeio das medidas de prevenção previstas neste documento, conforme item 1.4.1 da NR-01, comprometendo-se a: disponibilizar os recursos humanos e financeiros necessários; cumprir os prazos definidos no plano de ação; fornecer, capacitar e fiscalizar o uso dos EPIs; informar os trabalhadores sobre os riscos e as medidas de controle; e manter o PGR atualizado e disponível para consulta dos trabalhadores, de seus representantes e da fiscalização.`;
+  const orgText = (input.pgr.org_responsibility_text != null ? input.pgr.org_responsibility_text.trim() : DEFAULT_ORG_RESP);
+  if (orgText) {
+    subTitle('6.6 Responsabilidade de Implementação pela Organização');
+    paragraph(orgText);
+  }
+
+  // ─── Assinaturas ──────────────────────────────────────────
+  ensure(60);
   state.y += 18;
-  doc.setDrawColor(80, 80, 80);
-  doc.setLineWidth(0.4);
-  doc.line(MARGIN + 20, state.y, MARGIN + 110, state.y);
-  setText(TYPE.body, false, COLORS.text);
-  doc.text(placeholder(input.pgr.responsible_name), MARGIN + 65, state.y + 5, { align: 'center' });
-  setText(TYPE.caption, false, COLORS.muted);
-  doc.text(
-    `CPF: ${placeholder(input.pgr.responsible_cpf)}  •  Registro: ${placeholder(input.pgr.responsible_registration)}`,
-    MARGIN + 65, state.y + 10, { align: 'center' }
+  const signature = (cx: number, name: string, l2: string, l3: string) => {
+    doc.setDrawColor(80, 80, 80);
+    doc.setLineWidth(0.4);
+    doc.line(cx - 38, state.y, cx + 38, state.y);
+    setText(TYPE.body, false, COLORS.text);
+    doc.text(name, cx, state.y + 5, { align: 'center' });
+    setText(TYPE.caption, false, COLORS.muted);
+    doc.text(l2, cx, state.y + 10, { align: 'center' });
+    doc.text(l3, cx, state.y + 15, { align: 'center' });
+  };
+
+  const leftX = MARGIN + 42;
+  const rightX = PAGE_W - MARGIN - 42;
+  signature(
+    leftX,
+    placeholder(input.pgr.responsible_name),
+    `CPF: ${placeholder(input.pgr.responsible_cpf)}  •  Reg.: ${placeholder(input.pgr.responsible_registration)}`,
+    'Responsável Técnico — Segurança do Trabalho'
   );
-  doc.text('Responsável Técnico — Segurança do Trabalho', MARGIN + 65, state.y + 15, { align: 'center' });
+  signature(
+    rightX,
+    placeholder(input.pgr.org_responsible_name),
+    `CPF: ${placeholder(input.pgr.org_responsible_cpf)}${input.pgr.org_responsible_role ? `  •  ${input.pgr.org_responsible_role}` : ''}`,
+    'Responsável pela Organização — Implementação'
+  );
+  state.y += 18;
+
 
   addFooter();
   return doc;

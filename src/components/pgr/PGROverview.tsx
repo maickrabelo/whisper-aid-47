@@ -77,6 +77,11 @@ export const PGROverview = ({ pgr, companyName, companyCnpj, onUpdated }: Props)
     trainings: pgr.trainings ?? "",
     monitoring_text: pgr.monitoring_text ?? "",
     epi_text: pgr.epi_text ?? "",
+    org_responsibility_text: pgr.org_responsibility_text ?? "",
+    org_responsible_name: pgr.org_responsible_name ?? "",
+    org_responsible_role: pgr.org_responsible_role ?? "",
+    org_responsible_cpf: pgr.org_responsible_cpf ?? "",
+
   });
 
   const DEFAULT_INTRO = 'Os propósitos da avaliação de exposição a agentes de risco ocupacionais foram cumpridos: determinaram-se os riscos a que os trabalhadores estão expostos, diferenciaram-se exposições aceitáveis das inaceitáveis e foram propostas medidas de controle. A organização deve prosseguir com seus programas de controle, introduzindo melhorias contínuas.';

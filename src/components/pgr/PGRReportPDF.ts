@@ -144,7 +144,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const isRural = input.pgr.document_type === 'pgtr';
   const shortName = isRural ? 'PGRTR' : 'PGR';
   const fullName = isRural ? 'Programa de Gerenciamento de Riscos do Trabalhador Rural' : 'Programa de Gerenciamento de Riscos';
-  const regulation = isRural ? 'NR-31 — Portaria MTP 1.887/2022' : 'NR-01 — Portaria 6.730/2020';
+  const regulation = isRural ? 'NR-31 — Portaria MTP 1.887/2022' : 'NR-01 — Portaria MTE 1.419/2024';
 
   const setText = (size: number, bold = false, color: [number, number, number] = COLORS.text) => {
     doc.setFont(FONT, bold ? 'bold' : 'normal');

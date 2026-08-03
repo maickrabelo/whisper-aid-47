@@ -591,8 +591,16 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       leftCol.forEach((r, i) => drawRow(r, margin, startY + i * rowH));
       rightCol.forEach((r, i) => drawRow(r, margin + colW + colGap, startY + i * rowH));
       y = startY + blockH + 4;
+
+      ensure(16);
+      setText(9.5, true, COLORS.primary);
+      pdf.text(`Pontuação de todas as perguntas — ${dept}`, margin, y);
+      y += 5;
+      drawAllQuestionsTable(deptAnswers);
+      y += 3;
     });
   }
+
 
   // ══════════════════════════════════════════
   // 5 — Top Critical Questions

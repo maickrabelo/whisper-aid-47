@@ -1,32 +1,38 @@
-## Diagnóstico (verificado)
+# Ajustes: relatórios psicossociais, AEP, PGR
 
-O e-mail de convite de colaborador é gerado em `supabase/functions/invite-collaborator/index.ts` com o link **fixo** `https://soia.app.br/convite/{token}` (linha do `acceptUrl`), remetente "SOIA <noreply@soia.app.br>", cabeçalho "SOIA – Sistema de Gestão NR-01" e rodapé "© SOIA · soia.app.br". Por isso os convidados de `fabio.carette@safetyework.com.br` foram parar no site antigo e nunca chegaram à tela `/convite/:token` do Sr.SMS — os três convites (`deise.duarte@sdafetyework.com.br`, `tamires.oliveira@safetyework.com.br` e um de 30/07) continuam com status `pending` no banco, ou seja, nenhum aceite foi concluído e nenhum vínculo/role foi criado.
+## 1. Lista de perguntas com pontuação nos PDFs (HSE-IT e COPSOQ)
 
-O mesmo problema de domínio existe em `invite-sector-viewer` (link `https://soia.app.br/convite-setor/{token}`). Consultando `account_invitations`, há **vários outros convites pendentes** de outras contas com o mesmo destino quebrado (ex.: adibsalles, larissacavalcantetst, sandy.gomes, juniormoises414, miguelroaamaral, tanialcrepaldi, nalucristal, antoniocarlos.solucoes, entre outros).
+Hoje o HSE-IT lista apenas as 15 questões mais críticas e o COPSOQ traz médias por dimensão. Passa a existir, nos dois relatórios:
 
-Observação: o e-mail `deise.duarte@sdafetyework.com.br` tem erro de digitação no domínio (`sdafetyework`), então esse convite precisa ser reenviado para o endereço correto.
+- **Análise geral**: seção nova "Detalhamento de todas as perguntas" com tabela contendo número da pergunta, texto completo (com quebra de linha, sem corte em "..."), dimensão, média e classificação de risco.
+- **Por setor**: dentro de cada bloco de setor, a mesma lista completa de perguntas com a média calculada apenas com as respostas daquele setor.
+- Ordenação por número da pergunta (mantendo a seção de questões críticas já existente no HSE-IT).
+- Tabelas com repetição de cabeçalho a cada quebra de página, respeitando a tipografia padrão já usada nos relatórios.
 
-Também confirmado: hoje o fluxo de aceite (`signup-from-invitation` + `accept-invitation`) **não dispara nenhum e-mail de boas-vindas** — o colaborador cria a senha e fica sem nenhuma confirmação.
+## 2. AEP — adicionar fatores na aba "Fatores"
 
-## Correções
+- Botão "Adicionar" no topo da aba Fatores, no mesmo padrão da aba Participantes.
+- Reaproveita o diálogo de edição de fator já existente, agora em modo criação: seleção do fator no catálogo (categoria/nome), severidade, probabilidade, fonte/causa, grupos expostos, evidência e o bloco/GHE (escopo) ao qual o fator pertence — ou "Geral".
+- Disponível apenas quando a AEP está editável (rascunho); em versões assinadas continua bloqueado com a mensagem atual.
 
-**1. Link e branding do convite (causa raiz)**
-- Em `invite-collaborator`: trocar o domínio fixo por `https://srsms.com.br/convite/{token}` (com override opcional por `APP_PUBLIC_URL`), e refazer o template com identidade Sr.SMS (cabeçalho, cores, rodapé, assunto e remetente `Sr. SMS <noreply@...>`), no mesmo padrão de `_shared/welcome-email.ts`.
-- Mesma correção em `invite-sector-viewer` (`/convite-setor/{token}`).
-- Centralizar a URL base em um helper compartilhado (`supabase/functions/_shared/app-url.ts`) para não voltar a existir domínio "chumbado" espalhado.
-- Retornar o `accept_url` correto para o front, e exibir no diálogo de convite um botão "Copiar link do convite" como plano B caso o e-mail não chegue.
+## 3. PGR — responsabilidade de implementação da organização
 
-**2. E-mail de boas-vindas para colaborador convidado**
-- Após o aceite bem-sucedido (`signup-from-invitation` com `action=signup`, e também `accept-invitation` para quem já tinha conta), disparar o e-mail de boas-vindas usando o utilitário existente `_shared/welcome-email.ts`, com contexto "colaborador convidado", nome da conta, link de login e sem expor senha.
+- Novo campo de texto editável na Visão Geral do PGR: "Responsabilidade de implementação (organização)", com botão "Preencher padrão" (texto base citando as responsabilidades do empregador conforme NR-01 item 1.4.1).
+- Novos campos de identificação do representante da organização: nome, cargo e CPF.
+- No PDF: o texto entra na Parte VI e passa a existir **dois blocos de assinatura** lado a lado — Responsável Técnico (existente) e Representante Legal da Organização (novo), cada um com nome, CPF/registro e função.
 
-**3. Reenvio dos convites quebrados**
-- Criar uma ação de "Reenviar convite" no `TeamManagementCard` (chamando `invite-collaborator` com reenvio, renovando `expires_at` em vez de bloquear com "já existe convite pendente").
-- Reenviar imediatamente, com o link correto, os convites pendentes de Fábio (`tamires.oliveira@safetyework.com.br` e o de 30/07) e reenviar o de Deise para o e-mail corrigido `deise.duarte@safetyework.com.br` (confirmar o endereço com o cliente antes).
-- Fazer uma varredura dos demais convites `pending` criados antes desta correção e reenviá-los com o link novo (via função pontual de reenvio em lote), evitando os já expirados sem interesse.
+## 4. Atualização da base normativa no PDF do PGR
 
-**4. Verificação pós-correção**
-- Após o aceite de um convite de teste, confirmar no banco que o usuário recebeu a role correta e o vínculo em `user_sst_managers` / `user_companies`, e que ele cai no dashboard certo.
+Substituir as citações da Portaria SEPRT nº 6.730/2020 pela redação vigente:
+
+- Rodapé/etiqueta de regulamentação: "NR-01 — Portaria MTE nº 1.419/2024".
+- Texto introdutório: NR-01 aprovada pela Portaria nº 3.214/1978, com redação atualizada pelas Portarias MTE nº 342/2024, nº 344/2024 e nº 1.419/2024.
+- Texto de responsabilidades: referência à Lei nº 6.514/1977 e às Portarias MTE nº 342/2024, nº 344/2024 e nº 1.419/2024 (NR-01).
+- Revisão de todas as demais menções à Portaria 6.730 no gerador para o novo texto.
 
 ## Detalhes técnicos
 
-Arquivos afetados: `supabase/functions/invite-collaborator/index.ts`, `supabase/functions/invite-sector-viewer/index.ts`, `supabase/functions/signup-from-invitation/index.ts`, `supabase/functions/accept-invitation/index.ts`, novo `supabase/functions/_shared/app-url.ts`, `src/components/collaborators/InviteCollaboratorDialog.tsx` e `src/components/collaborators/TeamManagementCard.tsx`. Sem alteração de schema; apenas atualização de `expires_at`/`token` nos reenvios.
+- `src/components/hseit/HSEITReportPDF.tsx` e `src/components/psychosocial/COPSOQReportPDF.ts`: nova função utilitária de tabela de perguntas, reutilizada no consolidado e no loop por setor; médias por setor calculadas a partir das respostas filtradas por departamento.
+- `src/pages/AEPDetail.tsx`: `openNewFator()` + botão na aba Fatores; `saveFator()` passa a fazer insert quando não há registro em edição (com `aep_id` e `escopo_ref`).
+- Migração em `pgr_documents`: colunas `org_responsibility_text`, `org_responsible_name`, `org_responsible_role`, `org_responsible_cpf`.
+- `src/components/pgr/PGROverview.tsx`: campos novos no formulário; `src/components/pgr/PGRReportPDF.ts`: texto, duplo bloco de assinatura e atualização normativa.

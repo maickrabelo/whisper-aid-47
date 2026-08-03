@@ -484,11 +484,21 @@ export function HSEITReportPDF({
         yPos += 10;
       });
 
-      // ========== PÁGINA 6: PLANO DE AÇÃO ==========
+      // ========== DETALHAMENTO DE TODAS AS PERGUNTAS (GERAL) ==========
       pdf.addPage();
       yPos = margin;
 
-      addHeader('5. PLANO DE AÇÃO RECOMENDADO', 16);
+      addHeader('5. DETALHAMENTO DE TODAS AS PERGUNTAS', 16);
+      addText('Pontuação média consolidada (todos os setores) de cada uma das questões do instrumento, em escala normalizada de 1 a 5 — quanto menor a pontuação, maior o risco.');
+      yPos += 6;
+      addAllQuestionsTable(responses.flatMap(r => r.answers));
+
+      // ========== PLANO DE AÇÃO ==========
+      pdf.addPage();
+      yPos = margin;
+
+      addHeader('6. PLANO DE AÇÃO RECOMENDADO', 16);
+
       yPos += 3;
 
       const criticalCats = categories.filter(cat => getHealthImpact(categoryAverages[cat] || 0) === 'risk');

@@ -25,7 +25,9 @@ const AEPDetail = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useRealAuth();
   const [loading, setLoading] = useState(true);
+  const { data: catalogo } = useAEPFatoresCatalog();
   const [aep, setAep] = useState<any>(null);
+
   const [fatores, setFatores] = useState<any[]>([]);
   const [participantes, setParticipantes] = useState<any[]>([]);
   const [evidencias, setEvidencias] = useState<any[]>([]);

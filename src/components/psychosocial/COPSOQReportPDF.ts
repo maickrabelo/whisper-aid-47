@@ -234,6 +234,72 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     y += 2;
   };
 
+  // Tabela com TODAS as perguntas e suas pontuações (geral ou por setor)
+  const drawAllQuestionsTable = (answers: Answer[]) => {
+    const tableW = pw - 2 * margin;
+    const colNum = 9;
+    const colAvg = 16;
+    const colLevel = 28;
+    const colText = tableW - colNum - colAvg - colLevel - 4;
+    const xText = margin + colNum + 2;
+    const xAvg = margin + colNum + colText + 4;
+    const xLevel = xAvg + colAvg;
+
+    const header = () => {
+      ensure(12);
+      pdf.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+      pdf.rect(margin, y, tableW, 7, 'F');
+      setText(8, true, [255, 255, 255]);
+      pdf.text('#', margin + 2, y + 4.8);
+      pdf.text('Pergunta', xText, y + 4.8);
+      pdf.text('Média', xAvg, y + 4.8);
+      pdf.text('Nível', xLevel, y + 4.8);
+      y += 9;
+    };
+
+    header();
+
+    COPSOQ_QUESTIONS.forEach((q, index) => {
+      const vals = answers.filter(a => a.questionNumber === q.number)
+        .map(a => normalizeScore(a.value, q.isInverted));
+      const avg = vals.length > 0 ? vals.reduce((s, v) => s + v, 0) / vals.length : NaN;
+      const level: CellRisk = vals.length > 0 ? getRiskLevel(avg) : 'na';
+
+      setText(8, false, COLORS.text);
+      const lines: string[] = pdf.splitTextToSize(q.text, colText - 2);
+      const rowH = Math.max(7, lines.length * 3.8 + 3);
+
+      if (y + rowH > ph - 20) {
+        newPage();
+        header();
+      }
+
+      const bg = index % 2 === 0 ? 250 : 242;
+      pdf.setFillColor(bg, bg, bg);
+      pdf.rect(margin, y, tableW, rowH, 'F');
+
+      setText(8, false, COLORS.muted);
+      pdf.text(String(q.number), margin + 2, y + 4.5);
+      setText(8, false, COLORS.text);
+      pdf.text(lines, xText, y + 4.5);
+
+      const rc = riskColor(level);
+      if (vals.length === 0) {
+        setText(8, false, COLORS.neutral);
+        pdf.text('—', xAvg, y + 4.5);
+        pdf.text('sem dados', xLevel, y + 4.5);
+      } else {
+        setText(8, true, rc);
+        pdf.text(avg.toFixed(2), xAvg, y + 4.5);
+        pdf.text(RISK_LEVEL_LABELS[level as CopsoqRiskLevel], xLevel, y + 4.5);
+      }
+
+      y += rowH;
+    });
+    y += 4;
+  };
+
+
   // ══════════════════════════════════════════
   // COVER
   // ══════════════════════════════════════════

@@ -309,6 +309,21 @@ const AEPDetail = () => {
     }
   };
 
+  const openNewFator = () => {
+    setFatorEditing(null);
+    setFatorForm({
+      categoria: 'ergonomico_fisico',
+      fator_nome: '',
+      fonte_causa: '',
+      grupos_expostos: '',
+      evidencia_texto: '',
+      severity: 3,
+      probability: 3,
+      observacoes: '',
+      escopo_ref: escopoArr.length === 1 ? (escopoArr[0]?.tempId || '__geral__') : '__geral__',
+    });
+    setEditFatorOpen(true);
+  };
   const openEditFator = (f: any) => {
     setFatorEditing(f);
     setFatorForm({
@@ -320,11 +335,15 @@ const AEPDetail = () => {
       severity: f.severity || 3,
       probability: f.probability || 3,
       observacoes: f.observacoes || '',
+      escopo_ref: f.escopo_ref || '__geral__',
     });
     setEditFatorOpen(true);
   };
   const saveFator = async () => {
-    if (!fatorEditing) return;
+    if (!fatorForm.fator_nome || !String(fatorForm.fator_nome).trim()) {
+      toast.error('Informe o nome do fator');
+      return;
+    }
     try {
       const patch: any = {
         categoria: fatorForm.categoria,
@@ -335,14 +354,22 @@ const AEPDetail = () => {
         severity: Number(fatorForm.severity) || 1,
         probability: Number(fatorForm.probability) || 1,
         observacoes: fatorForm.observacoes || null,
+        escopo_ref: fatorForm.escopo_ref && fatorForm.escopo_ref !== '__geral__' ? fatorForm.escopo_ref : null,
       };
-      const { error } = await supabase.from('aep_fatores_avaliados' as any).update(patch).eq('id', fatorEditing.id);
-      if (error) throw error;
-      toast.success('Fator atualizado');
+      if (fatorEditing) {
+        const { error } = await supabase.from('aep_fatores_avaliados' as any).update(patch).eq('id', fatorEditing.id);
+        if (error) throw error;
+        toast.success('Fator atualizado');
+      } else {
+        const { error } = await supabase.from('aep_fatores_avaliados' as any).insert({ ...patch, aep_id: aep.id } as any);
+        if (error) throw error;
+        toast.success('Fator adicionado');
+      }
       setEditFatorOpen(false);
       load();
     } catch (e: any) {
       toast.error('Erro ao salvar: ' + e.message);
+
     }
   };
   const deleteFator = async (f: any) => {

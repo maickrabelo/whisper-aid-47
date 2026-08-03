@@ -666,7 +666,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   // 6 — Action Plan
   // ══════════════════════════════════════════
   newPage();
-  drawSectionTitle('6. Plano de Ação Recomendado');
+  drawSectionTitle('7. Plano de Ação Recomendado');
 
   const criticalCats = ALL_CATEGORIES.filter(c => catData[c].level === 'risk');
   const intermediateCats = ALL_CATEGORIES.filter(c => catData[c].level === 'intermediate');

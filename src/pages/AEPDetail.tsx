@@ -646,12 +646,20 @@ const AEPDetail = () => {
 
           <TabsContent value="fatores" className="mt-4">
             <div className="space-y-3">
-              {!isEditable && fatores.length > 0 && (
-                <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
-                  <Lock className="h-3 w-3" /> Crie uma nova versão para alterar os fatores
-                </div>
-              )}
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold">Fatores levantados</span>
+                {isEditable ? (
+                  <Button size="sm" variant="outline" className="gap-1" onClick={openNewFator}>
+                    <Plus className="h-3.5 w-3.5" /> Adicionar
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Lock className="h-3 w-3" /> Crie uma nova versão para alterar os fatores
+                  </span>
+                )}
+              </div>
               {fatores.length === 0 && <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Nenhum fator levantado</CardContent></Card>}
+
               {fatores.map(f => {
                 const level = classifyRisk(5, f.severity, f.probability);
                 const linked = linkedByFator.get(f.id) || [];

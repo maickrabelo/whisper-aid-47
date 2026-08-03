@@ -604,7 +604,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   ]);
 
   subTitle('1.4 Responsabilidades');
-  paragraph(`${input.company.name || '(EMPRESA)'}, cumpridora de requisitos legais, vem por meio deste documento implantar o seu PGR, conforme preconiza a Lei nº 6.514/1977 e a Portaria nº 6.730/2020 (NR-01). As responsabilidades estão distribuídas conforme abaixo:`);
+  paragraph(`${input.company.name || '(EMPRESA)'}, cumpridora de requisitos legais, vem por meio deste documento implantar o seu PGR, conforme preconiza a Lei nº 6.514/1977 e a NR-01 com redação atualizada pelas Portarias MTE nº 342/2024, nº 344/2024 e nº 1.419/2024. As responsabilidades estão distribuídas conforme abaixo:`);
 
   subTitle('Empregador');
   bullets([

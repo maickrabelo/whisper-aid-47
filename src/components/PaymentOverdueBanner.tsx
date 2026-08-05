@@ -11,7 +11,7 @@ const PaymentOverdueBanner: React.FC = () => {
   if (paymentStatus !== 'overdue_warning' && paymentStatus !== 'overdue_critical') return null;
 
   const isCritical = paymentStatus === 'overdue_critical';
-  const daysUntilBlock = Math.max(0, 7 - daysOverdue);
+  const daysUntilBlock = Math.max(0, 3 - daysOverdue);
 
   const handleRefresh = async () => {
     setRefreshing(true);

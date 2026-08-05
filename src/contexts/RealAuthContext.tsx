@@ -281,8 +281,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const diffDays = Math.floor((now - end) / (1000 * 60 * 60 * 24));
       setDaysOverdue(diffDays > 0 ? diffDays : 0);
 
-      if (diffDays >= 7) setPaymentStatus('blocked');
-      else if (diffDays >= 3) setPaymentStatus('overdue_critical');
+      if (diffDays >= 3) setPaymentStatus('blocked');
+      else if (diffDays >= 2) setPaymentStatus('overdue_critical');
       else if (diffDays >= 1) setPaymentStatus('overdue_warning');
       else setPaymentStatus('ok');
     } catch (e) {

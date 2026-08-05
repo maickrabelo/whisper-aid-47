@@ -416,6 +416,18 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
 
   const unionRiskCount = isConsolidated ? dimensionsAtRiskInAnySector.size : criticalCount;
 
+  const finalizeDocument = () => {
+    const totalPages = (pdf as any).internal.getNumberOfPages();
+    for (let p = 2; p <= totalPages; p++) {
+      pdf.setPage(p);
+      setText(8, false, COLORS.muted);
+      pdf.text(`Página ${p} de ${totalPages}`, pw - margin, ph - 8, { align: 'right' });
+      pdf.text('Relatório COPSOQ II', margin, ph - 8);
+    }
+    const safeName = input.companyName.replace(/[^\w]+/g, '_').substring(0, 40);
+    pdf.save(`Relatorio_COPSOQ_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   // ══════════════════════════════════════════
   // PAGE 2 — Executive Summary
   // ══════════════════════════════════════════

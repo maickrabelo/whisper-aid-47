@@ -191,38 +191,38 @@ export default function COPSOQResults() {
                 Compartilhar setor
               </Button>
             )}
-            <Button
-              onClick={async () => {
-                if (!assessment) return;
-                setIsGeneratingPDF(true);
-                try {
-                  await generateCOPSOQReport({
-                    assessment: {
-                      id: assessment.id,
-                      title: assessment.title,
-                      description: assessment.description,
-                      createdAt: assessment.createdAt,
-                    },
-                    companyName: assessment.companies?.name || '',
-                    responses,
-                    selectedDepartment,
-                    departments,
-                  });
-                  toast({ title: 'Relatório PDF gerado com sucesso!' });
-                } catch (e) {
-                  console.error(e);
-                  toast({ title: 'Erro ao gerar PDF', variant: 'destructive' });
-                } finally {
-                  setIsGeneratingPDF(false);
-                }
-              }}
-              disabled={isGeneratingPDF}
-            >
+            <Button onClick={() => { setEditingLastVersion(false); setIsReportEditorOpen(true); }} disabled={isGeneratingPDF}>
               {isGeneratingPDF ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ClipboardList className="h-4 w-4 mr-2" />}
               Gerar Relatório PDF
             </Button>
+            {savedDraft && (
+              <Button variant="outline" onClick={() => { setEditingLastVersion(true); setIsReportEditorOpen(true); }}>
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Editar última versão
+              </Button>
+            )}
           </div>
         </div>
+
+        <COPSOQReportEditor
+          open={isReportEditorOpen}
+          onOpenChange={setIsReportEditorOpen}
+          assessment={{
+            id: assessment.id,
+            title: assessment.title,
+            description: assessment.description,
+            createdAt: assessment.createdAt,
+          }}
+          companyName={assessment.companies?.name || ''}
+          companyId={assessment.companies?.id || null}
+          responses={responses}
+          departments={departments}
+          selectedDepartment={selectedDepartment}
+          categoryAverages={categoryAverages}
+          initialConfig={editingLastVersion ? savedDraft : null}
+          onSaved={() => { if (id) loadReportDraft('copsoq', id).then(setSavedDraft); }}
+        />
+
 
         {assessment.companies?.id && (
           <ShareSectorDialog

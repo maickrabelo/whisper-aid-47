@@ -498,7 +498,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     'A pontuação varia de 1 a 5 em escala Likert. Para dimensões que representam riscos (ex.: exigências quantitativas, conflitos, burnout, estresse), a pontuação é invertida — de forma que valores mais altos após normalização sempre representam condições mais favoráveis, e valores mais baixos indicam maior risco psicossocial.'
   );
   drawSubTitle('Classificação de Risco:');
-  drawParagraph('• Favorável (≥ 3,67): condição adequada — manter práticas atuais.');
+  drawParagraph('• Favorável (3,67 ou mais): condição adequada — manter práticas atuais.');
   drawParagraph('• Intermediário (2,33 – 3,66): atenção necessária — planejar melhorias.');
   drawParagraph('• Risco (< 2,33): intervenção prioritária.');
 

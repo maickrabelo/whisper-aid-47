@@ -536,7 +536,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
 
     drawSubSection('4.3 Classificação de Risco');
     const riskThresholds = [
-      ['Muito Baixo', '≥ 4,21', 'Condição muito favorável', [34, 197, 94]],
+      ['Muito Baixo', 'acima de 4,20', 'Condição muito favorável', [34, 197, 94]],
       ['Baixo', '3,41 – 4,20', 'Condição favorável', [132, 204, 22]],
       ['Moderado', '2,61 – 3,40', 'Atenção necessária', [234, 179, 8]],
       ['Alto', '1,81 – 2,60', 'Intervenção necessária', [249, 115, 22]],
@@ -559,9 +559,9 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
 
     y += 5;
     drawSubSection('4.4 Semáforo de Impacto na Saúde');
-    drawText('🟢 Favorável (< 2,33): Ambiente psicossocial saudável', 5);
-    drawText('🟡 Intermediário (2,33 – 3,66): Atenção e monitoramento necessários', 5);
-    drawText('🔴 Risco (≥ 3,67): Intervenção urgente necessária', 5);
+    drawText('Verde — Favorável (abaixo de 2,33): Ambiente psicossocial saudável', 5);
+    drawText('Amarelo — Intermediário (2,33 a 3,66): Atenção e monitoramento necessários', 5);
+    drawText('Vermelho — Risco (3,67 ou mais): Intervenção urgente necessária', 5);
   }
 
   y += 5;

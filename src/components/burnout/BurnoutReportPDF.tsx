@@ -245,7 +245,7 @@ export function BurnoutReportPDF({
 
       yPos += 8;
       addSubHeader('Classificação de Risco:');
-      addText('• Sem Indício (≤ 20 pts): Não há sinais de burnout', 5);
+      addText('• Sem Indício (até 20 pts): Não há sinais de burnout', 5);
       addText('• Risco de Desenvolver (21-40 pts): Atenção preventiva necessária', 5);
       addText('• Fase Inicial (41-60 pts): Intervenção preventiva recomendada', 5);
       addText('• Condição Estabelecida (61-80 pts): Tratamento necessário', 5);

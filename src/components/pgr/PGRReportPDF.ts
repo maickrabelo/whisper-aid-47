@@ -430,7 +430,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     doc.text('PROBABILIDADE', MARGIN + 3, y0 + (size * cell) / 2, { angle: 90, align: 'center' });
 
     setText(8, false, COLORS.text);
-    doc.text('SEVERIDADE →', x0, state.y + 5);
+    doc.text('SEVERIDADE >', x0, state.y + 5);
     for (let i = 0; i < size; i++) {
       const cx = x0 + i * cell + cell / 2;
       doc.text(String(i + 1), cx, state.y + 10, { align: 'center' });
@@ -828,7 +828,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
         const mag = Number(r.magnitude) || 1;
         const bump = mag === 5 ? 2 : mag === 4 ? 1 : 0;
         const probAdj = Math.min(r.probability + bump, Number(r.matrix_size) || 5);
-        const magCell = `${magShort[mag] || '—'}${r.exposed_workers ? ` · ${r.exposed_workers}` : ''}${bump > 0 ? `\nP:${r.probability}→${probAdj}` : ''}`;
+        const magCell = `${magShort[mag] || '—'}${r.exposed_workers ? ` · ${r.exposed_workers}` : ''}${bump > 0 ? `\nP:${r.probability} > ${probAdj}` : ''}`;
         const lvlKey = (r.risk_level || '').toString().trim().toLowerCase();
         const lvlPT = riskLevelPT[lvlKey] || (r.risk_level || '—').toUpperCase();
         return [

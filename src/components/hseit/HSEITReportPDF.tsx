@@ -325,7 +325,7 @@ export function HSEITReportPDF({
 
       yPos += 8;
       addSubHeader('Classificação de Risco:');
-      addText('• Muito Baixo (≥ 4.21): Condição muito favorável - manter práticas atuais', 5);
+      addText('• Muito Baixo (acima de 4.20): Condição muito favorável - manter práticas atuais', 5);
       addText('• Baixo (3.41 - 4.20): Condição favorável - monitorar', 5);
       addText('• Moderado (2.61 - 3.40): Atenção necessária - planejar melhorias', 5);
       addText('• Alto (1.81 - 2.60): Intervenção necessária - agir em curto prazo', 5);
@@ -505,7 +505,7 @@ export function HSEITReportPDF({
       const intermediateCats = categories.filter(cat => getHealthImpact(categoryAverages[cat] || 0) === 'intermediate');
 
       if (criticalCats.length > 0) {
-        addSubHeader('🔴 Ações Imediatas (Categorias Críticas):');
+        addSubHeader('Ações Imediatas (Categorias Críticas):');
         yPos += 2;
         criticalCats.forEach((cat, i) => {
           addNewPageIfNeeded(20);

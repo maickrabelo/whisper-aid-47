@@ -13,7 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, FileText, Share2, ClipboardList } from 'lucide-react';
 import ShareSectorDialog from '@/components/sector-sharing/ShareSectorDialog';
 import { toast } from '@/hooks/use-toast';
-import { generateCOPSOQReport } from '@/components/psychosocial/COPSOQReportPDF';
+import { COPSOQReportEditor } from '@/components/psychosocial/COPSOQReportEditor';
+import { loadReportDraft, PsychosocialReportDraftConfig } from '@/lib/psychosocialReportDrafts';
 import {
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, PieChart, Pie, Legend
@@ -40,6 +41,9 @@ export default function COPSOQResults() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
+  const [savedDraft, setSavedDraft] = useState<PsychosocialReportDraftConfig | null>(null);
+  const [editingLastVersion, setEditingLastVersion] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
@@ -48,6 +52,10 @@ export default function COPSOQResults() {
       fetchData();
     }
   }, [user, role, authLoading, id]);
+
+  useEffect(() => {
+    if (id) loadReportDraft('copsoq', id).then(setSavedDraft);
+  }, [id]);
 
   const fetchData = async () => {
     try {
@@ -183,38 +191,38 @@ export default function COPSOQResults() {
                 Compartilhar setor
               </Button>
             )}
-            <Button
-              onClick={async () => {
-                if (!assessment) return;
-                setIsGeneratingPDF(true);
-                try {
-                  await generateCOPSOQReport({
-                    assessment: {
-                      id: assessment.id,
-                      title: assessment.title,
-                      description: assessment.description,
-                      createdAt: assessment.createdAt,
-                    },
-                    companyName: assessment.companies?.name || '',
-                    responses,
-                    selectedDepartment,
-                    departments,
-                  });
-                  toast({ title: 'Relatório PDF gerado com sucesso!' });
-                } catch (e) {
-                  console.error(e);
-                  toast({ title: 'Erro ao gerar PDF', variant: 'destructive' });
-                } finally {
-                  setIsGeneratingPDF(false);
-                }
-              }}
-              disabled={isGeneratingPDF}
-            >
+            <Button onClick={() => { setEditingLastVersion(false); setIsReportEditorOpen(true); }} disabled={isGeneratingPDF}>
               {isGeneratingPDF ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ClipboardList className="h-4 w-4 mr-2" />}
               Gerar Relatório PDF
             </Button>
+            {savedDraft && (
+              <Button variant="outline" onClick={() => { setEditingLastVersion(true); setIsReportEditorOpen(true); }}>
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Editar última versão
+              </Button>
+            )}
           </div>
         </div>
+
+        <COPSOQReportEditor
+          open={isReportEditorOpen}
+          onOpenChange={setIsReportEditorOpen}
+          assessment={{
+            id: assessment.id,
+            title: assessment.title,
+            description: assessment.description,
+            createdAt: assessment.createdAt,
+          }}
+          companyName={assessment.companies?.name || ''}
+          companyId={assessment.companies?.id || null}
+          responses={responses}
+          departments={departments}
+          selectedDepartment={selectedDepartment}
+          categoryAverages={categoryAverages}
+          initialConfig={editingLastVersion ? savedDraft : null}
+          onSaved={() => { if (id) loadReportDraft('copsoq', id).then(setSavedDraft); }}
+        />
+
 
         {assessment.companies?.id && (
           <ShareSectorDialog

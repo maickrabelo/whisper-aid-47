@@ -19,6 +19,7 @@ import {
   calculateCategoryAverage
 } from "@/data/hseitQuestions";
 import { toast } from "sonner";
+import { PsychosocialReportDraftConfig, saveReportDraft } from "@/lib/psychosocialReportDrafts";
 
 interface CategoryAverage {
   category: HSEITCategory;
@@ -55,6 +56,9 @@ interface HSEITReportEditorProps {
   sstLogoUrl?: string | null;
   sstName?: string | null;
   companyLogoUrl?: string | null;
+  companyId?: string | null;
+  initialConfig?: PsychosocialReportDraftConfig | null;
+  onSaved?: () => void;
 }
 
 // Default recommendations based on health impact
@@ -106,7 +110,10 @@ export function HSEITReportEditor({
   questionAverages,
   sstLogoUrl,
   sstName,
-  companyLogoUrl
+  companyLogoUrl,
+  companyId,
+  initialConfig,
+  onSaved
 }: HSEITReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("preview");
@@ -120,9 +127,24 @@ export function HSEITReportEditor({
   const [sstCpf, setSstCpf] = useState("");
   const [sstRegistration, setSstRegistration] = useState("");
 
+  // Load saved configuration (última versão) when provided
+  useEffect(() => {
+    if (open && initialConfig) {
+      setExecutiveSummary(initialConfig.executiveSummary || "");
+      setActionItems((initialConfig.actionItems as ActionItem[]) || []);
+      setScheduleItems((initialConfig.scheduleItems as ScheduleItem[]) || []);
+      setCompanyCnpj(initialConfig.companyCnpj || "");
+      setCompanyAddress(initialConfig.companyAddress || "");
+      setCompanyCnae(initialConfig.companyCnae || "");
+      setCompanyRiskGrade(initialConfig.companyRiskGrade || "");
+      setSstCpf(initialConfig.sstCpf || "");
+      setSstRegistration(initialConfig.sstRegistration || "");
+    }
+  }, [open, initialConfig]);
+
   // Initialize default values based on assessment data
   useEffect(() => {
-    if (open && categoryAverages.length > 0) {
+    if (open && !initialConfig && categoryAverages.length > 0) {
       // Generate executive summary
       const criticalCategories = categoryAverages.filter(c => getHealthImpact(c.average) === 'risk');
       const intermediateCategories = categoryAverages.filter(c => getHealthImpact(c.average) === 'intermediate');
@@ -200,7 +222,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
 
       setScheduleItems(defaultSchedule);
     }
-  }, [open, categoryAverages, responses, departments, assessment]);
+  }, [open, initialConfig, categoryAverages, responses, departments, assessment]);
 
   const generatePDF = async () => {
     setIsGenerating(true);
@@ -234,6 +256,18 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         sstRegistration: sstRegistration || undefined,
         methodology: 'hseit',
       });
+      await saveReportDraft('hseit', assessment.id, companyId, {
+        executiveSummary,
+        actionItems,
+        scheduleItems,
+        companyCnpj,
+        companyAddress,
+        companyCnae,
+        companyRiskGrade,
+        sstCpf,
+        sstRegistration,
+      });
+      onSaved?.();
       toast.success('Relatório PGR gerado com sucesso!');
       onOpenChange(false);
     } catch (error) {

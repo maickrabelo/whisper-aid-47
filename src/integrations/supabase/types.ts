@@ -2479,6 +2479,39 @@ export type Database = {
           },
         ]
       }
+      psychosocial_report_drafts: {
+        Row: {
+          assessment_id: string
+          assessment_type: string
+          company_id: string | null
+          config: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          assessment_id: string
+          assessment_type: string
+          company_id?: string | null
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          assessment_id?: string
+          assessment_type?: string
+          company_id?: string | null
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pulse_survey_answers: {
         Row: {
           created_at: string

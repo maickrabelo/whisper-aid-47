@@ -31,6 +31,11 @@ export interface COPSOQReportInput {
   sstLogoUrl?: string | null;
   sstName?: string | null;
   companyLogoUrl?: string | null;
+  executiveSummary?: string;
+  actionItems?: { id?: string; category?: string; priority?: string; description?: string; recommendation?: string }[];
+  scheduleItems?: { id?: string; action?: string; deadline?: string; responsible?: string; status?: string }[];
+  companyInfo?: { cnpj?: string; address?: string; cnae?: string; riskGrade?: string };
+  responsibleInfo?: { name?: string; cpf?: string; registration?: string };
 }
 
 const COLORS = {
@@ -55,7 +60,7 @@ const riskColor = (level: CellRisk) =>
   : COLORS.neutral;
 
 // Recomendações por dimensão (23) — 3 níveis de intervenção
-const RECOMMENDATIONS: Record<COPSOQCategory, Record<CopsoqRiskLevel, string>> = {
+export const COPSOQ_RECOMMENDATIONS: Record<COPSOQCategory, Record<CopsoqRiskLevel, string>> = {
   quantitativeDemands: {
     risk: 'Redistribuir carga, revisar prazos, dimensionar equipe adequadamente e monitorar horas extras.',
     intermediate: 'Monitorar volume de trabalho e ajustar cronogramas quando necessário.',
@@ -411,11 +416,29 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
 
   const unionRiskCount = isConsolidated ? dimensionsAtRiskInAnySector.size : criticalCount;
 
+  const finalizeDocument = () => {
+    const totalPages = (pdf as any).internal.getNumberOfPages();
+    for (let p = 2; p <= totalPages; p++) {
+      pdf.setPage(p);
+      setText(8, false, COLORS.muted);
+      pdf.text(`Página ${p} de ${totalPages}`, pw - margin, ph - 8, { align: 'right' });
+      pdf.text('Relatório COPSOQ II', margin, ph - 8);
+    }
+    const safeName = input.companyName.replace(/[^\w]+/g, '_').substring(0, 40);
+    pdf.save(`Relatorio_COPSOQ_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   // ══════════════════════════════════════════
   // PAGE 2 — Executive Summary
   // ══════════════════════════════════════════
   newPage();
   drawSectionTitle('1. Resumo Executivo');
+  if (input.executiveSummary && input.executiveSummary.trim()) {
+    input.executiveSummary.split(/\n{2,}/).forEach(par => {
+      const t = par.trim();
+      if (t) drawParagraph(t);
+    });
+  } else {
   drawParagraph(
     `Este relatório apresenta os resultados da avaliação de riscos psicossociais aplicada aos colaboradores da ${input.companyName} utilizando o instrumento COPSOQ II (Copenhagen Psychosocial Questionnaire), validado internacionalmente para identificação e mensuração de fatores psicossociais no ambiente de trabalho.`
   );
@@ -426,6 +449,15 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     drawParagraph(
       `Considerando também a análise setorizada, ${dimensionsAtRiskInAnySector.size} dimensão(ões) apresentam Risco em pelo menos um setor — totalizando ${sectorRiskOccurrences} ocorrência(s) de risco em ${sectorsWithRisk} setor(es). Foram ainda identificadas ${sectorAttentionOccurrences} ocorrência(s) em nível Intermediário distribuídas em ${sectorsWithAttention} setor(es). Estas informações complementam a visão geral e evidenciam focos localizados de atenção mesmo quando o consolidado da empresa é favorável.`
     );
+  }
+  }
+
+  if (input.companyInfo && (input.companyInfo.cnpj || input.companyInfo.address || input.companyInfo.cnae || input.companyInfo.riskGrade)) {
+    drawSubTitle('Identificação da Empresa');
+    if (input.companyInfo.cnpj) drawParagraph(`CNPJ: ${input.companyInfo.cnpj}`);
+    if (input.companyInfo.address) drawParagraph(`Endereço: ${input.companyInfo.address}`);
+    if (input.companyInfo.cnae) drawParagraph(`CNAE: ${input.companyInfo.cnae}`);
+    if (input.companyInfo.riskGrade) drawParagraph(`Grau de risco: ${input.companyInfo.riskGrade}`);
   }
 
   // KPI cards
@@ -668,6 +700,56 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   newPage();
   drawSectionTitle('7. Plano de Ação Recomendado');
 
+  const customActions = (input.actionItems || []).filter(a => (a.description || a.recommendation));
+  if (customActions.length > 0) {
+    const PRIORITY_LABELS: Record<string, string> = {
+      immediate: 'Imediato (até 30 dias)',
+      short_term: 'Curto prazo (1-3 meses)',
+      medium_term: 'Médio prazo (3-6 meses)',
+    };
+    customActions.forEach((item, i) => {
+      ensure(20);
+      const catLabel = item.category && (COPSOQ_CATEGORY_LABELS as any)[item.category]
+        ? (COPSOQ_CATEGORY_LABELS as any)[item.category]
+        : (item.category || '');
+      setText(10, true, COLORS.primary);
+      pdf.text(`${i + 1}. ${catLabel}${item.priority ? ` — ${PRIORITY_LABELS[item.priority] || item.priority}` : ''}`, margin, y);
+      y += 5;
+      if (item.description) {
+        setText(9.5, false, COLORS.text);
+        pdf.splitTextToSize(item.description, pw - 2 * margin - 5).forEach((line: string) => { ensure(5); pdf.text(line, margin + 5, y); y += 4.5; });
+      }
+      if (item.recommendation) {
+        setText(9.5, false, COLORS.muted);
+        pdf.splitTextToSize(`Ação: ${item.recommendation}`, pw - 2 * margin - 5).forEach((line: string) => { ensure(5); pdf.text(line, margin + 5, y); y += 4.5; });
+      }
+      y += 3;
+    });
+
+    ensure(10);
+    drawSubTitle('Cronograma');
+    const sched = (input.scheduleItems || []).filter(s => s.action);
+    if (sched.length > 0) {
+      const STATUS_LABELS: Record<string, string> = { pending: 'Pendente', in_progress: 'Em andamento', completed: 'Concluído' };
+      sched.forEach(item => {
+        drawParagraph(`• ${item.action} — Prazo: ${item.deadline || '-'} · Responsável: ${item.responsible || '-'} · ${STATUS_LABELS[item.status || 'pending'] || ''}`);
+      });
+    } else {
+      drawParagraph('• Cronograma não informado.');
+    }
+
+    if (input.responsibleInfo && (input.responsibleInfo.name || input.responsibleInfo.cpf || input.responsibleInfo.registration)) {
+      ensure(12);
+      drawSubTitle('Responsável Técnico');
+      if (input.responsibleInfo.name) drawParagraph(`Nome: ${input.responsibleInfo.name}`);
+      if (input.responsibleInfo.cpf) drawParagraph(`CPF: ${input.responsibleInfo.cpf}`);
+      if (input.responsibleInfo.registration) drawParagraph(`Registro profissional: ${input.responsibleInfo.registration}`);
+    }
+
+    finalizeDocument();
+    return;
+  }
+
   const criticalCats = ALL_CATEGORIES.filter(c => catData[c].level === 'risk');
   const intermediateCats = ALL_CATEGORIES.filter(c => catData[c].level === 'intermediate');
 
@@ -678,7 +760,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       setText(10, true, COLORS.risk);
       pdf.text(`${i + 1}. ${COPSOQ_CATEGORY_LABELS[cat]}`, margin, y);
       y += 5;
-      const rec = RECOMMENDATIONS[cat].risk;
+      const rec = COPSOQ_RECOMMENDATIONS[cat].risk;
       setText(9.5, false, COLORS.text);
       const lines = pdf.splitTextToSize(rec, pw - 2 * margin - 5);
       lines.forEach((line: string) => { ensure(5); pdf.text(line, margin + 5, y); y += 4.5; });
@@ -694,7 +776,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       setText(10, true, COLORS.intermediate);
       pdf.text(`${i + 1}. ${COPSOQ_CATEGORY_LABELS[cat]}`, margin, y);
       y += 5;
-      const rec = RECOMMENDATIONS[cat].intermediate;
+      const rec = COPSOQ_RECOMMENDATIONS[cat].intermediate;
       setText(9.5, false, COLORS.text);
       const lines = pdf.splitTextToSize(rec, pw - 2 * margin - 5);
       lines.forEach((line: string) => { ensure(5); pdf.text(line, margin + 5, y); y += 4.5; });
@@ -715,17 +797,5 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   drawParagraph('• Meses 4-6: monitorar indicadores, ajustar ações e coletar feedback.');
   drawParagraph('• Mês 6: reaplicar avaliação para medir progresso.');
 
-  // ══════════════════════════════════════════
-  // Footer with page numbers
-  // ══════════════════════════════════════════
-  const totalPages = (pdf as any).internal.getNumberOfPages();
-  for (let p = 2; p <= totalPages; p++) {
-    pdf.setPage(p);
-    setText(8, false, COLORS.muted);
-    pdf.text(`Página ${p} de ${totalPages}`, pw - margin, ph - 8, { align: 'right' });
-    pdf.text('Relatório COPSOQ II', margin, ph - 8);
-  }
-
-  const safeName = input.companyName.replace(/[^\w]+/g, '_').substring(0, 40);
-  pdf.save(`Relatorio_COPSOQ_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);
+  finalizeDocument();
 }

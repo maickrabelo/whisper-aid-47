@@ -48,6 +48,7 @@ import {
 import { ChartConfig } from '@/components/ui/chart';
 import { CategoryRiskIndicators } from '@/components/hseit/CategoryRiskIndicators';
 import { HSEITReportEditor } from '@/components/hseit/HSEITReportEditor';
+import { loadReportDraft, PsychosocialReportDraftConfig } from '@/lib/psychosocialReportDrafts';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { AssessmentComparison } from '@/components/psychosocial/AssessmentComparison';
@@ -113,6 +114,8 @@ export default function HSEITResults() {
   const [sstLogoUrl, setSstLogoUrl] = useState<string | null>(null);
   const [sstName, setSstName] = useState<string | null>(null);
   const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
+  const [savedDraft, setSavedDraft] = useState<PsychosocialReportDraftConfig | null>(null);
+  const [editingLastVersion, setEditingLastVersion] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const { shouldShowTour, completeTour } = useOnboarding('hseit-results');
 
@@ -129,6 +132,10 @@ export default function HSEITResults() {
       fetchData();
     }
   }, [user, role, authLoading, id]);
+
+  useEffect(() => {
+    if (id) loadReportDraft('hseit', id).then(setSavedDraft);
+  }, [id]);
 
   const fetchData = async () => {
     try {
@@ -446,10 +453,17 @@ export default function HSEITResults() {
               </Button>
             )}
 
-            <Button id="hseit-report-btn" onClick={() => setIsReportEditorOpen(true)}>
+            <Button id="hseit-report-btn" onClick={() => { setEditingLastVersion(false); setIsReportEditorOpen(true); }}>
               <ClipboardList className="h-4 w-4 mr-2" />
               Preparar Relatório PDF
             </Button>
+
+            {savedDraft && (
+              <Button variant="outline" onClick={() => { setEditingLastVersion(true); setIsReportEditorOpen(true); }}>
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Editar última versão
+              </Button>
+            )}
           </div>
         </div>
 
@@ -491,6 +505,9 @@ export default function HSEITResults() {
           sstLogoUrl={sstLogoUrl}
           sstName={sstName}
           companyLogoUrl={assessment.companies?.logo_url || null}
+          companyId={assessment.companies?.id || null}
+          initialConfig={editingLastVersion ? savedDraft : null}
+          onSaved={() => { if (assessment?.id) loadReportDraft('hseit', assessment.id).then(setSavedDraft); }}
         />
 
         {assessment.multiSectorEnabled && (

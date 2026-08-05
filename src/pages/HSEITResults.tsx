@@ -133,6 +133,10 @@ export default function HSEITResults() {
     }
   }, [user, role, authLoading, id]);
 
+  useEffect(() => {
+    if (id) loadReportDraft('hseit', id).then(setSavedDraft);
+  }, [id]);
+
   const fetchData = async () => {
     try {
       setIsLoading(true);

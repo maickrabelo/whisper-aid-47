@@ -254,6 +254,18 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         sstRegistration: sstRegistration || undefined,
         methodology: 'hseit',
       });
+      await saveReportDraft('hseit', assessment.id, companyId, {
+        executiveSummary,
+        actionItems,
+        scheduleItems,
+        companyCnpj,
+        companyAddress,
+        companyCnae,
+        companyRiskGrade,
+        sstCpf,
+        sstRegistration,
+      });
+      onSaved?.();
       toast.success('Relatório PGR gerado com sucesso!');
       onOpenChange(false);
     } catch (error) {

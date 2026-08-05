@@ -55,6 +55,8 @@ interface HSEITReportEditorProps {
   sstLogoUrl?: string | null;
   sstName?: string | null;
   companyLogoUrl?: string | null;
+  companyId?: string | null;
+  initialConfig?: PsychosocialReportDraftConfig | null;
 }
 
 // Default recommendations based on health impact

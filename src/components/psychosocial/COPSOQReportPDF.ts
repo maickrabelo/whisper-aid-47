@@ -60,7 +60,7 @@ const riskColor = (level: CellRisk) =>
   : COLORS.neutral;
 
 // Recomendações por dimensão (23) — 3 níveis de intervenção
-const RECOMMENDATIONS: Record<COPSOQCategory, Record<CopsoqRiskLevel, string>> = {
+export const COPSOQ_RECOMMENDATIONS: Record<COPSOQCategory, Record<CopsoqRiskLevel, string>> = {
   quantitativeDemands: {
     risk: 'Redistribuir carga, revisar prazos, dimensionar equipe adequadamente e monitorar horas extras.',
     intermediate: 'Monitorar volume de trabalho e ajustar cronogramas quando necessário.',
@@ -760,7 +760,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       setText(10, true, COLORS.risk);
       pdf.text(`${i + 1}. ${COPSOQ_CATEGORY_LABELS[cat]}`, margin, y);
       y += 5;
-      const rec = RECOMMENDATIONS[cat].risk;
+      const rec = COPSOQ_RECOMMENDATIONS[cat].risk;
       setText(9.5, false, COLORS.text);
       const lines = pdf.splitTextToSize(rec, pw - 2 * margin - 5);
       lines.forEach((line: string) => { ensure(5); pdf.text(line, margin + 5, y); y += 4.5; });
@@ -776,7 +776,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       setText(10, true, COLORS.intermediate);
       pdf.text(`${i + 1}. ${COPSOQ_CATEGORY_LABELS[cat]}`, margin, y);
       y += 5;
-      const rec = RECOMMENDATIONS[cat].intermediate;
+      const rec = COPSOQ_RECOMMENDATIONS[cat].intermediate;
       setText(9.5, false, COLORS.text);
       const lines = pdf.splitTextToSize(rec, pw - 2 * margin - 5);
       lines.forEach((line: string) => { ensure(5); pdf.text(line, margin + 5, y); y += 4.5; });

@@ -109,7 +109,9 @@ export function HSEITReportEditor({
   questionAverages,
   sstLogoUrl,
   sstName,
-  companyLogoUrl
+  companyLogoUrl,
+  companyId,
+  initialConfig
 }: HSEITReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("preview");
@@ -123,9 +125,24 @@ export function HSEITReportEditor({
   const [sstCpf, setSstCpf] = useState("");
   const [sstRegistration, setSstRegistration] = useState("");
 
+  // Load saved configuration (última versão) when provided
+  useEffect(() => {
+    if (open && initialConfig) {
+      setExecutiveSummary(initialConfig.executiveSummary || "");
+      setActionItems((initialConfig.actionItems as ActionItem[]) || []);
+      setScheduleItems((initialConfig.scheduleItems as ScheduleItem[]) || []);
+      setCompanyCnpj(initialConfig.companyCnpj || "");
+      setCompanyAddress(initialConfig.companyAddress || "");
+      setCompanyCnae(initialConfig.companyCnae || "");
+      setCompanyRiskGrade(initialConfig.companyRiskGrade || "");
+      setSstCpf(initialConfig.sstCpf || "");
+      setSstRegistration(initialConfig.sstRegistration || "");
+    }
+  }, [open, initialConfig]);
+
   // Initialize default values based on assessment data
   useEffect(() => {
-    if (open && categoryAverages.length > 0) {
+    if (open && !initialConfig && categoryAverages.length > 0) {
       // Generate executive summary
       const criticalCategories = categoryAverages.filter(c => getHealthImpact(c.average) === 'risk');
       const intermediateCategories = categoryAverages.filter(c => getHealthImpact(c.average) === 'intermediate');

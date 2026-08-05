@@ -220,7 +220,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
 
       setScheduleItems(defaultSchedule);
     }
-  }, [open, categoryAverages, responses, departments, assessment]);
+  }, [open, initialConfig, categoryAverages, responses, departments, assessment]);
 
   const generatePDF = async () => {
     setIsGenerating(true);

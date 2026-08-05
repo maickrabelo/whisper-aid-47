@@ -58,6 +58,7 @@ interface HSEITReportEditorProps {
   companyLogoUrl?: string | null;
   companyId?: string | null;
   initialConfig?: PsychosocialReportDraftConfig | null;
+  onSaved?: () => void;
 }
 
 // Default recommendations based on health impact
@@ -111,7 +112,8 @@ export function HSEITReportEditor({
   sstName,
   companyLogoUrl,
   companyId,
-  initialConfig
+  initialConfig,
+  onSaved
 }: HSEITReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("preview");

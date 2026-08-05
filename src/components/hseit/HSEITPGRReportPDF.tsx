@@ -305,7 +305,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
     setColor(255, 255, 255);
-    pdf.text(`${number}. ${title.toUpperCase()}`, m + 4, y + 7);
+    pdf.text(number ? `${number}. ${title.toUpperCase()}` : title.toUpperCase(), m + 4, y + 7);
     y += 16;
   };
 
@@ -394,7 +394,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   // ═══════════════════════════════
   pdf.addPage(); y = m;
   drawSection('SUMÁRIO', '');
-  y -= 6;
+  y += 2;
 
   const tocItems = [
     '1. Introdução ao PGR de Riscos Psicossociais',

@@ -13,7 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, FileText, Share2, ClipboardList } from 'lucide-react';
 import ShareSectorDialog from '@/components/sector-sharing/ShareSectorDialog';
 import { toast } from '@/hooks/use-toast';
-import { generateCOPSOQReport } from '@/components/psychosocial/COPSOQReportPDF';
+import { COPSOQReportEditor } from '@/components/psychosocial/COPSOQReportEditor';
+import { loadReportDraft, PsychosocialReportDraftConfig } from '@/lib/psychosocialReportDrafts';
 import {
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, PieChart, Pie, Legend
@@ -40,6 +41,9 @@ export default function COPSOQResults() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
+  const [savedDraft, setSavedDraft] = useState<PsychosocialReportDraftConfig | null>(null);
+  const [editingLastVersion, setEditingLastVersion] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
@@ -48,6 +52,10 @@ export default function COPSOQResults() {
       fetchData();
     }
   }, [user, role, authLoading, id]);
+
+  useEffect(() => {
+    if (id) loadReportDraft('copsoq', id).then(setSavedDraft);
+  }, [id]);
 
   const fetchData = async () => {
     try {

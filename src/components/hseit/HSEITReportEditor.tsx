@@ -19,6 +19,7 @@ import {
   calculateCategoryAverage
 } from "@/data/hseitQuestions";
 import { toast } from "sonner";
+import { PsychosocialReportDraftConfig, saveReportDraft } from "@/lib/psychosocialReportDrafts";
 
 interface CategoryAverage {
   category: HSEITCategory;

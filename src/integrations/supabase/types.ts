@@ -127,6 +127,36 @@ export type Database = {
           },
         ]
       }
+      ad_attributions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          landing_url: string | null
+          params: Json
+          referrer: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          landing_url?: string | null
+          params?: Json
+          referrer?: string | null
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          landing_url?: string | null
+          params?: Json
+          referrer?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
       aep_avaliacoes: {
         Row: {
           anonymity_ensured: boolean

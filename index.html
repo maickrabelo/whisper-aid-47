@@ -38,6 +38,24 @@
       fbq('track', 'PageView');
     </script>
     <!-- End Meta Pixel Code -->
+
+    <!-- OpenAI (ChatGPT Ads) Pixel -->
+    <script>
+      (function (w, d) {
+        if (w.oaiq) return;
+        var q = [];
+        w.oaiq = function () { q.push(arguments); };
+        w.oaiq.q = q;
+        var s = d.createElement('script');
+        s.async = true;
+        s.src = 'https://bzr.openai.com/pixel.js?pid=5suuVCixrwGcmkDPzEfVe9';
+        d.head.appendChild(s);
+      })(window, document);
+      oaiq('init', '5suuVCixrwGcmkDPzEfVe9');
+      oaiq('measure', 'page_view');
+    </script>
+    <!-- End OpenAI Pixel -->
+
     <meta property="og:title" content="Sr.SMS | Gestão de SST, PGR e Riscos Psicossociais">
   <meta name="twitter:title" content="Sr.SMS | Gestão de SST, PGR e Riscos Psicossociais">
   <meta property="og:description" content="Sr.SMS — Plataforma completa para gestão de Saúde, Segurança e Meio Ambiente, PGR/NR-1, riscos psicossociais, pesquisa de clima e treinamentos.">

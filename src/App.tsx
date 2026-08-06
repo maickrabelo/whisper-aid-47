@@ -9,6 +9,8 @@ import { useRealAuth } from "./contexts/RealAuthContext";
 import { useAccessLogger } from "./hooks/useAccessLogger";
 import React, { Suspense } from "react";
 import { MetaPixelRouteTracker } from "./components/MetaPixelRouteTracker";
+import { OpenAIPixelRouteTracker } from "./components/OpenAIPixelRouteTracker";
+
 import BackToHomeButton from "./components/BackToHomeButton";
 import TrialGate from "./components/TrialGate";
 
@@ -120,6 +122,8 @@ const App = () => (
           <WhiteLabelProvider>
             <AppContent />
             <MetaPixelRouteTracker />
+            <OpenAIPixelRouteTracker />
+
             <BackToHomeButton />
             <TrialGate />
             <Suspense fallback={<PageLoader />}>

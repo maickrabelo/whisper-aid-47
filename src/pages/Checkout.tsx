@@ -10,6 +10,8 @@ import { ArrowLeft, Loader2, Plus, X, CreditCard, QrCode, FileText, Mail, Phone 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { fbqTrack } from '@/lib/metaPixel';
+import { oaiqTrack, linkAdAttributionToEmail } from '@/lib/openaiPixel';
+
 
 const SMS_LOGO_URL = '/__l5e/assets-v1/86052a62-59f9-47bf-af09-bc2d67c91278/sr-sms-logo.png';
 
@@ -152,6 +154,9 @@ const Checkout = () => {
       external_id: form.cpfCnpj,
       country: 'br',
     });
+    oaiqTrack('checkout_started', { plan: plan.slug, value: totalCents / 100, currency: 'BRL' });
+    await linkAdAttributionToEmail(form.email);
+
     try {
       const { data, error } = await supabase.functions.invoke('asaas-create-subscription', {
         body: {

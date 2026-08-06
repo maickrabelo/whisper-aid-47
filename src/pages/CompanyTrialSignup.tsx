@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
+import { oaiqTrack, linkAdAttributionToEmail } from '@/lib/openaiPixel';
+
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import usePageSEO from '@/hooks/usePageSEO';
@@ -68,6 +70,9 @@ const CompanyTrialSignup = () => {
       if (data?.error) throw new Error(data.error);
       fbqTrack('Lead', { content_name: 'Trial Empresa' });
       fbqTrack('CompleteRegistration', { content_name: 'Trial Empresa', status: true });
+      oaiqTrack('lead', { type: 'trial_signup' });
+      await linkAdAttributionToEmail(formData.email);
+
       setIsSuccess(true);
     } catch (error: any) {
       toast({ title: 'Erro ao criar conta', description: error.message || 'Tente novamente.', variant: 'destructive' });

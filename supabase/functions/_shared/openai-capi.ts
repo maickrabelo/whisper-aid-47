@@ -24,6 +24,15 @@ export async function sendOpenAIConversion(
       return { ok: false, skipped: 'no_api_key' };
     }
 
+    // A API da OpenAI rejeita campos desconhecidos em `data`.
+    // Só enviamos os campos aceitos pelo evento.
+    const ALLOWED_DATA_FIELDS = ['type'];
+    const data: Record<string, unknown> = {};
+    for (const key of ALLOWED_DATA_FIELDS) {
+      const value = event.data?.[key];
+      if (value !== undefined) data[key] = value;
+    }
+
     const body = {
       validate_only: false,
       events: [
@@ -33,10 +42,11 @@ export async function sendOpenAIConversion(
           timestamp_ms: event.timestampMs ?? Date.now(),
           source_url: event.sourceUrl ?? 'https://srsms.com.br',
           action_source: 'web',
-          data: event.data ?? {},
+          data,
         },
       ],
     };
+
 
     const res = await fetch(ENDPOINT, {
       method: 'POST',

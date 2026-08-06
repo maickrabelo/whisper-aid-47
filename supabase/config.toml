@@ -37,3 +37,7 @@ verify_jwt = false
 [functions.resend-pending-invitations]
 verify_jwt = false
 
+[functions.openai-capi-test]
+verify_jwt = false
+
+

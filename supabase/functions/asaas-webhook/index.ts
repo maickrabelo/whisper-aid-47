@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { sendOpenAIConversion, getAdAttributionForEmail } from '../_shared/openai-capi.ts';
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -183,6 +185,25 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
+      // ===== Conversão ChatGPT Ads (server-side) =====
+      try {
+        const attribution = await getAdAttributionForEmail(supabase, email);
+        await sendOpenAIConversion({
+          eventId: `asaas-${asaasSubscriptionId || asaasPaymentId || sub.id}`,
+          type: 'subscription_created',
+          data: {
+            type: 'plan_enrollment',
+            plan_slug: plan?.slug ?? undefined,
+            plan_name: plan?.name ?? undefined,
+            currency: 'BRL',
+            ...(attribution || {}),
+          },
+        });
+      } catch (e) {
+        console.warn('[asaas-webhook] openai conversion failed', e);
+      }
+
 
       // Generate password (CNPJ digits or random)
       const cpfCnpj = (meta.customer?.cpfCnpj || '').replace(/\D/g, '');

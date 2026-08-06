@@ -20,6 +20,11 @@ interface SoniaChatProps {
 }
 
 export default function SoniaChat({ companyId, sstManagerId, contextType = "dashboard" }: SoniaChatProps) {
+  // Assistente SOnIA desativada globalmente — nada é renderizado.
+  return null;
+}
+
+function SoniaChatDisabled({ companyId, sstManagerId, contextType = "dashboard" }: SoniaChatProps) {
   const { isOpen: open, setIsOpen: setOpen } = useSoniaChat();
   const { hasAccess: aiEnabled, isLoading: aiLoading } = useAiAccess();
   const [messages, setMessages] = useState<Msg[]>([]);

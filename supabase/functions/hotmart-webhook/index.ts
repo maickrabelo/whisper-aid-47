@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { sendOpenAIConversion, getAdAttributionForEmail } from '../_shared/openai-capi.ts';
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -746,6 +748,27 @@ Deno.serve(async (req) => {
       }
 
       const plan: any = mapping.subscription_plans;
+
+      // ===== Conversão ChatGPT Ads (server-side) =====
+      // Deduplicado pelo id da transação Hotmart; nunca interrompe o provisionamento.
+      try {
+        const attribution = await getAdAttributionForEmail(supabase, buyerEmail);
+        await sendOpenAIConversion({
+          eventId: `hotmart-${transactionId}`,
+          type: 'subscription_created',
+          data: {
+            type: 'plan_enrollment',
+            plan_slug: plan?.slug ?? undefined,
+            plan_name: plan?.name ?? undefined,
+            value: purchase?.price?.value ?? undefined,
+            currency: purchase?.price?.currency_value ?? 'BRL',
+            ...(attribution || {}),
+          },
+        });
+      } catch (e) {
+        console.warn('[hotmart-webhook] openai conversion failed', e);
+      }
+
 
       // ===== Detecção: e-mail já cadastrado =====
       const existingAuthUser = await findAuthUserByEmail(supabase, buyerEmail);

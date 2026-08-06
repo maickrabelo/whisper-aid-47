@@ -21,10 +21,5 @@ export function SoniaChatProvider({ children }: { children: ReactNode }) {
 }
 
 export function SoniaChatLayout({ children }: { children: ReactNode }) {
-  const { isOpen } = useSoniaChat();
-  return (
-    <div className={`transition-all duration-300 ease-in-out ${isOpen ? "mr-[50vw]" : "mr-10"}`}>
-      {children}
-    </div>
-  );
+  return <>{children}</>;
 }

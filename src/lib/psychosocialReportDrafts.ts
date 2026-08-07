@@ -12,6 +12,10 @@ export interface PsychosocialReportDraftConfig {
   companyRiskGrade?: string;
   sstCpf?: string;
   sstRegistration?: string;
+  technicianName?: string;
+  orgResponsibleName?: string;
+  orgResponsibleCpf?: string;
+  orgResponsibleRole?: string;
 }
 
 export async function loadReportDraft(

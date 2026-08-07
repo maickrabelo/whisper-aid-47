@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, PenLine } from "lucide-react";
+import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, PenLine, Save } from "lucide-react";
 import { HSEITActionPlanEditor, ActionItem } from "./HSEITActionPlanEditor";
 import { HSEITScheduleEditor, ScheduleItem } from "./HSEITScheduleEditor";
 import { generatePGRReport } from "./HSEITPGRReportPDF";

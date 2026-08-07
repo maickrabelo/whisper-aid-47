@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, Plus, Trash2, PenLine } from "lucide-react";
+import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, Plus, Trash2, PenLine, Save } from "lucide-react";
 import { toast } from "sonner";
 import { generateCOPSOQReport, COPSOQ_RECOMMENDATIONS } from "./COPSOQReportPDF";
 import {
@@ -90,6 +90,8 @@ export function COPSOQReportEditor({
   onSaved,
 }: COPSOQReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   const [activeTab, setActiveTab] = useState("preview");
   const [executiveSummary, setExecutiveSummary] = useState("");
   const [actionItems, setActionItems] = useState<COPSOQActionItem[]>([]);
@@ -197,24 +199,41 @@ export function COPSOQReportEditor({
     setScheduleItems(items => items.map(i => (i.id === id ? { ...i, [field]: value } as COPSOQScheduleItem : i)));
   };
 
+  const buildConfig = (): PsychosocialReportDraftConfig => ({
+    executiveSummary,
+    actionItems,
+    scheduleItems,
+    companyCnpj,
+    companyAddress,
+    companyCnae,
+    companyRiskGrade,
+    sstCpf,
+    sstRegistration,
+    technicianName,
+    orgResponsibleName,
+    orgResponsibleCpf,
+    orgResponsibleRole,
+  });
+
+  const saveVersionOnly = async () => {
+    setIsSaving(true);
+    try {
+      const savedConfig = await saveReportDraft('copsoq', assessment.id, companyId, buildConfig());
+      onSaved?.(savedConfig);
+      toast.success('Versão salva! Você pode continuar depois em "Editar última versão".');
+    } catch (error) {
+      console.error('Error saving COPSOQ draft:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar a versão');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
-      const config: PsychosocialReportDraftConfig = {
-        executiveSummary,
-        actionItems,
-        scheduleItems,
-        companyCnpj,
-        companyAddress,
-        companyCnae,
-        companyRiskGrade,
-        sstCpf,
-        sstRegistration,
-        technicianName,
-        orgResponsibleName,
-        orgResponsibleCpf,
-        orgResponsibleRole,
-      };
+      const config: PsychosocialReportDraftConfig = buildConfig();
+
 
       // Persist first and require database confirmation before creating the file.
       // This prevents a successful download from masking a failed draft save.
@@ -275,6 +294,26 @@ export function COPSOQReportEditor({
             Preparar Relatório COPSOQ II
           </DialogTitle>
         </DialogHeader>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <p className="text-xs text-muted-foreground">
+            Salve o progresso a qualquer momento e continue depois em "Editar última versão".
+          </p>
+          <Button onClick={saveVersionOnly} disabled={isSaving || isGenerating} className="shrink-0">
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Salvar versão
+              </>
+            )}
+          </Button>
+        </div>
+
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
           <TabsList className="grid w-full grid-cols-6">

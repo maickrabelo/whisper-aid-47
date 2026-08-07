@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, PenLine } from "lucide-react";
+import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, PenLine, Save } from "lucide-react";
 import { HSEITActionPlanEditor, ActionItem } from "./HSEITActionPlanEditor";
 import { HSEITScheduleEditor, ScheduleItem } from "./HSEITScheduleEditor";
 import { generatePGRReport } from "./HSEITPGRReportPDF";
@@ -346,6 +346,32 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
             Preparar Relatório PGR — Riscos Psicossociais
           </DialogTitle>
         </DialogHeader>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <p className="text-xs text-muted-foreground">
+            Salve o progresso a qualquer momento e continue depois em "Editar última versão".
+          </p>
+          <Button
+            onClick={saveVersionOnly}
+            disabled={isSaving || isGenerating}
+            variant="default"
+            className="shrink-0"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Salvar versão
+              </>
+            )}
+          </Button>
+        </div>
+
+
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
           <TabsList className="grid w-full grid-cols-6">

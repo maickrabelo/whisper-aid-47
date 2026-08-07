@@ -37,6 +37,7 @@ export interface COPSOQReportInput {
   scheduleItems?: { id?: string; action?: string; deadline?: string; responsible?: string; status?: string }[];
   companyInfo?: { cnpj?: string; address?: string; cnae?: string; riskGrade?: string };
   responsibleInfo?: { name?: string; cpf?: string; registration?: string };
+  orgResponsible?: { name?: string; cpf?: string; role?: string };
 }
 
 const COLORS = {
@@ -418,7 +419,40 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
 
   const unionRiskCount = isConsolidated ? dimensionsAtRiskInAnySector.size : criticalCount;
 
+  const drawSignatureBlock = () => {
+    ensure(45);
+    y += 12;
+    drawSubTitle('Assinaturas');
+    const colW = (pw - 2 * margin) / 2;
+    const lineY = y + 10;
+    pdf.setDrawColor(0, 0, 0);
+    pdf.line(margin, lineY, margin + colW - 12, lineY);
+    pdf.line(margin + colW + 12, lineY, pw - margin, lineY);
+
+    let leftY = lineY + 5;
+    let rightY = lineY + 5;
+    const leftX = margin;
+    const rightX = margin + colW + 12;
+
+    setText(10, true, COLORS.text);
+    pdf.text(input.responsibleInfo?.name || input.sstName || 'Responsável Técnico', leftX, leftY);
+    pdf.text(input.orgResponsible?.name || 'Representante Legal da Empresa', rightX, rightY);
+    leftY += 5; rightY += 5;
+
+    setText(8.5, false, COLORS.muted);
+    if (input.responsibleInfo?.cpf) { pdf.text(`CPF: ${input.responsibleInfo.cpf}`, leftX, leftY); leftY += 4.5; }
+    if (input.responsibleInfo?.registration) { pdf.text(`Registro profissional: ${input.responsibleInfo.registration}`, leftX, leftY); leftY += 4.5; }
+    if (input.orgResponsible?.role) { pdf.text(input.orgResponsible.role, rightX, rightY); rightY += 4.5; }
+    if (input.orgResponsible?.cpf) { pdf.text(`CPF: ${input.orgResponsible.cpf}`, rightX, rightY); rightY += 4.5; }
+    pdf.text(input.companyName, rightX, rightY); rightY += 4.5;
+
+    y = Math.max(leftY, rightY) + 4;
+    pdf.text(`Local e Data: _______________, ${new Date().toLocaleDateString('pt-BR')}`, leftX, y);
+    y += 6;
+  };
+
   const finalizeDocument = () => {
+    drawSignatureBlock();
     const totalPages = (pdf as any).internal.getNumberOfPages();
     for (let p = 2; p <= totalPages; p++) {
       pdf.setPage(p);
@@ -738,14 +772,6 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       });
     } else {
       drawParagraph('• Cronograma não informado.');
-    }
-
-    if (input.responsibleInfo && (input.responsibleInfo.name || input.responsibleInfo.cpf || input.responsibleInfo.registration)) {
-      ensure(12);
-      drawSubTitle('Responsável Técnico');
-      if (input.responsibleInfo.name) drawParagraph(`Nome: ${input.responsibleInfo.name}`);
-      if (input.responsibleInfo.cpf) drawParagraph(`CPF: ${input.responsibleInfo.cpf}`);
-      if (input.responsibleInfo.registration) drawParagraph(`Registro profissional: ${input.responsibleInfo.registration}`);
     }
 
     finalizeDocument();

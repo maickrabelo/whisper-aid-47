@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Download, FileText, FileCode, Loader2, AlertCircle } from "lucide-react";
+import { Download, FileText, FileCode, Loader2, AlertCircle, PenLine } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import type { PGRDocument } from "@/pages/PGRDashboard";
 import { downloadPGRReport } from "@/components/pgr/PGRReportPDF";
@@ -134,9 +137,44 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
   };
 
 
+  const [sig, setSig] = useState({
+    responsible_name: '',
+    responsible_cpf: '',
+    responsible_registration: '',
+    org_responsible_name: '',
+    org_responsible_role: '',
+    org_responsible_cpf: '',
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    setSig({
+      responsible_name: pgr.responsible_name || '',
+      responsible_cpf: pgr.responsible_cpf || '',
+      responsible_registration: pgr.responsible_registration || '',
+      org_responsible_name: pgr.org_responsible_name || '',
+      org_responsible_role: pgr.org_responsible_role || '',
+      org_responsible_cpf: pgr.org_responsible_cpf || '',
+    });
+  }, [open, pgr]);
+
+  const persistSignatures = async () => {
+    const payload = {
+      responsible_name: sig.responsible_name.trim() || null,
+      responsible_cpf: sig.responsible_cpf.trim() || null,
+      responsible_registration: sig.responsible_registration.trim() || null,
+      org_responsible_name: sig.org_responsible_name.trim() || null,
+      org_responsible_role: sig.org_responsible_role.trim() || null,
+      org_responsible_cpf: sig.org_responsible_cpf.trim() || null,
+    };
+    await supabase.from('pgr_documents').update(payload as any).eq('id', pgr.id);
+    return payload;
+  };
+
   const generatePDF = async () => {
     setGenerating('pdf');
     try {
+      const signatures = await persistSignatures();
       const [{ data: ghes }, { data: risks }, { data: actions }, { data: companyRow }, sstLogoUrl] = await Promise.all([
         supabase.from('pgr_ghe').select('*').eq('pgr_document_id', pgr.id).order('name', { ascending: true }).limit(1000),
         supabase.from('pgr_risks').select('*').eq('pgr_document_id', pgr.id).limit(2000),
@@ -146,7 +184,7 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
       ]);
 
       await downloadPGRReport({
-        pgr,
+        pgr: { ...pgr, ...signatures },
         company: { name: companyName, cnpj: companyCnpj, logo_url: freshLogoUrl((companyRow as any)?.logo_url || null) },
         sstLogoUrl,
         ghes: (ghes as any) || [],
@@ -236,7 +274,7 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Exportar PGR</DialogTitle>
           <DialogDescription>Gere o relatório PGR NR-1 em PDF ou os XMLs do evento S-2240 do e-Social.</DialogDescription>
@@ -250,7 +288,52 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
           </AlertDescription>
         </Alert>
 
-        <div className="space-y-3 mt-2">
+        <Tabs defaultValue="export" className="mt-2">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="export" className="gap-1 text-xs"><Download className="h-3 w-3" /> Exportar</TabsTrigger>
+            <TabsTrigger value="signatures" className="gap-1 text-xs"><PenLine className="h-3 w-3" /> Assinaturas</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="signatures" className="space-y-4 mt-4">
+            <div className="space-y-3">
+              <p className="text-sm font-semibold">Responsável Técnico (assinatura)</p>
+              <p className="text-xs text-muted-foreground">Informe manualmente o nome do técnico que assinará o documento — não é usado o nome da gestora.</p>
+              <div className="space-y-2">
+                <Label className="text-xs">Nome</Label>
+                <Input value={sig.responsible_name} onChange={e => setSig({ ...sig, responsible_name: e.target.value })} placeholder="Nome completo do técnico" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-xs">CPF</Label>
+                  <Input value={sig.responsible_cpf} onChange={e => setSig({ ...sig, responsible_cpf: e.target.value })} placeholder="000.000.000-00" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Registro MTE / CREA</Label>
+                  <Input value={sig.responsible_registration} onChange={e => setSig({ ...sig, responsible_registration: e.target.value })} placeholder="Nº do registro" />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3 border-t pt-4">
+              <p className="text-sm font-semibold">Responsável pela Empresa (opcional)</p>
+              <div className="space-y-2">
+                <Label className="text-xs">Nome</Label>
+                <Input value={sig.org_responsible_name} onChange={e => setSig({ ...sig, org_responsible_name: e.target.value })} placeholder="Nome completo" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-xs">CPF</Label>
+                  <Input value={sig.org_responsible_cpf} onChange={e => setSig({ ...sig, org_responsible_cpf: e.target.value })} placeholder="000.000.000-00" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Cargo</Label>
+                  <Input value={sig.org_responsible_role} onChange={e => setSig({ ...sig, org_responsible_role: e.target.value })} placeholder="Ex: Diretor, RH" />
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Os dados são salvos automaticamente ao gerar o PDF.</p>
+          </TabsContent>
+
+        <TabsContent value="export" className="space-y-3 mt-4">
           <Button onClick={generatePDF} disabled={!!generating} variant="outline" className="w-full justify-start gap-3 h-auto py-3">
             {generating === 'pdf' ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileText className="h-5 w-5" />}
             <div className="text-left">
@@ -265,7 +348,8 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
               <div className="text-xs text-muted-foreground">Evento de Condições Ambientais do Trabalho — 1 arquivo por trabalhador/GHE</div>
             </div>
           </Button>
-        </div>
+        </TabsContent>
+        </Tabs>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Fechar</Button>

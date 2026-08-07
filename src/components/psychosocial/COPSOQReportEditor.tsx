@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, Plus, Trash2 } from "lucide-react";
+import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, Plus, Trash2, PenLine } from "lucide-react";
 import { toast } from "sonner";
 import { generateCOPSOQReport, COPSOQ_RECOMMENDATIONS } from "./COPSOQReportPDF";
 import {
@@ -17,6 +17,7 @@ import {
   RISK_LEVEL_LABELS,
 } from "@/data/copsoqQuestions";
 import { PsychosocialReportDraftConfig, saveReportDraft } from "@/lib/psychosocialReportDrafts";
+import { ReportSignatureFields, SignatureFieldsValue } from "./ReportSignatureFields";
 
 interface Answer { questionNumber: number; value: number; }
 interface Response {
@@ -99,6 +100,27 @@ export function COPSOQReportEditor({
   const [companyRiskGrade, setCompanyRiskGrade] = useState("");
   const [sstCpf, setSstCpf] = useState("");
   const [sstRegistration, setSstRegistration] = useState("");
+  const [technicianName, setTechnicianName] = useState("");
+  const [orgResponsibleName, setOrgResponsibleName] = useState("");
+  const [orgResponsibleCpf, setOrgResponsibleCpf] = useState("");
+  const [orgResponsibleRole, setOrgResponsibleRole] = useState("");
+
+  const signatureValue: SignatureFieldsValue = {
+    technicianName,
+    technicianCpf: sstCpf,
+    technicianRegistration: sstRegistration,
+    orgResponsibleName,
+    orgResponsibleCpf,
+    orgResponsibleRole,
+  };
+  const patchSignature = (patch: Partial<SignatureFieldsValue>) => {
+    if (patch.technicianName !== undefined) setTechnicianName(patch.technicianName);
+    if (patch.technicianCpf !== undefined) setSstCpf(patch.technicianCpf);
+    if (patch.technicianRegistration !== undefined) setSstRegistration(patch.technicianRegistration);
+    if (patch.orgResponsibleName !== undefined) setOrgResponsibleName(patch.orgResponsibleName);
+    if (patch.orgResponsibleCpf !== undefined) setOrgResponsibleCpf(patch.orgResponsibleCpf);
+    if (patch.orgResponsibleRole !== undefined) setOrgResponsibleRole(patch.orgResponsibleRole);
+  };
 
   const dimensions = ALL_CATEGORIES
     .filter(cat => typeof categoryAverages[cat] === 'number' && categoryAverages[cat] > 0)
@@ -116,6 +138,10 @@ export function COPSOQReportEditor({
       setCompanyRiskGrade(initialConfig.companyRiskGrade || "");
       setSstCpf(initialConfig.sstCpf || "");
       setSstRegistration(initialConfig.sstRegistration || "");
+      setTechnicianName(initialConfig.technicianName || "");
+      setOrgResponsibleName(initialConfig.orgResponsibleName || "");
+      setOrgResponsibleCpf(initialConfig.orgResponsibleCpf || "");
+      setOrgResponsibleRole(initialConfig.orgResponsibleRole || "");
     }
   }, [open, initialConfig]);
 
@@ -198,9 +224,14 @@ export function COPSOQReportEditor({
           riskGrade: companyRiskGrade || undefined,
         },
         responsibleInfo: {
-          name: sstName || undefined,
+          name: technicianName.trim() || sstName || undefined,
           cpf: sstCpf || undefined,
           registration: sstRegistration || undefined,
+        },
+        orgResponsible: {
+          name: orgResponsibleName.trim() || undefined,
+          cpf: orgResponsibleCpf.trim() || undefined,
+          role: orgResponsibleRole.trim() || undefined,
         },
       });
 
@@ -214,6 +245,10 @@ export function COPSOQReportEditor({
         companyRiskGrade,
         sstCpf,
         sstRegistration,
+        technicianName,
+        orgResponsibleName,
+        orgResponsibleCpf,
+        orgResponsibleRole,
       });
       onSaved?.();
       toast.success('Relatório COPSOQ gerado com sucesso!');
@@ -237,9 +272,10 @@ export function COPSOQReportEditor({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="preview" className="flex items-center gap-1 text-xs"><Eye className="h-3 w-3" /> Preview</TabsTrigger>
             <TabsTrigger value="company" className="flex items-center gap-1 text-xs"><Building2 className="h-3 w-3" /> Empresa</TabsTrigger>
+            <TabsTrigger value="signatures" className="flex items-center gap-1 text-xs"><PenLine className="h-3 w-3" /> Assinaturas</TabsTrigger>
             <TabsTrigger value="action-plan" className="flex items-center gap-1 text-xs"><ClipboardList className="h-3 w-3" /> Plano de Ação</TabsTrigger>
             <TabsTrigger value="schedule" className="flex items-center gap-1 text-xs"><Calendar className="h-3 w-3" /> Cronograma</TabsTrigger>
             <TabsTrigger value="finalize" className="flex items-center gap-1 text-xs"><Download className="h-3 w-3" /> Finalizar</TabsTrigger>
@@ -312,6 +348,10 @@ export function COPSOQReportEditor({
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="signatures" className="mt-0">
+              <ReportSignatureFields value={signatureValue} onChange={patchSignature} technicianPlaceholder={sstName || undefined} />
             </TabsContent>
 
             <TabsContent value="action-plan" className="mt-0">

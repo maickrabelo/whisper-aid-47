@@ -51,6 +51,7 @@ interface PGRReportData {
   sstName?: string | null;
   sstCpf?: string;
   sstRegistration?: string;
+  orgResponsible?: { name?: string; cpf?: string; role?: string };
   methodology: 'hseit' | 'copsoq';
 }
 
@@ -896,19 +897,27 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
   setColor(0, 0, 0);
+  const orgName = data.orgResponsible?.name?.trim();
   pdf.text(data.sstName || 'Responsável Técnico SST', m + 20, y);
-  pdf.text('Representante Legal da Empresa', pw / 2 + 10, y);
+  pdf.text(orgName || 'Representante Legal da Empresa', pw / 2 + 10, y);
+  const sigTop = y;
   y += 5;
 
   pdf.setFontSize(8);
   pdf.setFont('helvetica', 'normal');
   setColor(80, 80, 80);
-  if (data.sstCpf) pdf.text(`CPF: ${data.sstCpf}`, m + 20, y);
-  if (data.sstRegistration) { y += 5; pdf.text(`Registro MTE: ${data.sstRegistration}`, m + 20, y); }
+  let leftY = y;
+  if (data.sstCpf) { pdf.text(`CPF: ${data.sstCpf}`, m + 20, leftY); leftY += 5; }
+  if (data.sstRegistration) { pdf.text(`Registro MTE: ${data.sstRegistration}`, m + 20, leftY); leftY += 5; }
 
-  y += 10;
-  pdf.text(`${data.assessment.companyName}`, pw / 2 + 10, y - 5);
-  pdf.text(`Local e Data: _______________, ${new Date().toLocaleDateString('pt-BR')}`, m + 20, y + 5);
+  let rightY = y;
+  if (data.orgResponsible?.role?.trim()) { pdf.text(data.orgResponsible.role.trim(), pw / 2 + 10, rightY); rightY += 5; }
+  if (data.orgResponsible?.cpf?.trim()) { pdf.text(`CPF: ${data.orgResponsible.cpf.trim()}`, pw / 2 + 10, rightY); rightY += 5; }
+  pdf.text(`${data.assessment.companyName}`, pw / 2 + 10, rightY);
+  rightY += 5;
+
+  y = Math.max(leftY, rightY, sigTop + 10) + 5;
+  pdf.text(`Local e Data: _______________, ${new Date().toLocaleDateString('pt-BR')}`, m + 20, y);
 
   // ═══ RODAPÉ EM TODAS AS PÁGINAS ═══
   const totalPages = (pdf as any).internal.pages.length - 1;

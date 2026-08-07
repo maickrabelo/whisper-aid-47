@@ -199,24 +199,41 @@ export function COPSOQReportEditor({
     setScheduleItems(items => items.map(i => (i.id === id ? { ...i, [field]: value } as COPSOQScheduleItem : i)));
   };
 
+  const buildConfig = (): PsychosocialReportDraftConfig => ({
+    executiveSummary,
+    actionItems,
+    scheduleItems,
+    companyCnpj,
+    companyAddress,
+    companyCnae,
+    companyRiskGrade,
+    sstCpf,
+    sstRegistration,
+    technicianName,
+    orgResponsibleName,
+    orgResponsibleCpf,
+    orgResponsibleRole,
+  });
+
+  const saveVersionOnly = async () => {
+    setIsSaving(true);
+    try {
+      const savedConfig = await saveReportDraft('copsoq', assessment.id, companyId, buildConfig());
+      onSaved?.(savedConfig);
+      toast.success('Versão salva! Você pode continuar depois em "Editar última versão".');
+    } catch (error) {
+      console.error('Error saving COPSOQ draft:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar a versão');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
-      const config: PsychosocialReportDraftConfig = {
-        executiveSummary,
-        actionItems,
-        scheduleItems,
-        companyCnpj,
-        companyAddress,
-        companyCnae,
-        companyRiskGrade,
-        sstCpf,
-        sstRegistration,
-        technicianName,
-        orgResponsibleName,
-        orgResponsibleCpf,
-        orgResponsibleRole,
-      };
+      const config: PsychosocialReportDraftConfig = buildConfig();
+
 
       // Persist first and require database confirmation before creating the file.
       // This prevents a successful download from masking a failed draft save.

@@ -58,7 +58,7 @@ interface COPSOQReportEditorProps {
   sstName?: string | null;
   companyLogoUrl?: string | null;
   initialConfig?: PsychosocialReportDraftConfig | null;
-  onSaved?: () => void;
+  onSaved?: (config: PsychosocialReportDraftConfig) => void;
 }
 
 const PRIORITY_LABELS: Record<COPSOQActionItem['priority'], string> = {
@@ -200,6 +200,27 @@ export function COPSOQReportEditor({
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
+      const config: PsychosocialReportDraftConfig = {
+        executiveSummary,
+        actionItems,
+        scheduleItems,
+        companyCnpj,
+        companyAddress,
+        companyCnae,
+        companyRiskGrade,
+        sstCpf,
+        sstRegistration,
+        technicianName,
+        orgResponsibleName,
+        orgResponsibleCpf,
+        orgResponsibleRole,
+      };
+
+      // Persist first and require database confirmation before creating the file.
+      // This prevents a successful download from masking a failed draft save.
+      const savedConfig = await saveReportDraft('copsoq', assessment.id, companyId, config);
+      onSaved?.(savedConfig);
+
       await generateCOPSOQReport({
         assessment: {
           id: assessment.id,
@@ -235,27 +256,11 @@ export function COPSOQReportEditor({
         },
       });
 
-      await saveReportDraft('copsoq', assessment.id, companyId, {
-        executiveSummary,
-        actionItems,
-        scheduleItems,
-        companyCnpj,
-        companyAddress,
-        companyCnae,
-        companyRiskGrade,
-        sstCpf,
-        sstRegistration,
-        technicianName,
-        orgResponsibleName,
-        orgResponsibleCpf,
-        orgResponsibleRole,
-      });
-      onSaved?.();
-      toast.success('Relatório COPSOQ gerado com sucesso!');
+      toast.success('Relatório gerado e última versão salva com sucesso!');
       onOpenChange(false);
     } catch (error) {
       console.error('Error generating COPSOQ PDF:', error);
-      toast.error('Erro ao gerar o relatório PDF');
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar ou gerar o relatório PDF');
     } finally {
       setIsGenerating(false);
     }

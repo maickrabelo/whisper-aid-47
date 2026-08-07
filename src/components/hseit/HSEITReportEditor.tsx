@@ -59,7 +59,7 @@ interface HSEITReportEditorProps {
   companyLogoUrl?: string | null;
   companyId?: string | null;
   initialConfig?: PsychosocialReportDraftConfig | null;
-  onSaved?: () => void;
+  onSaved?: (config: PsychosocialReportDraftConfig) => void;
 }
 
 // Default recommendations based on health impact
@@ -253,6 +253,27 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
+      const config: PsychosocialReportDraftConfig = {
+        executiveSummary,
+        actionItems,
+        scheduleItems,
+        companyCnpj,
+        companyAddress,
+        companyCnae,
+        companyRiskGrade,
+        sstCpf,
+        sstRegistration,
+        technicianName,
+        orgResponsibleName,
+        orgResponsibleCpf,
+        orgResponsibleRole,
+      };
+
+      // Persist first and require database confirmation before creating the file.
+      // This prevents a successful download from masking a failed draft save.
+      const savedConfig = await saveReportDraft('hseit', assessment.id, companyId, config);
+      onSaved?.(savedConfig);
+
       await generatePGRReport({
         assessment: {
           id: assessment.id,
@@ -287,27 +308,11 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         },
         methodology: 'hseit',
       });
-      await saveReportDraft('hseit', assessment.id, companyId, {
-        executiveSummary,
-        actionItems,
-        scheduleItems,
-        companyCnpj,
-        companyAddress,
-        companyCnae,
-        companyRiskGrade,
-        sstCpf,
-        sstRegistration,
-        technicianName,
-        orgResponsibleName,
-        orgResponsibleCpf,
-        orgResponsibleRole,
-      });
-      onSaved?.();
-      toast.success('Relatório PGR gerado com sucesso!');
+      toast.success('Relatório gerado e última versão salva com sucesso!');
       onOpenChange(false);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Erro ao gerar o relatório PDF');
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar ou gerar o relatório PDF');
     } finally {
       setIsGenerating(false);
     }

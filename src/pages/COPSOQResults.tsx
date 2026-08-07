@@ -220,7 +220,7 @@ export default function COPSOQResults() {
           selectedDepartment={selectedDepartment}
           categoryAverages={categoryAverages}
           initialConfig={editingLastVersion ? savedDraft : null}
-          onSaved={() => { if (id) loadReportDraft('copsoq', id).then(setSavedDraft); }}
+          onSaved={setSavedDraft}
         />
 
 

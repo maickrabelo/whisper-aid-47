@@ -507,7 +507,7 @@ export default function HSEITResults() {
           companyLogoUrl={assessment.companies?.logo_url || null}
           companyId={assessment.companies?.id || null}
           initialConfig={editingLastVersion ? savedDraft : null}
-          onSaved={() => { if (assessment?.id) loadReportDraft('hseit', assessment.id).then(setSavedDraft); }}
+          onSaved={setSavedDraft}
         />
 
         {assessment.multiSectorEnabled && (

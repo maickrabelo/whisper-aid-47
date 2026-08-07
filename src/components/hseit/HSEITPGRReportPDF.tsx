@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { renderReportLogos } from '@/lib/pdfLogos';
+import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import {
   HSEITCategory,
   HSEIT_CATEGORY_LABELS,
@@ -268,6 +269,7 @@ function drawSemaphore(
 
 export async function generatePGRReport(data: PGRReportData): Promise<void> {
   const pdf = new jsPDF('p', 'mm', 'a4');
+  installPdfTextSafety(pdf);
   const pw = pdf.internal.pageSize.getWidth();
   const ph = pdf.internal.pageSize.getHeight();
   const m = 20;

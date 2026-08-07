@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { renderReportLogos } from '@/lib/pdfLogos';
+import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import {
   COPSOQ_QUESTIONS,
   COPSOQ_CATEGORY_LABELS,
@@ -180,6 +181,7 @@ export const COPSOQ_RECOMMENDATIONS: Record<COPSOQCategory, Record<CopsoqRiskLev
 
 export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<void> {
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+  installPdfTextSafety(pdf);
   const pw = pdf.internal.pageSize.getWidth();
   const ph = pdf.internal.pageSize.getHeight();
   const margin = 15;
@@ -291,7 +293,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       const rc = riskColor(level);
       if (vals.length === 0) {
         setText(8, false, COLORS.neutral);
-        pdf.text('—', xAvg, y + 4.5);
+        pdf.text('-', xAvg, y + 4.5);
         pdf.text('sem dados', xLevel, y + 4.5);
       } else {
         setText(8, true, rc);

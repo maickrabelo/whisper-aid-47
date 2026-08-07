@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -118,6 +118,8 @@ export function HSEITReportEditor({
 }: HSEITReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const defaultsAppliedRef = useRef(false);
+  const loadedConfigRef = useRef(false);
 
   const [activeTab, setActiveTab] = useState("preview");
   const [executiveSummary, setExecutiveSummary] = useState("");
@@ -151,28 +153,38 @@ export function HSEITReportEditor({
     if (patch.orgResponsibleRole !== undefined) setOrgResponsibleRole(patch.orgResponsibleRole);
   };
 
-  // Load saved configuration (última versão) when provided
+  // Load saved configuration (última versão) when provided — only once per opening
   useEffect(() => {
-    if (open && initialConfig) {
-      setExecutiveSummary(initialConfig.executiveSummary || "");
-      setActionItems((initialConfig.actionItems as ActionItem[]) || []);
-      setScheduleItems((initialConfig.scheduleItems as ScheduleItem[]) || []);
-      setCompanyCnpj(initialConfig.companyCnpj || "");
-      setCompanyAddress(initialConfig.companyAddress || "");
-      setCompanyCnae(initialConfig.companyCnae || "");
-      setCompanyRiskGrade(initialConfig.companyRiskGrade || "");
-      setSstCpf(initialConfig.sstCpf || "");
-      setSstRegistration(initialConfig.sstRegistration || "");
-      setTechnicianName(initialConfig.technicianName || "");
-      setOrgResponsibleName(initialConfig.orgResponsibleName || "");
-      setOrgResponsibleCpf(initialConfig.orgResponsibleCpf || "");
-      setOrgResponsibleRole(initialConfig.orgResponsibleRole || "");
+    if (!open) {
+      loadedConfigRef.current = false;
+      return;
     }
+    if (loadedConfigRef.current || !initialConfig) return;
+    loadedConfigRef.current = true;
+    setExecutiveSummary(initialConfig.executiveSummary || "");
+    setActionItems((initialConfig.actionItems as ActionItem[]) || []);
+    setScheduleItems((initialConfig.scheduleItems as ScheduleItem[]) || []);
+    setCompanyCnpj(initialConfig.companyCnpj || "");
+    setCompanyAddress(initialConfig.companyAddress || "");
+    setCompanyCnae(initialConfig.companyCnae || "");
+    setCompanyRiskGrade(initialConfig.companyRiskGrade || "");
+    setSstCpf(initialConfig.sstCpf || "");
+    setSstRegistration(initialConfig.sstRegistration || "");
+    setTechnicianName(initialConfig.technicianName || "");
+    setOrgResponsibleName(initialConfig.orgResponsibleName || "");
+    setOrgResponsibleCpf(initialConfig.orgResponsibleCpf || "");
+    setOrgResponsibleRole(initialConfig.orgResponsibleRole || "");
   }, [open, initialConfig]);
 
-  // Initialize default values based on assessment data
+  // Initialize default values based on assessment data (only once per opening)
   useEffect(() => {
-    if (open && !initialConfig && categoryAverages.length > 0) {
+    if (!open) {
+      defaultsAppliedRef.current = false;
+      return;
+    }
+    if (defaultsAppliedRef.current) return;
+    if (!initialConfig && categoryAverages.length > 0) {
+      defaultsAppliedRef.current = true;
       // Generate executive summary
       const criticalCategories = categoryAverages.filter(c => getHealthImpact(c.average) === 'risk');
       const intermediateCategories = categoryAverages.filter(c => getHealthImpact(c.average) === 'intermediate');

@@ -784,10 +784,15 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     y += 16;
 
     data.actionItems.forEach((item, idx) => {
-      // Wrap recommendation text to fit column
+      // Build full cell content: category, problem description and recommendation
       pdf.setFontSize(6.5);
       pdf.setFont('helvetica', 'normal');
-      const wrappedLines = pdf.splitTextToSize(item.recommendation, descColW - 4);
+      const parts: string[] = [];
+      const catLabel = HSEIT_CATEGORY_LABELS[item.category as HSEITCategory];
+      if (catLabel) parts.push(`[${catLabel}]`);
+      if (item.description && item.description.trim()) parts.push(item.description.trim());
+      if (item.recommendation && item.recommendation.trim()) parts.push(item.recommendation.trim());
+      const wrappedLines = pdf.splitTextToSize(parts.join(' ') || '-', descColW - 4);
       const rowH = Math.max(10, wrappedLines.length * 4 + 4);
 
       checkPage(rowH + 2);
@@ -817,6 +822,57 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     });
   } else {
     drawText('Nenhuma ação foi definida no plano.', 5);
+  }
+
+  // Cronograma definido na configuração do relatório
+  const schedule = (data.scheduleItems || []).filter(s => s && (s.action || '').trim());
+  if (schedule.length > 0) {
+    y += 8;
+    checkPage(40);
+    drawSubSection('Cronograma de Implementação');
+
+    const statusLabels: Record<string, string> = {
+      pending: 'Pendente',
+      in_progress: 'Em andamento',
+      completed: 'Concluído',
+    };
+    const colW = [(pw - 2 * m) * 0.46, (pw - 2 * m) * 0.18, (pw - 2 * m) * 0.2, (pw - 2 * m) * 0.16];
+
+    checkPage(20);
+    pdf.setFillColor(0, 51, 102);
+    pdf.rect(m, y, pw - 2 * m, 8, 'F');
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'bold');
+    setColor(255, 255, 255);
+    ['Ação', 'Prazo', 'Responsável', 'Status'].forEach((h, i) => {
+      const x = m + colW.slice(0, i).reduce((a, b) => a + b, 0) + 2;
+      pdf.text(h, x, y + 5.5);
+    });
+    y += 10;
+
+    schedule.forEach((item, idx) => {
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica', 'normal');
+      const cells = [
+        item.action || '-',
+        item.deadline || '-',
+        item.responsible || '-',
+        statusLabels[item.status as string] || 'Pendente',
+      ];
+      const wrapped = cells.map((c, i) => pdf.splitTextToSize(c, colW[i] - 4));
+      const rowH = Math.max(8, Math.max(...wrapped.map(w => w.length)) * 4 + 4);
+
+      checkPage(rowH + 2);
+      const bgCol = idx % 2 === 0 ? 250 : 240;
+      pdf.setFillColor(bgCol, bgCol, bgCol);
+      pdf.rect(m, y - 3, pw - 2 * m, rowH, 'F');
+      setColor(0, 0, 0);
+      wrapped.forEach((lines: string[], i: number) => {
+        const x = m + colW.slice(0, i).reduce((a, b) => a + b, 0) + 2;
+        lines.forEach((line: string, li: number) => pdf.text(line, x, y + 2 + li * 4));
+      });
+      y += rowH;
+    });
   }
 
   // ═══════════════════════════════

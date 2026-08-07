@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -92,6 +92,8 @@ export function COPSOQReportEditor({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const defaultsAppliedRef = useRef(false);
+  const loadedConfigRef = useRef(false);
   const [activeTab, setActiveTab] = useState("preview");
   const [executiveSummary, setExecutiveSummary] = useState("");
   const [actionItems, setActionItems] = useState<COPSOQActionItem[]>([]);
@@ -128,28 +130,35 @@ export function COPSOQReportEditor({
     .filter(cat => typeof categoryAverages[cat] === 'number' && categoryAverages[cat] > 0)
     .map(cat => ({ category: cat, average: categoryAverages[cat], level: getRiskLevel(categoryAverages[cat]) }));
 
-  // Carrega a última versão salva
+  // Carrega a última versão salva (apenas uma vez por abertura)
   useEffect(() => {
-    if (open && initialConfig) {
-      setExecutiveSummary(initialConfig.executiveSummary || "");
-      setActionItems((initialConfig.actionItems as COPSOQActionItem[]) || []);
-      setScheduleItems((initialConfig.scheduleItems as COPSOQScheduleItem[]) || []);
-      setCompanyCnpj(initialConfig.companyCnpj || "");
-      setCompanyAddress(initialConfig.companyAddress || "");
-      setCompanyCnae(initialConfig.companyCnae || "");
-      setCompanyRiskGrade(initialConfig.companyRiskGrade || "");
-      setSstCpf(initialConfig.sstCpf || "");
-      setSstRegistration(initialConfig.sstRegistration || "");
-      setTechnicianName(initialConfig.technicianName || "");
-      setOrgResponsibleName(initialConfig.orgResponsibleName || "");
-      setOrgResponsibleCpf(initialConfig.orgResponsibleCpf || "");
-      setOrgResponsibleRole(initialConfig.orgResponsibleRole || "");
+    if (!open) {
+      loadedConfigRef.current = false;
+      defaultsAppliedRef.current = false;
+      return;
     }
+    if (loadedConfigRef.current || !initialConfig) return;
+    loadedConfigRef.current = true;
+    setExecutiveSummary(initialConfig.executiveSummary || "");
+    setActionItems((initialConfig.actionItems as COPSOQActionItem[]) || []);
+    setScheduleItems((initialConfig.scheduleItems as COPSOQScheduleItem[]) || []);
+    setCompanyCnpj(initialConfig.companyCnpj || "");
+    setCompanyAddress(initialConfig.companyAddress || "");
+    setCompanyCnae(initialConfig.companyCnae || "");
+    setCompanyRiskGrade(initialConfig.companyRiskGrade || "");
+    setSstCpf(initialConfig.sstCpf || "");
+    setSstRegistration(initialConfig.sstRegistration || "");
+    setTechnicianName(initialConfig.technicianName || "");
+    setOrgResponsibleName(initialConfig.orgResponsibleName || "");
+    setOrgResponsibleCpf(initialConfig.orgResponsibleCpf || "");
+    setOrgResponsibleRole(initialConfig.orgResponsibleRole || "");
   }, [open, initialConfig]);
 
   // Pré-preenche com padrões quando não há versão salva
   useEffect(() => {
     if (!open || initialConfig || dimensions.length === 0) return;
+    if (defaultsAppliedRef.current) return;
+    defaultsAppliedRef.current = true;
 
     const critical = dimensions.filter(d => d.level === 'risk');
     const intermediate = dimensions.filter(d => d.level === 'intermediate');

@@ -242,12 +242,25 @@ async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participan
   y = ensureSpace(doc, y, 40);
   doc.setFontSize(11); doc.setFont('helvetica', 'bold');
   doc.text('6. Responsável Técnico', MARGIN, y); y += 10;
+  const sig = signatures || {};
   doc.line(MARGIN, y, MARGIN + 90, y); y += 4;
   doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-  doc.text(aep.responsible_name || '—', MARGIN, y); y += 4;
+  doc.text((sig.technicianName || '').trim() || aep.responsible_name || '—', MARGIN, y); y += 4;
   doc.setFont('helvetica', 'normal');
   if (aep.responsible_role) { doc.text(aep.responsible_role, MARGIN, y); y += 4; }
-  if (aep.responsible_registration) { doc.text(`Registro: ${aep.responsible_registration}`, MARGIN, y); y += 4; }
+  if ((sig.technicianCpf || '').trim()) { doc.text(`CPF: ${sig.technicianCpf!.trim()}`, MARGIN, y); y += 4; }
+  const cReg = (sig.technicianRegistration || '').trim() || aep.responsible_registration;
+  if (cReg) { doc.text(`Registro: ${cReg}`, MARGIN, y); y += 4; }
+  if ((sig.orgResponsibleName || '').trim() || (sig.orgResponsibleRole || '').trim() || (sig.orgResponsibleCpf || '').trim()) {
+    y += 12;
+    y = ensureSpace(doc, y, 20);
+    doc.line(MARGIN, y, MARGIN + 90, y); y += 4;
+    doc.setFont('helvetica', 'bold');
+    doc.text((sig.orgResponsibleName || '').trim() || 'Responsável pela empresa', MARGIN, y); y += 4;
+    doc.setFont('helvetica', 'normal');
+    if ((sig.orgResponsibleRole || '').trim()) { doc.text(sig.orgResponsibleRole!.trim(), MARGIN, y); y += 4; }
+    if ((sig.orgResponsibleCpf || '').trim()) { doc.text(`CPF: ${sig.orgResponsibleCpf!.trim()}`, MARGIN, y); y += 4; }
+  }
   if (aep.signed_at) { doc.text(`Assinado em: ${new Date(aep.signed_at).toLocaleString('pt-BR')}`, MARGIN, y); y += 4; }
   if (aep.signature_hash) {
     doc.setFontSize(7); doc.setTextColor(150);

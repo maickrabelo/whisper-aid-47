@@ -92,6 +92,8 @@ export function COPSOQReportEditor({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const defaultsAppliedRef = useRef(false);
+  const loadedConfigRef = useRef(false);
   const [activeTab, setActiveTab] = useState("preview");
   const [executiveSummary, setExecutiveSummary] = useState("");
   const [actionItems, setActionItems] = useState<COPSOQActionItem[]>([]);

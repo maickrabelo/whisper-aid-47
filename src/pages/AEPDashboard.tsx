@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { SignatureSettingsDialog } from '@/components/reports/SignatureSettingsDialog';
+import type { ReportSignatures } from '@/lib/reportSignatures';
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
@@ -114,7 +116,7 @@ const AEPDashboard = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
-  const handleDownloadConsolidated = async () => {
+  const handleDownloadConsolidated = async (signatures?: ReportSignatures) => {
     if (!companyId) return;
     const elegiveis = aeps.filter(a => a.status === 'completed' || a.status === 'revised');
     if (elegiveis.length === 0) {
@@ -157,6 +159,7 @@ const AEPDashboard = () => {
       bundles.sort((x, y) => (x.aep.setor_nome || '').localeCompare(y.aep.setor_nome || '') || (x.aep.assessment_date || '').localeCompare(y.aep.assessment_date || ''));
 
       await generateAEPConsolidatedReportPDF({
+        signatures,
         company: {
           name: (comp as any)?.name || companyName,
           cnpj: (comp as any)?.cnpj || '',
@@ -212,10 +215,14 @@ const AEPDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleDownloadConsolidated} disabled={generatingPdf} className="gap-2">
-              {generatingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-              AEP Consolidado (PDF)
-            </Button>
+            <SignatureSettingsDialog
+              scope={`aep:${companyId}`}
+              triggerLabel="AEP Consolidado (PDF)"
+              triggerSize="default"
+              triggerClassName="gap-2"
+              generating={generatingPdf}
+              onGenerate={(sig) => handleDownloadConsolidated(sig)}
+            />
             <Button variant="secondary" onClick={() => setBulkSendOpen(true)} className="gap-2">
               <Send className="h-4 w-4" /> Enviar todas ao PGR
             </Button>

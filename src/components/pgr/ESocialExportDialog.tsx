@@ -274,7 +274,7 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Exportar PGR</DialogTitle>
           <DialogDescription>Gere o relatório PGR NR-1 em PDF ou os XMLs do evento S-2240 do e-Social.</DialogDescription>

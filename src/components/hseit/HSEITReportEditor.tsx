@@ -170,9 +170,15 @@ export function HSEITReportEditor({
     }
   }, [open, initialConfig]);
 
-  // Initialize default values based on assessment data
+  // Initialize default values based on assessment data (only once per opening)
   useEffect(() => {
-    if (open && !initialConfig && categoryAverages.length > 0) {
+    if (!open) {
+      defaultsAppliedRef.current = false;
+      return;
+    }
+    if (defaultsAppliedRef.current) return;
+    if (!initialConfig && categoryAverages.length > 0) {
+      defaultsAppliedRef.current = true;
       // Generate executive summary
       const criticalCategories = categoryAverages.filter(c => getHealthImpact(c.average) === 'risk');
       const intermediateCategories = categoryAverages.filter(c => getHealthImpact(c.average) === 'intermediate');

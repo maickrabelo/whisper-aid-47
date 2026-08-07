@@ -128,28 +128,35 @@ export function COPSOQReportEditor({
     .filter(cat => typeof categoryAverages[cat] === 'number' && categoryAverages[cat] > 0)
     .map(cat => ({ category: cat, average: categoryAverages[cat], level: getRiskLevel(categoryAverages[cat]) }));
 
-  // Carrega a última versão salva
+  // Carrega a última versão salva (apenas uma vez por abertura)
   useEffect(() => {
-    if (open && initialConfig) {
-      setExecutiveSummary(initialConfig.executiveSummary || "");
-      setActionItems((initialConfig.actionItems as COPSOQActionItem[]) || []);
-      setScheduleItems((initialConfig.scheduleItems as COPSOQScheduleItem[]) || []);
-      setCompanyCnpj(initialConfig.companyCnpj || "");
-      setCompanyAddress(initialConfig.companyAddress || "");
-      setCompanyCnae(initialConfig.companyCnae || "");
-      setCompanyRiskGrade(initialConfig.companyRiskGrade || "");
-      setSstCpf(initialConfig.sstCpf || "");
-      setSstRegistration(initialConfig.sstRegistration || "");
-      setTechnicianName(initialConfig.technicianName || "");
-      setOrgResponsibleName(initialConfig.orgResponsibleName || "");
-      setOrgResponsibleCpf(initialConfig.orgResponsibleCpf || "");
-      setOrgResponsibleRole(initialConfig.orgResponsibleRole || "");
+    if (!open) {
+      loadedConfigRef.current = false;
+      defaultsAppliedRef.current = false;
+      return;
     }
+    if (loadedConfigRef.current || !initialConfig) return;
+    loadedConfigRef.current = true;
+    setExecutiveSummary(initialConfig.executiveSummary || "");
+    setActionItems((initialConfig.actionItems as COPSOQActionItem[]) || []);
+    setScheduleItems((initialConfig.scheduleItems as COPSOQScheduleItem[]) || []);
+    setCompanyCnpj(initialConfig.companyCnpj || "");
+    setCompanyAddress(initialConfig.companyAddress || "");
+    setCompanyCnae(initialConfig.companyCnae || "");
+    setCompanyRiskGrade(initialConfig.companyRiskGrade || "");
+    setSstCpf(initialConfig.sstCpf || "");
+    setSstRegistration(initialConfig.sstRegistration || "");
+    setTechnicianName(initialConfig.technicianName || "");
+    setOrgResponsibleName(initialConfig.orgResponsibleName || "");
+    setOrgResponsibleCpf(initialConfig.orgResponsibleCpf || "");
+    setOrgResponsibleRole(initialConfig.orgResponsibleRole || "");
   }, [open, initialConfig]);
 
   // Pré-preenche com padrões quando não há versão salva
   useEffect(() => {
     if (!open || initialConfig || dimensions.length === 0) return;
+    if (defaultsAppliedRef.current) return;
+    defaultsAppliedRef.current = true;
 
     const critical = dimensions.filter(d => d.level === 'risk');
     const intermediate = dimensions.filter(d => d.level === 'intermediate');

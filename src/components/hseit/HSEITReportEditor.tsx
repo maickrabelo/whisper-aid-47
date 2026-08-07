@@ -117,6 +117,8 @@ export function HSEITReportEditor({
   onSaved
 }: HSEITReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   const [activeTab, setActiveTab] = useState("preview");
   const [executiveSummary, setExecutiveSummary] = useState("");
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);

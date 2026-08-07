@@ -1,4 +1,6 @@
 import { Button } from '@/components/ui/button';
+import { SignatureSettingsDialog } from '@/components/reports/SignatureSettingsDialog';
+import type { ReportSignatures } from '@/lib/reportSignatures';
 import { FileDown, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
@@ -78,7 +80,7 @@ export function BurnoutReportPDF({
 }: BurnoutReportPDFProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generatePDF = async () => {
+  const generatePDF = async (signatures?: ReportSignatures) => {
     setIsGenerating(true);
     
     try {
@@ -516,6 +518,55 @@ export function BurnoutReportPDF({
       pdf.setTextColor(80, 80, 80);
       pdf.text('Este relatório foi gerado automaticamente pelo Sistema SOIA.', pageWidth / 2, yPos, { align: 'center' });
 
+      // ========== ASSINATURAS ==========
+      yPos += 20;
+      addNewPageIfNeeded(70);
+      addSubHeader('Responsáveis');
+      yPos += 6;
+
+      const sig = signatures;
+      const signatureBlock = (title: string, name: string, extra: string[]) => {
+        addNewPageIfNeeded(32);
+        pdf.setDrawColor(120, 120, 120);
+        pdf.line(margin, yPos, margin + 90, yPos);
+        yPos += 5;
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(40, 40, 40);
+        pdf.text(name || title, margin, yPos);
+        yPos += 5;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.setTextColor(80, 80, 80);
+        pdf.text(title, margin, yPos);
+        yPos += 5;
+        extra.filter(Boolean).forEach((l) => {
+          pdf.text(l, margin, yPos);
+          yPos += 5;
+        });
+        yPos += 8;
+      };
+
+      signatureBlock(
+        'Responsável Técnico',
+        (sig?.technicianName || '').trim(),
+        [
+          (sig?.technicianCpf || '').trim() ? `CPF: ${sig!.technicianCpf.trim()}` : '',
+          (sig?.technicianRegistration || '').trim() ? `Registro: ${sig!.technicianRegistration.trim()}` : '',
+        ]
+      );
+
+      if ((sig?.orgResponsibleName || '').trim() || (sig?.orgResponsibleCpf || '').trim() || (sig?.orgResponsibleRole || '').trim()) {
+        signatureBlock(
+          'Responsável pela Empresa',
+          (sig?.orgResponsibleName || '').trim(),
+          [
+            (sig?.orgResponsibleRole || '').trim(),
+            (sig?.orgResponsibleCpf || '').trim() ? `CPF: ${sig!.orgResponsibleCpf.trim()}` : '',
+          ]
+        );
+      }
+
       // ========== RODAPÉ EM TODAS AS PÁGINAS ==========
       const totalPages = (pdf as any).internal.pages.length - 1;
       for (let i = 1; i <= totalPages; i++) {
@@ -550,23 +601,13 @@ export function BurnoutReportPDF({
   };
 
   return (
-    <Button 
-      onClick={generatePDF} 
-      disabled={isGenerating}
-      variant="outline"
-      className="gap-2"
-    >
-      {isGenerating ? (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Gerando PDF...
-        </>
-      ) : (
-        <>
-          <FileDown className="h-4 w-4" />
-          Exportar PDF
-        </>
-      )}
-    </Button>
+    <SignatureSettingsDialog
+      scope={`burnout:${assessment.company_id || assessment.id}`}
+      triggerLabel={isGenerating ? 'Gerando PDF...' : 'Exportar PDF'}
+      triggerSize="default"
+      triggerClassName="gap-2"
+      generating={isGenerating}
+      onGenerate={(sig) => generatePDF(sig)}
+    />
   );
 }

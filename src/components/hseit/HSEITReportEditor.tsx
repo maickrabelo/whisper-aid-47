@@ -117,6 +117,8 @@ export function HSEITReportEditor({
   onSaved
 }: HSEITReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   const [activeTab, setActiveTab] = useState("preview");
   const [executiveSummary, setExecutiveSummary] = useState("");
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
@@ -250,24 +252,41 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
     }
   }, [open, initialConfig, categoryAverages, responses, departments, assessment]);
 
+  const buildConfig = (): PsychosocialReportDraftConfig => ({
+    executiveSummary,
+    actionItems,
+    scheduleItems,
+    companyCnpj,
+    companyAddress,
+    companyCnae,
+    companyRiskGrade,
+    sstCpf,
+    sstRegistration,
+    technicianName,
+    orgResponsibleName,
+    orgResponsibleCpf,
+    orgResponsibleRole,
+  });
+
+  const saveVersionOnly = async () => {
+    setIsSaving(true);
+    try {
+      const savedConfig = await saveReportDraft('hseit', assessment.id, companyId, buildConfig());
+      onSaved?.(savedConfig);
+      toast.success('Versão salva! Você pode continuar depois em "Editar última versão".');
+    } catch (error) {
+      console.error('Error saving HSE-IT draft:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar a versão');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
-      const config: PsychosocialReportDraftConfig = {
-        executiveSummary,
-        actionItems,
-        scheduleItems,
-        companyCnpj,
-        companyAddress,
-        companyCnae,
-        companyRiskGrade,
-        sstCpf,
-        sstRegistration,
-        technicianName,
-        orgResponsibleName,
-        orgResponsibleCpf,
-        orgResponsibleRole,
-      };
+      const config: PsychosocialReportDraftConfig = buildConfig();
+
 
       // Persist first and require database confirmation before creating the file.
       // This prevents a successful download from masking a failed draft save.

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import { renderReportLogos } from '@/lib/pdfLogos';
+import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import {
   BurnoutCategory,
   BurnoutRiskLevel,
@@ -82,6 +83,7 @@ export function BurnoutReportPDF({
     
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
+      installPdfTextSafety(pdf);
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 15;

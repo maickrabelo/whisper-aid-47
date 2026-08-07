@@ -3,6 +3,7 @@ import { FileDown, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
+import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import {
   HSEITCategory,
   HSEIT_CATEGORY_LABELS,
@@ -98,6 +99,7 @@ export function HSEITReportPDF({
     
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
+      installPdfTextSafety(pdf);
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 15;
@@ -224,7 +226,7 @@ export function HSEITReportPDF({
 
           if (qAnswers.length === 0) {
             pdf.setTextColor(130, 130, 130);
-            pdf.text('—', xAvg, yPos + 4.5);
+            pdf.text('-', xAvg, yPos + 4.5);
             pdf.text('sem dados', xLevel, yPos + 4.5);
           } else {
             pdf.setFont('helvetica', 'bold');
@@ -314,7 +316,7 @@ export function HSEITReportPDF({
       const categories: HSEITCategory[] = ['demands', 'control', 'managerSupport', 'peerSupport', 'relationships', 'role', 'change'];
       categories.forEach(cat => {
         const questionsCount = HSEIT_QUESTIONS.filter(q => q.category === cat).length;
-        addText(`• ${HSEIT_CATEGORY_LABELS[cat]} (${questionsCount} questões)`, 5);
+        addText(`- ${HSEIT_CATEGORY_LABELS[cat]} (${questionsCount} questões)`, 5);
       });
 
       yPos += 5;
@@ -325,11 +327,11 @@ export function HSEITReportPDF({
 
       yPos += 8;
       addSubHeader('Classificação de Risco:');
-      addText('• Muito Baixo (acima de 4.20): Condição muito favorável - manter práticas atuais', 5);
-      addText('• Baixo (3.41 - 4.20): Condição favorável - monitorar', 5);
-      addText('• Moderado (2.61 - 3.40): Atenção necessária - planejar melhorias', 5);
-      addText('• Alto (1.81 - 2.60): Intervenção necessária - agir em curto prazo', 5);
-      addText('• Muito Alto (< 1.81): Situação crítica - ação imediata requerida', 5);
+      addText('- Muito Baixo (acima de 4.20): Condição muito favorável - manter práticas atuais', 5);
+      addText('- Baixo (3.41 - 4.20): Condição favorável - monitorar', 5);
+      addText('- Moderado (2.61 - 3.40): Atenção necessária - planejar melhorias', 5);
+      addText('- Alto (1.81 - 2.60): Intervenção necessária - agir em curto prazo', 5);
+      addText('- Muito Alto (< 1.81): Situação crítica - ação imediata requerida', 5);
 
       // ========== PÁGINA 3: RESULTADOS POR CATEGORIA ==========
       pdf.addPage();
@@ -517,7 +519,7 @@ export function HSEITReportPDF({
       }
 
       if (intermediateCats.length > 0) {
-        addSubHeader('🟠 Ações de Médio Prazo (Categorias em Atenção):');
+        addSubHeader('Ações de Médio Prazo (Categorias em Atenção):');
         yPos += 2;
         intermediateCats.forEach((cat, i) => {
           addNewPageIfNeeded(20);
@@ -528,12 +530,12 @@ export function HSEITReportPDF({
         yPos += 5;
       }
 
-      addSubHeader('📅 Cronograma Sugerido:');
-      addText('• Semana 1-2: Comunicar resultados à liderança e equipes', 5);
-      addText('• Semana 3-4: Elaborar planos de ação específicos para áreas críticas', 5);
-      addText('• Mês 2-3: Implementar primeiras intervenções', 5);
-      addText('• Mês 4-6: Monitorar indicadores e ajustar ações', 5);
-      addText('• Mês 6: Reaplicar avaliação para medir progresso', 5);
+      addSubHeader('Cronograma Sugerido:');
+      addText('- Semana 1-2: Comunicar resultados à liderança e equipes', 5);
+      addText('- Semana 3-4: Elaborar planos de ação específicos para áreas críticas', 5);
+      addText('- Mês 2-3: Implementar primeiras intervenções', 5);
+      addText('- Mês 4-6: Monitorar indicadores e ajustar ações', 5);
+      addText('- Mês 6: Reaplicar avaliação para medir progresso', 5);
 
       // ========== RODAPÉ EM TODAS AS PÁGINAS ==========
       const totalPages = (pdf as any).internal.pages.length - 1;

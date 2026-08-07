@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2 } from "lucide-react";
+import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, PenLine } from "lucide-react";
 import { HSEITActionPlanEditor, ActionItem } from "./HSEITActionPlanEditor";
 import { HSEITScheduleEditor, ScheduleItem } from "./HSEITScheduleEditor";
 import { generatePGRReport } from "./HSEITPGRReportPDF";
@@ -20,6 +20,7 @@ import {
 } from "@/data/hseitQuestions";
 import { toast } from "sonner";
 import { PsychosocialReportDraftConfig, saveReportDraft } from "@/lib/psychosocialReportDrafts";
+import { ReportSignatureFields, SignatureFieldsValue } from "@/components/psychosocial/ReportSignatureFields";
 
 interface CategoryAverage {
   category: HSEITCategory;
@@ -126,6 +127,27 @@ export function HSEITReportEditor({
   const [companyRiskGrade, setCompanyRiskGrade] = useState("");
   const [sstCpf, setSstCpf] = useState("");
   const [sstRegistration, setSstRegistration] = useState("");
+  const [technicianName, setTechnicianName] = useState("");
+  const [orgResponsibleName, setOrgResponsibleName] = useState("");
+  const [orgResponsibleCpf, setOrgResponsibleCpf] = useState("");
+  const [orgResponsibleRole, setOrgResponsibleRole] = useState("");
+
+  const signatureValue: SignatureFieldsValue = {
+    technicianName,
+    technicianCpf: sstCpf,
+    technicianRegistration: sstRegistration,
+    orgResponsibleName,
+    orgResponsibleCpf,
+    orgResponsibleRole,
+  };
+  const patchSignature = (patch: Partial<SignatureFieldsValue>) => {
+    if (patch.technicianName !== undefined) setTechnicianName(patch.technicianName);
+    if (patch.technicianCpf !== undefined) setSstCpf(patch.technicianCpf);
+    if (patch.technicianRegistration !== undefined) setSstRegistration(patch.technicianRegistration);
+    if (patch.orgResponsibleName !== undefined) setOrgResponsibleName(patch.orgResponsibleName);
+    if (patch.orgResponsibleCpf !== undefined) setOrgResponsibleCpf(patch.orgResponsibleCpf);
+    if (patch.orgResponsibleRole !== undefined) setOrgResponsibleRole(patch.orgResponsibleRole);
+  };
 
   // Load saved configuration (última versão) when provided
   useEffect(() => {
@@ -139,6 +161,10 @@ export function HSEITReportEditor({
       setCompanyRiskGrade(initialConfig.companyRiskGrade || "");
       setSstCpf(initialConfig.sstCpf || "");
       setSstRegistration(initialConfig.sstRegistration || "");
+      setTechnicianName(initialConfig.technicianName || "");
+      setOrgResponsibleName(initialConfig.orgResponsibleName || "");
+      setOrgResponsibleCpf(initialConfig.orgResponsibleCpf || "");
+      setOrgResponsibleRole(initialConfig.orgResponsibleRole || "");
     }
   }, [open, initialConfig]);
 
@@ -250,10 +276,15 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         scheduleItems,
         executiveSummary,
         sstLogoUrl,
-        sstName,
+        sstName: technicianName.trim() || sstName,
         companyLogoUrl,
         sstCpf: sstCpf || undefined,
         sstRegistration: sstRegistration || undefined,
+        orgResponsible: {
+          name: orgResponsibleName.trim() || undefined,
+          cpf: orgResponsibleCpf.trim() || undefined,
+          role: orgResponsibleRole.trim() || undefined,
+        },
         methodology: 'hseit',
       });
       await saveReportDraft('hseit', assessment.id, companyId, {
@@ -266,6 +297,10 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         companyRiskGrade,
         sstCpf,
         sstRegistration,
+        technicianName,
+        orgResponsibleName,
+        orgResponsibleCpf,
+        orgResponsibleRole,
       });
       onSaved?.();
       toast.success('Relatório PGR gerado com sucesso!');
@@ -289,7 +324,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="preview" className="flex items-center gap-1 text-xs">
               <Eye className="h-3 w-3" />
               Preview
@@ -297,6 +332,10 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
             <TabsTrigger value="company" className="flex items-center gap-1 text-xs">
               <Building2 className="h-3 w-3" />
               Empresa
+            </TabsTrigger>
+            <TabsTrigger value="signatures" className="flex items-center gap-1 text-xs">
+              <PenLine className="h-3 w-3" />
+              Assinaturas
             </TabsTrigger>
             <TabsTrigger value="action-plan" className="flex items-center gap-1 text-xs">
               <ClipboardList className="h-3 w-3" />
@@ -404,6 +443,10 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            <TabsContent value="signatures" className="mt-0 h-full">
+              <ReportSignatureFields value={signatureValue} onChange={patchSignature} technicianPlaceholder={sstName || undefined} />
             </TabsContent>
 
             <TabsContent value="action-plan" className="mt-0 h-full">

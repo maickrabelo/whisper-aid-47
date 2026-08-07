@@ -3,6 +3,7 @@ import { renderReportLogos } from '@/lib/pdfLogos';
 import { classifyRisk, LEVEL_LABELS } from '@/lib/aepRiskLevel';
 import { AEP_CATEGORIAS } from '@/hooks/useAEPFatoresCatalog';
 import { renderEvidenceImages } from './aepPdfImage';
+import type { ReportSignatures } from '@/lib/reportSignatures';
 
 interface AEPBundle {
   aep: any;
@@ -15,6 +16,7 @@ interface Input {
   company: { name: string; cnpj: string; logo_url?: string | null };
   sstLogoUrl?: string | null;
   bundles: AEPBundle[];
+  signatures?: Partial<ReportSignatures>;
 }
 
 const PAGE_W = 210;
@@ -71,7 +73,7 @@ function line(doc: jsPDF, y: number, label: string, value: string): number {
   return y + Math.max(5, wrapped.length * 4.5) + 0.5;
 }
 
-async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participantes: any[], evidencias: any[], idx: number, total: number): Promise<void> {
+async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participantes: any[], evidencias: any[], idx: number, total: number, signatures?: Partial<ReportSignatures>): Promise<void> {
   doc.addPage();
   let y = 20;
 
@@ -242,12 +244,25 @@ async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participan
   y = ensureSpace(doc, y, 40);
   doc.setFontSize(11); doc.setFont('helvetica', 'bold');
   doc.text('6. Responsável Técnico', MARGIN, y); y += 10;
+  const sig = signatures || {};
   doc.line(MARGIN, y, MARGIN + 90, y); y += 4;
   doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-  doc.text(aep.responsible_name || '—', MARGIN, y); y += 4;
+  doc.text((sig.technicianName || '').trim() || aep.responsible_name || '—', MARGIN, y); y += 4;
   doc.setFont('helvetica', 'normal');
   if (aep.responsible_role) { doc.text(aep.responsible_role, MARGIN, y); y += 4; }
-  if (aep.responsible_registration) { doc.text(`Registro: ${aep.responsible_registration}`, MARGIN, y); y += 4; }
+  if ((sig.technicianCpf || '').trim()) { doc.text(`CPF: ${sig.technicianCpf!.trim()}`, MARGIN, y); y += 4; }
+  const cReg = (sig.technicianRegistration || '').trim() || aep.responsible_registration;
+  if (cReg) { doc.text(`Registro: ${cReg}`, MARGIN, y); y += 4; }
+  if ((sig.orgResponsibleName || '').trim() || (sig.orgResponsibleRole || '').trim() || (sig.orgResponsibleCpf || '').trim()) {
+    y += 12;
+    y = ensureSpace(doc, y, 20);
+    doc.line(MARGIN, y, MARGIN + 90, y); y += 4;
+    doc.setFont('helvetica', 'bold');
+    doc.text((sig.orgResponsibleName || '').trim() || 'Responsável pela empresa', MARGIN, y); y += 4;
+    doc.setFont('helvetica', 'normal');
+    if ((sig.orgResponsibleRole || '').trim()) { doc.text(sig.orgResponsibleRole!.trim(), MARGIN, y); y += 4; }
+    if ((sig.orgResponsibleCpf || '').trim()) { doc.text(`CPF: ${sig.orgResponsibleCpf!.trim()}`, MARGIN, y); y += 4; }
+  }
   if (aep.signed_at) { doc.text(`Assinado em: ${new Date(aep.signed_at).toLocaleString('pt-BR')}`, MARGIN, y); y += 4; }
   if (aep.signature_hash) {
     doc.setFontSize(7); doc.setTextColor(150);
@@ -330,7 +345,7 @@ export async function generateAEPConsolidatedReportPDF(input: Input): Promise<vo
   // ===== SEÇÕES POR AEP =====
   for (let i = 0; i < bundles.length; i++) {
     const b = bundles[i];
-    await renderAEPSection(doc, b.aep, b.fatores, b.participantes, b.evidencias, i + 1, bundles.length);
+    await renderAEPSection(doc, b.aep, b.fatores, b.participantes, b.evidencias, i + 1, bundles.length, input.signatures);
   }
 
   // ===== ANEXO: TABELA CONSOLIDADA =====

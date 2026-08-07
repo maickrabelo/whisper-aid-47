@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { SignatureSettingsDialog } from '@/components/reports/SignatureSettingsDialog';
+import type { ReportSignatures } from '@/lib/reportSignatures';
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
@@ -253,11 +255,11 @@ const AEPDetail = () => {
     if (data?.signedUrl) window.open(data.signedUrl, '_blank');
   };
 
-  const exportPDF = async () => {
+  const exportPDF = async (signatures?: ReportSignatures) => {
     if (!aep || !company) return;
     try {
       await generateAEPReportPDF({
-        aep, company, sstLogoUrl, fatores, participantes, evidencias,
+        aep, company, sstLogoUrl, fatores, participantes, evidencias, signatures,
       });
     } catch (e: any) {
       toast.error('Erro ao gerar PDF: ' + e.message);
@@ -548,9 +550,12 @@ const AEPDetail = () => {
                 <Split className="h-4 w-4" /> Dividir por GHE
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={exportPDF} className="gap-1">
-              <Download className="h-4 w-4" /> Exportar PDF
-            </Button>
+            <SignatureSettingsDialog
+              scope={`aep:${companyId}`}
+              triggerLabel="Exportar PDF"
+              triggerClassName="gap-1"
+              onGenerate={(sig) => exportPDF(sig)}
+            />
             <Button
               variant="outline"
               size="sm"

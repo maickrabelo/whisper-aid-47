@@ -3,9 +3,11 @@ import { renderReportLogos } from '@/lib/pdfLogos';
 import { classifyRisk, LEVEL_LABELS } from '@/lib/aepRiskLevel';
 import { AEP_CATEGORIAS } from '@/hooks/useAEPFatoresCatalog';
 import { renderEvidenceImages } from './aepPdfImage';
+import type { ReportSignatures } from '@/lib/reportSignatures';
 
 interface AEPPDFInput {
   aep: any;
+  signatures?: Partial<ReportSignatures>;
   company: { name: string; cnpj: string; logo_url?: string | null };
   sstLogoUrl?: string | null;
   fatores: any[];
@@ -233,14 +235,19 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
   doc.text('6. Responsável Técnico', MARGIN, y); y += 8;
   doc.setFontSize(9); doc.setFont('helvetica', 'normal');
 
+  const sig = input.signatures || {};
+  const techName = (sig.technicianName || '').trim() || aep.responsible_name || '—';
+  const techReg = (sig.technicianRegistration || '').trim() || aep.responsible_registration || '';
+
   y += 12;
   doc.line(MARGIN, y, MARGIN + 90, y);
   y += 4;
   doc.setFont('helvetica', 'bold');
-  doc.text(aep.responsible_name || '—', MARGIN, y); y += 4;
+  doc.text(techName, MARGIN, y); y += 4;
   doc.setFont('helvetica', 'normal');
   doc.text(aep.responsible_role || '', MARGIN, y); y += 4;
-  if (aep.responsible_registration) { doc.text(`Registro: ${aep.responsible_registration}`, MARGIN, y); y += 4; }
+  if ((sig.technicianCpf || '').trim()) { doc.text(`CPF: ${sig.technicianCpf!.trim()}`, MARGIN, y); y += 4; }
+  if (techReg) { doc.text(`Registro: ${techReg}`, MARGIN, y); y += 4; }
   if (aep.signed_at) {
     doc.text(`Assinado em: ${new Date(aep.signed_at).toLocaleString('pt-BR')}`, MARGIN, y); y += 4;
   }
@@ -248,6 +255,19 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
     doc.setFontSize(7); doc.setTextColor(120);
     doc.text(`Hash de assinatura: ${aep.signature_hash}`, MARGIN, y);
     doc.setTextColor(0);
+  }
+
+  // Responsável pela empresa (opcional)
+  if ((sig.orgResponsibleName || '').trim() || (sig.orgResponsibleCpf || '').trim() || (sig.orgResponsibleRole || '').trim()) {
+    y += 14;
+    if (y > 265) { doc.addPage(); y = 20; }
+    doc.setFontSize(9);
+    doc.line(MARGIN, y, MARGIN + 90, y); y += 4;
+    doc.setFont('helvetica', 'bold');
+    doc.text((sig.orgResponsibleName || '').trim() || 'Responsável pela empresa', MARGIN, y); y += 4;
+    doc.setFont('helvetica', 'normal');
+    if ((sig.orgResponsibleRole || '').trim()) { doc.text(sig.orgResponsibleRole!.trim(), MARGIN, y); y += 4; }
+    if ((sig.orgResponsibleCpf || '').trim()) { doc.text(`CPF: ${sig.orgResponsibleCpf!.trim()}`, MARGIN, y); y += 4; }
   }
 
   // Rodapé

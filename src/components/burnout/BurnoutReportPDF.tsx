@@ -602,7 +602,7 @@ export function BurnoutReportPDF({
 
   return (
     <SignatureSettingsDialog
-      scope={`burnout:${assessment.company_id || assessment.id}`}
+      scope={`burnout:${(assessment as any).company_id || (assessment as any).id || 'default'}`}
       triggerLabel={isGenerating ? 'Gerando PDF...' : 'Exportar PDF'}
       triggerSize="default"
       triggerClassName="gap-2"

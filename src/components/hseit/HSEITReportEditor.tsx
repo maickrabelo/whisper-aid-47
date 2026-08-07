@@ -489,21 +489,22 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
                       </div>
                     </div>
 
-                    {sstName && (
+                    {(technicianName.trim() || sstName) && (
                       <div className="pt-4 border-t">
                         <label className="text-sm font-medium text-muted-foreground">Responsável SST</label>
                         <div className="flex items-center gap-3 mt-2">
                           {sstLogoUrl && (
                             <img 
                               src={sstLogoUrl} 
-                              alt={sstName} 
+                              alt={technicianName.trim() || sstName} 
                               className="h-10 w-auto object-contain"
                             />
                           )}
-                          <p className="font-medium">{sstName}</p>
+                          <p className="font-medium">{technicianName.trim() || sstName}</p>
                         </div>
                       </div>
                     )}
+
                   </CardContent>
                 </Card>
 

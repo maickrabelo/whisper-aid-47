@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, Plus, Trash2, PenLine } from "lucide-react";
+import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, Plus, Trash2, PenLine, Save } from "lucide-react";
 import { toast } from "sonner";
 import { generateCOPSOQReport, COPSOQ_RECOMMENDATIONS } from "./COPSOQReportPDF";
 import {

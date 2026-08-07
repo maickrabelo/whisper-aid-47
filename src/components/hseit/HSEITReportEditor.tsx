@@ -118,6 +118,7 @@ export function HSEITReportEditor({
 }: HSEITReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const defaultsAppliedRef = useRef(false);
 
   const [activeTab, setActiveTab] = useState("preview");
   const [executiveSummary, setExecutiveSummary] = useState("");

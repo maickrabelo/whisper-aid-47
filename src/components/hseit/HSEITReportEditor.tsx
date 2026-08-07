@@ -347,6 +347,32 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
           </DialogTitle>
         </DialogHeader>
 
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <p className="text-xs text-muted-foreground">
+            Salve o progresso a qualquer momento e continue depois em "Editar última versão".
+          </p>
+          <Button
+            onClick={saveVersionOnly}
+            disabled={isSaving || isGenerating}
+            variant="default"
+            className="shrink-0"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Salvar versão
+              </>
+            )}
+          </Button>
+        </div>
+
+
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="preview" className="flex items-center gap-1 text-xs">

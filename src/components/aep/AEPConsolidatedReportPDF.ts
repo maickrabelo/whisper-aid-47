@@ -3,6 +3,7 @@ import { renderReportLogos } from '@/lib/pdfLogos';
 import { classifyRisk, LEVEL_LABELS } from '@/lib/aepRiskLevel';
 import { AEP_CATEGORIAS } from '@/hooks/useAEPFatoresCatalog';
 import { renderEvidenceImages } from './aepPdfImage';
+import type { ReportSignatures } from '@/lib/reportSignatures';
 
 interface AEPBundle {
   aep: any;
@@ -15,6 +16,7 @@ interface Input {
   company: { name: string; cnpj: string; logo_url?: string | null };
   sstLogoUrl?: string | null;
   bundles: AEPBundle[];
+  signatures?: Partial<ReportSignatures>;
 }
 
 const PAGE_W = 210;
@@ -71,7 +73,7 @@ function line(doc: jsPDF, y: number, label: string, value: string): number {
   return y + Math.max(5, wrapped.length * 4.5) + 0.5;
 }
 
-async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participantes: any[], evidencias: any[], idx: number, total: number): Promise<void> {
+async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participantes: any[], evidencias: any[], idx: number, total: number, signatures?: Partial<ReportSignatures>): Promise<void> {
   doc.addPage();
   let y = 20;
 
@@ -343,7 +345,7 @@ export async function generateAEPConsolidatedReportPDF(input: Input): Promise<vo
   // ===== SEÇÕES POR AEP =====
   for (let i = 0; i < bundles.length; i++) {
     const b = bundles[i];
-    await renderAEPSection(doc, b.aep, b.fatores, b.participantes, b.evidencias, i + 1, bundles.length);
+    await renderAEPSection(doc, b.aep, b.fatores, b.participantes, b.evidencias, i + 1, bundles.length, input.signatures);
   }
 
   // ===== ANEXO: TABELA CONSOLIDADA =====

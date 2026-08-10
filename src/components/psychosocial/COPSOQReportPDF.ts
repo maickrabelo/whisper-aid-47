@@ -840,5 +840,6 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   drawParagraph('• Meses 4-6: monitorar indicadores, ajustar ações e coletar feedback.');
   drawParagraph('• Mês 6: reaplicar avaliação para medir progresso.');
 
+  drawPeriodicity();
   finalizeDocument();
 }

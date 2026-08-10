@@ -19,7 +19,7 @@ import {
   calculateCategoryAverage
 } from "@/data/hseitQuestions";
 import { toast } from "sonner";
-import { PsychosocialReportDraftConfig, saveReportDraft } from "@/lib/psychosocialReportDrafts";
+import { DEFAULT_RECOMMENDED_PERIODICITY, PsychosocialReportDraftConfig, saveReportDraft } from "@/lib/psychosocialReportDrafts";
 import { ReportSignatureFields, SignatureFieldsValue } from "@/components/psychosocial/ReportSignatureFields";
 
 interface CategoryAverage {
@@ -125,6 +125,7 @@ export function HSEITReportEditor({
   const [executiveSummary, setExecutiveSummary] = useState("");
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+  const [recommendedPeriodicity, setRecommendedPeriodicity] = useState(DEFAULT_RECOMMENDED_PERIODICITY);
   const [companyCnpj, setCompanyCnpj] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [companyCnae, setCompanyCnae] = useState("");
@@ -164,6 +165,7 @@ export function HSEITReportEditor({
     setExecutiveSummary(initialConfig.executiveSummary || "");
     setActionItems((initialConfig.actionItems as ActionItem[]) || []);
     setScheduleItems((initialConfig.scheduleItems as ScheduleItem[]) || []);
+    setRecommendedPeriodicity(initialConfig.recommendedPeriodicity ?? DEFAULT_RECOMMENDED_PERIODICITY);
     setCompanyCnpj(initialConfig.companyCnpj || "");
     setCompanyAddress(initialConfig.companyAddress || "");
     setCompanyCnae(initialConfig.companyCnae || "");
@@ -268,6 +270,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
     executiveSummary,
     actionItems,
     scheduleItems,
+    recommendedPeriodicity,
     companyCnpj,
     companyAddress,
     companyCnae,
@@ -326,6 +329,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         questionAverages,
         actionItems,
         scheduleItems,
+        recommendedPeriodicity,
         executiveSummary,
         sstLogoUrl,
         sstName: technicianName.trim() || sstName,
@@ -519,10 +523,24 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
             </TabsContent>
 
             <TabsContent value="schedule" className="mt-0 h-full">
-              <HSEITScheduleEditor
-                scheduleItems={scheduleItems}
-                onUpdate={setScheduleItems}
-              />
+              <div className="space-y-6">
+                <HSEITScheduleEditor
+                  scheduleItems={scheduleItems}
+                  onUpdate={setScheduleItems}
+                />
+                <div className="space-y-2 rounded-lg border p-4">
+                  <label className="text-sm font-semibold">Periodicidade Recomendada</label>
+                  <p className="text-xs text-muted-foreground">
+                    Uma linha por item. Este conteúdo é impresso no relatório PDF.
+                  </p>
+                  <Textarea
+                    value={recommendedPeriodicity}
+                    onChange={(e) => setRecommendedPeriodicity(e.target.value)}
+                    rows={6}
+                    placeholder="Ex.: Reavaliação a cada 90 dias: Para dimensões em nível moderado"
+                  />
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="finalize" className="mt-0 h-full">

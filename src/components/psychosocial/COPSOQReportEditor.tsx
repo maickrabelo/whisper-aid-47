@@ -16,7 +16,7 @@ import {
   getRiskLevel,
   RISK_LEVEL_LABELS,
 } from "@/data/copsoqQuestions";
-import { PsychosocialReportDraftConfig, saveReportDraft } from "@/lib/psychosocialReportDrafts";
+import { DEFAULT_RECOMMENDED_PERIODICITY, PsychosocialReportDraftConfig, saveReportDraft } from "@/lib/psychosocialReportDrafts";
 import { ReportSignatureFields, SignatureFieldsValue } from "./ReportSignatureFields";
 
 interface Answer { questionNumber: number; value: number; }
@@ -98,6 +98,7 @@ export function COPSOQReportEditor({
   const [executiveSummary, setExecutiveSummary] = useState("");
   const [actionItems, setActionItems] = useState<COPSOQActionItem[]>([]);
   const [scheduleItems, setScheduleItems] = useState<COPSOQScheduleItem[]>([]);
+  const [recommendedPeriodicity, setRecommendedPeriodicity] = useState(DEFAULT_RECOMMENDED_PERIODICITY);
   const [companyCnpj, setCompanyCnpj] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [companyCnae, setCompanyCnae] = useState("");
@@ -142,6 +143,7 @@ export function COPSOQReportEditor({
     setExecutiveSummary(initialConfig.executiveSummary || "");
     setActionItems((initialConfig.actionItems as COPSOQActionItem[]) || []);
     setScheduleItems((initialConfig.scheduleItems as COPSOQScheduleItem[]) || []);
+    setRecommendedPeriodicity(initialConfig.recommendedPeriodicity ?? DEFAULT_RECOMMENDED_PERIODICITY);
     setCompanyCnpj(initialConfig.companyCnpj || "");
     setCompanyAddress(initialConfig.companyAddress || "");
     setCompanyCnae(initialConfig.companyCnae || "");
@@ -212,6 +214,7 @@ export function COPSOQReportEditor({
     executiveSummary,
     actionItems,
     scheduleItems,
+    recommendedPeriodicity,
     companyCnpj,
     companyAddress,
     companyCnae,
@@ -266,6 +269,7 @@ export function COPSOQReportEditor({
         executiveSummary,
         actionItems,
         scheduleItems,
+        recommendedPeriodicity,
         companyInfo: {
           cnpj: companyCnpj || undefined,
           address: companyAddress || undefined,
@@ -522,6 +526,19 @@ export function COPSOQReportEditor({
                     </CardContent>
                   </Card>
                 ))}
+
+                <div className="space-y-2 rounded-lg border p-4">
+                  <label className="text-sm font-semibold">Periodicidade Recomendada</label>
+                  <p className="text-xs text-muted-foreground">
+                    Uma linha por item. Este conteúdo é impresso no relatório PDF.
+                  </p>
+                  <Textarea
+                    value={recommendedPeriodicity}
+                    onChange={(e) => setRecommendedPeriodicity(e.target.value)}
+                    rows={6}
+                    placeholder="Ex.: Reavaliação a cada 90 dias: Para dimensões em nível moderado"
+                  />
+                </div>
               </div>
             </TabsContent>
 

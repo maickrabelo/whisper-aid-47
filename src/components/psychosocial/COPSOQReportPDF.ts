@@ -35,6 +35,7 @@ export interface COPSOQReportInput {
   executiveSummary?: string;
   actionItems?: { id?: string; category?: string; priority?: string; description?: string; recommendation?: string }[];
   scheduleItems?: { id?: string; action?: string; deadline?: string; responsible?: string; status?: string }[];
+  recommendedPeriodicity?: string;
   companyInfo?: { cnpj?: string; address?: string; cnae?: string; riskGrade?: string };
   responsibleInfo?: { name?: string; cpf?: string; registration?: string };
   orgResponsible?: { name?: string; cpf?: string; role?: string };

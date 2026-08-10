@@ -465,6 +465,19 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     pdf.save(`Relatorio_COPSOQ_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
+  const drawPeriodicity = () => {
+    const lines = (input.recommendedPeriodicity || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+    if (lines.length === 0) return;
+    ensure(12);
+    drawSubTitle('Periodicidade Recomendada');
+    lines.forEach(line => {
+      drawParagraph(line.startsWith('•') ? line : `• ${line.replace(/^-\s*/, '')}`);
+    });
+  };
+
   // ══════════════════════════════════════════
   // PAGE 2 — Executive Summary
   // ══════════════════════════════════════════

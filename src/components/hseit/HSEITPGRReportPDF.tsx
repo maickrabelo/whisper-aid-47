@@ -926,10 +926,17 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   y += 8;
 
   drawSubSection('Periodicidade Recomendada');
-  drawText('• Reavaliação a cada 30 dias: Para dimensões em nível crítico (Intolerável)');
-  drawText('• Reavaliação a cada 90 dias: Para dimensões em nível moderado');
-  drawText('• Reavaliação a cada 180 dias: Monitoramento regular');
-  drawText('• Reavaliação anual: Avaliação completa obrigatória');
+  const periodicityText = (data.recommendedPeriodicity || '').trim();
+  if (periodicityText) {
+    periodicityText.split('\n').map(l => l.trim()).filter(Boolean).forEach(line => {
+      drawText(line.startsWith('•') || line.startsWith('-') ? line.replace(/^-/, '•') : `• ${line}`);
+    });
+  } else {
+    drawText('• Reavaliação a cada 30 dias: Para dimensões em nível crítico (Intolerável)');
+    drawText('• Reavaliação a cada 90 dias: Para dimensões em nível moderado');
+    drawText('• Reavaliação a cada 180 dias: Monitoramento regular');
+    drawText('• Reavaliação anual: Avaliação completa obrigatória');
+  }
 
   // ═══════════════════════════════
   // SECTION 9: ENCERRAMENTO

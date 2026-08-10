@@ -35,6 +35,7 @@ export interface COPSOQReportInput {
   executiveSummary?: string;
   actionItems?: { id?: string; category?: string; priority?: string; description?: string; recommendation?: string }[];
   scheduleItems?: { id?: string; action?: string; deadline?: string; responsible?: string; status?: string }[];
+  recommendedPeriodicity?: string;
   companyInfo?: { cnpj?: string; address?: string; cnae?: string; riskGrade?: string };
   responsibleInfo?: { name?: string; cpf?: string; registration?: string };
   orgResponsible?: { name?: string; cpf?: string; role?: string };
@@ -464,6 +465,19 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     pdf.save(`Relatorio_COPSOQ_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
+  const drawPeriodicity = () => {
+    const lines = (input.recommendedPeriodicity || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+    if (lines.length === 0) return;
+    ensure(12);
+    drawSubTitle('Periodicidade Recomendada');
+    lines.forEach(line => {
+      drawParagraph(line.startsWith('•') ? line : `• ${line.replace(/^-\s*/, '')}`);
+    });
+  };
+
   // ══════════════════════════════════════════
   // PAGE 2 — Executive Summary
   // ══════════════════════════════════════════
@@ -774,6 +788,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       drawParagraph('• Cronograma não informado.');
     }
 
+    drawPeriodicity();
     finalizeDocument();
     return;
   }
@@ -825,5 +840,6 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   drawParagraph('• Meses 4-6: monitorar indicadores, ajustar ações e coletar feedback.');
   drawParagraph('• Mês 6: reaplicar avaliação para medir progresso.');
 
+  drawPeriodicity();
   finalizeDocument();
 }

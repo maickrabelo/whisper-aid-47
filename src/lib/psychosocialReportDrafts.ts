@@ -2,10 +2,18 @@ import { supabase } from '@/integrations/supabase/client';
 
 export type PsychosocialAssessmentType = 'hseit' | 'copsoq';
 
+export const DEFAULT_RECOMMENDED_PERIODICITY = [
+  'Reavaliação a cada 30 dias: Para dimensões em nível crítico (Intolerável)',
+  'Reavaliação a cada 90 dias: Para dimensões em nível moderado',
+  'Reavaliação a cada 180 dias: Monitoramento regular',
+  'Reavaliação anual: Avaliação completa obrigatória',
+].join('\n');
+
 export interface PsychosocialReportDraftConfig {
   executiveSummary?: string;
   actionItems?: any[];
   scheduleItems?: any[];
+  recommendedPeriodicity?: string;
   companyCnpj?: string;
   companyAddress?: string;
   companyCnae?: string;

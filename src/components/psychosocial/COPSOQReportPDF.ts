@@ -775,6 +775,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       drawParagraph('• Cronograma não informado.');
     }
 
+    drawPeriodicity();
     finalizeDocument();
     return;
   }

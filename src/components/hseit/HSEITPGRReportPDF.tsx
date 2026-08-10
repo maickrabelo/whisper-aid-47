@@ -45,6 +45,7 @@ interface PGRReportData {
   questionAverages: { questionNumber: number; text: string; category: string; average: number }[];
   actionItems: ActionItem[];
   scheduleItems: ScheduleItem[];
+  recommendedPeriodicity?: string;
   executiveSummary: string;
   sstLogoUrl?: string | null;
   companyLogoUrl?: string | null;

@@ -350,24 +350,30 @@ async function upgradeExistingAccount(supabase: any, ctx: {
   }
 
   // Se ainda não houver auth user (entidade órfã), cria um vinculado
+  let createdNewAuthUser = false;
+  let newPassword: string | null = null;
   if (!userId) {
-    const tempPwd = crypto.randomUUID().slice(0, 12);
+    newPassword = crypto.randomUUID().slice(0, 12);
     const { data: created, error } = await supabase.auth.admin.createUser({
-      email: buyerEmail, password: tempPwd, email_confirm: true,
+      email: buyerEmail, password: newPassword, email_confirm: true,
       user_metadata: { full_name: buyerName },
     });
     if (error) throw error;
     userId = created.user!.id;
+    createdNewAuthUser = true;
   }
 
-  // 1) Reseta senha
-  const newPassword = crypto.randomUUID().slice(0, 12);
-  await supabase.auth.admin.updateUserById(userId!, {
-    password: newPassword, email_confirm: true,
-  });
-  await supabase.from('profiles').upsert({
-    id: userId!, full_name: buyerName, must_change_password: true,
-  });
+  // 1) Conta já existente (renovação/upgrade): NÃO mexe na senha.
+  if (createdNewAuthUser) {
+    await supabase.from('profiles').upsert({
+      id: userId!, full_name: buyerName, must_change_password: true,
+    });
+  } else {
+    await supabase.auth.admin.updateUserById(userId!, { email_confirm: true });
+    await supabase.from('profiles').upsert({
+      id: userId!, full_name: buyerName,
+    });
+  }
 
   if ((plan.category === 'manager' || plan.category === 'sst') && existingManager?.id) {
     await supabase.from('profiles').update({ sst_manager_id: existingManager.id }).eq('id', userId!);
@@ -541,10 +547,11 @@ async function upgradeExistingAccount(supabase: any, ctx: {
     }
   }
 
-  // 6) Envia e-mail com nova senha provisória
+  // 6) E-mail: só envia senha provisória se o usuário acabou de ser criado.
+  // Em renovação/upgrade de conta existente, mantém a senha atual.
   const emailResult = await sendCredentialsEmail(
-    supabase, buyerEmail, newPassword, plan.name,
-    false, // estamos enviando senha provisória de verdade
+    supabase, buyerEmail, newPassword ?? '', plan.name,
+    !createdNewAuthUser,
     subId, plan.slug,
   );
   if (!emailResult.ok) {
@@ -552,7 +559,7 @@ async function upgradeExistingAccount(supabase: any, ctx: {
       metadata: {
         upgraded_from_existing_account: true,
         previous_subscription_ids: previousIds,
-        provisional_password: newPassword,
+        ...(createdNewAuthUser ? { provisional_password: newPassword } : {}),
         email_send_error: emailResult.error ?? 'unknown',
         buyer: { name: buyerName, email: buyerEmail },
       },

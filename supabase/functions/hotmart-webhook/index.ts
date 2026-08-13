@@ -547,10 +547,11 @@ async function upgradeExistingAccount(supabase: any, ctx: {
     }
   }
 
-  // 6) Envia e-mail com nova senha provisória
+  // 6) E-mail: só envia senha provisória se o usuário acabou de ser criado.
+  // Em renovação/upgrade de conta existente, mantém a senha atual.
   const emailResult = await sendCredentialsEmail(
-    supabase, buyerEmail, newPassword, plan.name,
-    false, // estamos enviando senha provisória de verdade
+    supabase, buyerEmail, newPassword ?? '', plan.name,
+    !createdNewAuthUser,
     subId, plan.slug,
   );
   if (!emailResult.ok) {
@@ -558,7 +559,7 @@ async function upgradeExistingAccount(supabase: any, ctx: {
       metadata: {
         upgraded_from_existing_account: true,
         previous_subscription_ids: previousIds,
-        provisional_password: newPassword,
+        ...(createdNewAuthUser ? { provisional_password: newPassword } : {}),
         email_send_error: emailResult.error ?? 'unknown',
         buyer: { name: buyerName, email: buyerEmail },
       },

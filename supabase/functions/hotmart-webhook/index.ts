@@ -350,24 +350,30 @@ async function upgradeExistingAccount(supabase: any, ctx: {
   }
 
   // Se ainda não houver auth user (entidade órfã), cria um vinculado
+  let createdNewAuthUser = false;
+  let newPassword: string | null = null;
   if (!userId) {
-    const tempPwd = crypto.randomUUID().slice(0, 12);
+    newPassword = crypto.randomUUID().slice(0, 12);
     const { data: created, error } = await supabase.auth.admin.createUser({
-      email: buyerEmail, password: tempPwd, email_confirm: true,
+      email: buyerEmail, password: newPassword, email_confirm: true,
       user_metadata: { full_name: buyerName },
     });
     if (error) throw error;
     userId = created.user!.id;
+    createdNewAuthUser = true;
   }
 
-  // 1) Reseta senha
-  const newPassword = crypto.randomUUID().slice(0, 12);
-  await supabase.auth.admin.updateUserById(userId!, {
-    password: newPassword, email_confirm: true,
-  });
-  await supabase.from('profiles').upsert({
-    id: userId!, full_name: buyerName, must_change_password: true,
-  });
+  // 1) Conta já existente (renovação/upgrade): NÃO mexe na senha.
+  if (createdNewAuthUser) {
+    await supabase.from('profiles').upsert({
+      id: userId!, full_name: buyerName, must_change_password: true,
+    });
+  } else {
+    await supabase.auth.admin.updateUserById(userId!, { email_confirm: true });
+    await supabase.from('profiles').upsert({
+      id: userId!, full_name: buyerName,
+    });
+  }
 
   if ((plan.category === 'manager' || plan.category === 'sst') && existingManager?.id) {
     await supabase.from('profiles').update({ sst_manager_id: existingManager.id }).eq('id', userId!);

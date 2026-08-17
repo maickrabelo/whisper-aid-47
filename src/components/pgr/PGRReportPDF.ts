@@ -476,7 +476,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   // ─── CAPA ─────────────────────────────────────────────────
   // Fundo branco para destacar as logos da gestora SST e da empresa final
   const FOREST: [number, number, number] = [11, 63, 41];
-  const LIME: [number, number, number] = [190, 242, 100];
+  
 
   state.skipChrome = true;
 
@@ -497,8 +497,8 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   setText(9, false, [80, 80, 80]);
   doc.text(regulation, PAGE_W / 2, 72, { align: 'center' });
 
-  doc.setFillColor(...LIME);
-  doc.rect(MARGIN, 80, CONTENT_W, 1.2, 'F');
+
+
 
   setText(18, true, FOREST);
   const compLines = doc.splitTextToSize(input.company.name || 'EMPRESA', CONTENT_W);
@@ -524,9 +524,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     PAGE_W / 2, 190, { align: 'center' });
 
   // Rodapé capa
-  doc.setDrawColor(...LIME);
-  doc.setLineWidth(0.5);
-  doc.line(MARGIN, PAGE_H - 30, PAGE_W - MARGIN, PAGE_H - 30);
+
   setText(8, false, COLORS.muted);
   doc.text('Documento gerado pela plataforma Sr.SMS — Gestão de Riscos Psicossociais',
     PAGE_W / 2, PAGE_H - 24, { align: 'center' });

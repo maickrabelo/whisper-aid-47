@@ -479,6 +479,8 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
 
   state.skipChrome = true;
 
+  await renderCoverBackground(doc, PAGE_W, PAGE_H, fundoPgr.url);
+
   await renderReportLogos(doc, PAGE_W, {
     sstLogoUrl: input.sstLogoUrl,
     companyLogoUrl: input.company.logo_url,

@@ -8,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Pencil, Loader2, Users, X } from "lucide-react";
+import { Plus, Trash2, Pencil, Loader2, Users, X, Download } from "lucide-react";
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
+import { ImportGHEFromAEPDialog } from "./ImportGHEFromAEPDialog";
 
 interface RoleMeta { role: string; cbo?: string; activities?: string }
 interface GHE {
@@ -32,6 +33,7 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
   const [editing, setEditing] = useState<GHE | null>(null);
   const [form, setForm] = useState({ name: "", sector: "", roles_meta: [] as RoleMeta[], activities_description: "", worker_count: 0, work_schedule: "" });
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [roleInput, setRoleInput] = useState("");
   const [cboInput, setCboInput] = useState("");
 
@@ -174,7 +176,12 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
                 : 'Agrupe trabalhadores que compartilham as mesmas condições de exposição.'}
             </p>
           </div>
-          <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo {term.gheLabel}</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+              <Download className="h-4 w-4" /> Importar da AEP
+            </Button>
+            <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo {term.gheLabel}</Button>
+          </div>
         </div>
 
         {loading ? (
@@ -286,7 +293,17 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <ImportGHEFromAEPDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          pgrDocumentId={pgrDocumentId}
+          gheLabel={term.gheLabel}
+          existingNames={ghes.map(g => g.name)}
+          onImported={load}
+        />
       </CardContent>
+
     </Card>
   );
 };

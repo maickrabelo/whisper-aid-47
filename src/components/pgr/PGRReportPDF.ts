@@ -497,8 +497,8 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   setText(9, false, [80, 80, 80]);
   doc.text(regulation, PAGE_W / 2, 72, { align: 'center' });
 
-  doc.setFillColor(...LIME);
-  doc.rect(MARGIN, 80, CONTENT_W, 1.2, 'F');
+
+
 
   setText(18, true, FOREST);
   const compLines = doc.splitTextToSize(input.company.name || 'EMPRESA', CONTENT_W);

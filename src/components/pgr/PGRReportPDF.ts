@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
-import { renderReportLogos } from '@/lib/pdfLogos';
+import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
+import fundoPgr from '@/assets/fundo-pgr.jpg.asset.json';
 
 // ─────────────────────────────────────────────────────────────
 // Tipos

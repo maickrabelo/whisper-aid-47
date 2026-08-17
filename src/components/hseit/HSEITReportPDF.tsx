@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
+import { renderCoverBackground } from '@/lib/pdfLogos';
+import fundoPsico from '@/assets/fundo-psico.jpg.asset.json';
 import {
   HSEITCategory,
   HSEIT_CATEGORY_LABELS,
@@ -245,8 +247,7 @@ export function HSEITReportPDF({
 
 
       // ========== CAPA ==========
-      pdf.setFillColor(0, 66, 128);
-      pdf.rect(0, 0, pageWidth, 60, 'F');
+      await renderCoverBackground(pdf, pageWidth, pageHeight, fundoPsico.url);
       
       pdf.setFontSize(24);
       pdf.setFont('helvetica', 'bold');

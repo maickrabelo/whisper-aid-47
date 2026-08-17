@@ -476,7 +476,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   // ─── CAPA ─────────────────────────────────────────────────
   // Fundo branco para destacar as logos da gestora SST e da empresa final
   const FOREST: [number, number, number] = [11, 63, 41];
-  const LIME: [number, number, number] = [190, 242, 100];
+  
 
   state.skipChrome = true;
 

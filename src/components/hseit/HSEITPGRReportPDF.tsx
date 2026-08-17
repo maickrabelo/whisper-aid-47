@@ -338,6 +338,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   // ═══════════════════════════════
   // PAGE 1: CAPA
   // ═══════════════════════════════
+  await renderCoverBackground(pdf, pw, ph, fundoPsico.url);
   await renderReportLogos(pdf, pw, {
     sstLogoUrl: data.sstLogoUrl,
     companyLogoUrl: data.companyLogoUrl,

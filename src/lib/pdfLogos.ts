@@ -115,3 +115,26 @@ export async function renderReportLogos(
   if (sstImg) drawFitted(sstImg, margin, 'left');
   if (companyImg) drawFitted(companyImg, pageWidth - margin, 'right');
 }
+
+/**
+ * Draw a full-page background image on the current PDF page (cover page).
+ * Must be called before any other content is drawn on the page.
+ */
+export async function renderCoverBackground(
+  pdf: jsPDF,
+  pageWidth: number,
+  pageHeight: number,
+  url: string,
+): Promise<void> {
+  const img = await loadImage(url);
+  if (!img) return;
+  try {
+    pdf.addImage(img, 'JPEG', 0, 0, pageWidth, pageHeight);
+  } catch (e) {
+    try {
+      pdf.addImage(img, 'PNG', 0, 0, pageWidth, pageHeight);
+    } catch (err) {
+      console.warn('PDF cover background failed:', err);
+    }
+  }
+}

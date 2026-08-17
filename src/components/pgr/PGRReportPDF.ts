@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
-import { renderReportLogos } from '@/lib/pdfLogos';
+import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
+import fundoPgr from '@/assets/fundo-pgr.jpg.asset.json';
 
 // ─────────────────────────────────────────────────────────────
 // Tipos
@@ -478,6 +479,8 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   const LIME: [number, number, number] = [190, 242, 100];
 
   state.skipChrome = true;
+
+  await renderCoverBackground(doc, PAGE_W, PAGE_H, fundoPgr.url);
 
   await renderReportLogos(doc, PAGE_W, {
     sstLogoUrl: input.sstLogoUrl,

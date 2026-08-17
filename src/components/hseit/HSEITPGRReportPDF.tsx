@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
-import { renderReportLogos } from '@/lib/pdfLogos';
+import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
+import fundoPsico from '@/assets/fundo-psico.jpg.asset.json';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import {
   HSEITCategory,
@@ -337,6 +338,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   // ═══════════════════════════════
   // PAGE 1: CAPA
   // ═══════════════════════════════
+  await renderCoverBackground(pdf, pw, ph, fundoPsico.url);
   await renderReportLogos(pdf, pw, {
     sstLogoUrl: data.sstLogoUrl,
     companyLogoUrl: data.companyLogoUrl,

@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
-import { renderReportLogos } from '@/lib/pdfLogos';
+import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
+import fundoPsico from '@/assets/fundo-psico.jpg.asset.json';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import {
   COPSOQ_QUESTIONS,
@@ -312,8 +313,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   // ══════════════════════════════════════════
   // COVER
   // ══════════════════════════════════════════
-  pdf.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-  pdf.rect(0, 0, pw, 55, 'F');
+  await renderCoverBackground(pdf, pw, ph, fundoPsico.url);
   await renderReportLogos(pdf, pw, {
     sstLogoUrl: input.sstLogoUrl,
     companyLogoUrl: input.companyLogoUrl,

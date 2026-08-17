@@ -293,7 +293,17 @@ export const GHEManager = ({ pgrDocumentId, documentType }: { pgrDocumentId: str
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <ImportGHEFromAEPDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          pgrDocumentId={pgrDocumentId}
+          gheLabel={term.gheLabel}
+          existingNames={ghes.map(g => g.name)}
+          onImported={load}
+        />
       </CardContent>
+
     </Card>
   );
 };

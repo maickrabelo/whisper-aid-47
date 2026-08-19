@@ -15,9 +15,10 @@ Uma mesma avaliação técnica (evidência) poderá no futuro alimentar outros d
 
 - `feature_flags` — `feature_key`, `enabled`, `beta`, timestamps. Registro `LTCAT_BETA`.
 - `feature_access` — `feature_key`, `user_id`, `company_id?`, `sst_manager_id?`, `plan_id?`, `enabled`, `valid_from`, `valid_to?`. Único registro: o `user_id` de `teste.sst@srsms.app`.
-- `has_feature_access(_user_id uuid, _feature_key text) returns boolean` — `LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public`, sem parâmetros dinâmicos, sem SQL montado em texto. `EXECUTE` concedido apenas a `authenticated` e `service_role` (revogado de `PUBLIC` e `anon`). Verifica flag habilitada + registro de acesso habilitado + vigência.
-- RLS de `feature_flags`/`feature_access`: **SELECT** apenas dos próprios registros; **nenhum** INSERT/UPDATE/DELETE para `anon`/`authenticated`. GRANT de escrita somente para `service_role`. O frontend não tem qualquer caminho para alterar acesso.
-- Frontend: hook único `useFeatureAccess('LTCAT_BETA')`; guarda de rota que decide **antes** de renderizar e antes de qualquer consulta; sem acesso → 404 padrão do projeto. Nenhum e-mail hard-coded, nenhum bypass por perfil admin.
+- `has_feature_access(_user_id uuid, _feature_key text) returns boolean` — `LANGUAGE sql STABLE SECURITY DEFINER SET search_path = ''` (mais restritivo possível), com **todas** as referências qualificadas explicitamente (`public.feature_flags`, `public.feature_access`), sem resolução implícita de objetos, sem SQL dinâmico. `EXECUTE` revogado de `PUBLIC`/`anon` e concedido apenas a `authenticated` e `service_role`. Verifica flag habilitada + registro de acesso habilitado + vigência.
+- RLS/exposição: `feature_access` e `feature_flags` **não são consultadas pelo frontend**. O cliente chama apenas a RPC `has_feature_access(...)` e recebe `true`/`false`. Sem GRANT de SELECT para `authenticated`/`anon` nessas tabelas e sem INSERT/UPDATE/DELETE para qualquer role de cliente; escrita apenas por `service_role`. RLS habilitada nas duas tabelas sem policies permissivas ao cliente.
+- Frontend: hook único `useFeatureAccess('LTCAT_BETA')` (via RPC); guarda de rota que decide **antes** de renderizar e antes de qualquer consulta; sem acesso → 404 padrão do projeto. Nenhum e-mail hard-coded, nenhum bypass por perfil admin.
+
 - Nenhuma liberação automática em deploy.
 
 ## 2. Profissional técnico e capacidade de assinatura

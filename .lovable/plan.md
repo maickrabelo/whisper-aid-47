@@ -95,7 +95,7 @@ Todo PDF do módulo sai com marcação permanente **"BETA — DOCUMENTO PARA VAL
 
 ## 13. Segurança
 
-Toda tabela do módulo com RLS exigindo **simultaneamente**: autenticado + vínculo com o tenant (`user_in_company` / `user_manages_company`) + `has_feature_access(auth.uid(), 'LTCAT_BETA')`. A permissão beta não fura isolamento entre organizações. Edge functions `ltcat-*` validam JWT, resolvem o usuário no servidor e checam a flag em todo GET/POST/PUT/PATCH/DELETE, PDF, upload, download, processamento e pré-validação S-2240. Bucket privado `ltcat-anexos` com as mesmas exigências e URLs assinadas emitidas apenas por função autorizada.
+Toda tabela do módulo com RLS exigindo **simultaneamente**: autenticado + vínculo com o tenant (`user_in_company` / `user_manages_company`) + `public.has_feature_access('LTCAT_BETA')` (usuário resolvido internamente por `auth.uid()`). A permissão beta não fura isolamento entre organizações. Edge functions `ltcat-*` validam JWT, resolvem o usuário no servidor e checam a flag em todo GET/POST/PUT/PATCH/DELETE, PDF, upload, download, processamento e pré-validação S-2240. Bucket privado `ltcat-anexos` com as mesmas exigências e URLs assinadas emitidas apenas por função autorizada.
 
 `ltcat_audit_log`: criação, alteração, avaliação, conclusão, override, geração de PDF, publicação, divergência, erro, falha de geração e tentativa de acesso não autorizado.
 `beta_feedback`: `feature_key`, `user_id`, `page`, `category` (BUG/UX/LEGAL_RULE/PDF/DATA/PERFORMANCE/SUGGESTION), `description`, `severity`, `resolved`, com botão discreto "Enviar feedback do Beta".

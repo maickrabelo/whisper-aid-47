@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck } from "lucide-react";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
 import { usePGRModuleAccess } from "@/hooks/usePGRModuleAccess";
+import { useFeatureAccess, LTCAT_BETA } from "@/hooks/useFeatureAccess";
 import { useAEPBetaAccess } from "@/hooks/useAEPBetaAccess";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
@@ -168,6 +169,7 @@ const SSTDashboard = () => {
   const { toast } = useToast();
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
+  const { allowed: hasLtcatBeta } = useFeatureAccess(LTCAT_BETA);
   const { allowed: aepAllowed } = useAEPBetaAccess();
   const { isSmartOnly } = useSmartOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
@@ -526,6 +528,16 @@ const SSTDashboard = () => {
                     description: 'Programa de Gerenciamento de Riscos (NR-1/NR-17)',
                     highlights: ['Inventário', 'Plano de ação', 'e-Social'],
                     path: '/pgr',
+                  }];
+                }
+                if (hasLtcatBeta) {
+                  displayedTools = [...displayedTools, {
+                    id: 'tool-ltcat',
+                    icon: FileText,
+                    title: 'LTCAT (BETA)',
+                    description: 'Laudo Técnico das Condições Ambientais do Trabalho — previdenciário',
+                    highlights: ['BETA', 'Anexo IV', 'S-2240'],
+                    path: '/ltcat',
                   }];
                 }
                 if (aepAllowed) {

@@ -642,6 +642,48 @@ export type Database = {
         }
         Relationships: []
       }
+      beta_feedback: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          feature_key: string
+          id: string
+          page: string | null
+          resolved: boolean
+          resolved_at: string | null
+          severity: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          feature_key?: string
+          id?: string
+          page?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          severity?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          feature_key?: string
+          id?: string
+          page?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          severity?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       beta_ouvidoria_attachments: {
         Row: {
           created_at: string
@@ -1479,6 +1521,92 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_access: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          enabled: boolean
+          feature_key: string
+          granted_by: string | null
+          id: string
+          note: string | null
+          plan_id: string | null
+          sst_manager_id: string | null
+          updated_at: string
+          user_id: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          enabled?: boolean
+          feature_key: string
+          granted_by?: string | null
+          id?: string
+          note?: string | null
+          plan_id?: string | null
+          sst_manager_id?: string | null
+          updated_at?: string
+          user_id: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          enabled?: boolean
+          feature_key?: string
+          granted_by?: string | null
+          id?: string
+          note?: string | null
+          plan_id?: string | null
+          sst_manager_id?: string | null
+          updated_at?: string
+          user_id?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_access_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "feature_flags"
+            referencedColumns: ["feature_key"]
+          },
+        ]
+      }
+      feature_flags: {
+        Row: {
+          beta: boolean
+          created_at: string
+          description: string | null
+          enabled: boolean
+          feature_key: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          beta?: boolean
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          feature_key: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          beta?: boolean
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          feature_key?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hotmart_product_plans: {
         Row: {
           created_at: string
@@ -1759,6 +1887,48 @@ export type Database = {
           terms_accepted?: boolean | null
           terms_accepted_at?: string | null
           updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ltcat_audit_log: {
+        Row: {
+          action: string
+          company_id: string | null
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          feature_key: string
+          id: string
+          page_path: string | null
+          success: boolean
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          company_id?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          feature_key?: string
+          id?: string
+          page_path?: string | null
+          success?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          company_id?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          feature_key?: string
+          id?: string
+          page_path?: string | null
+          success?: boolean
           user_id?: string | null
         }
         Relationships: []
@@ -4254,6 +4424,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_has_feature_access: {
+        Args: { _feature_key: string; _user_id: string }
+        Returns: boolean
+      }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       company_has_no_sst: { Args: { _company_id: string }; Returns: boolean }
       company_has_smart_ouvidoria: {
@@ -4298,6 +4472,10 @@ export type Database = {
       }
       get_user_sst_manager_id: { Args: { _user_id: string }; Returns: string }
       has_ai_access: { Args: { _user_id: string }; Returns: boolean }
+      has_feature_access: {
+        Args: { _company_id?: string; _feature_key: string }
+        Returns: boolean
+      }
       has_pgr_module: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {

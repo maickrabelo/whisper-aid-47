@@ -8,7 +8,7 @@ import { ArrowLeft, FileSearch, ShieldCheck } from 'lucide-react';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import BetaBadge from '@/components/feature-flags/BetaBadge';
 import BetaFeedbackButton from '@/components/feature-flags/BetaFeedbackButton';
-import { usePageSEO } from '@/hooks/usePageSEO';
+import usePageSEO from '@/hooks/usePageSEO';
 
 /**
  * Fase 1 — Fundação de Acesso.
@@ -22,7 +22,6 @@ const LTCATHub = () => {
   usePageSEO({
     title: 'LTCAT — Beta Privado | SR SMS',
     description: 'Módulo LTCAT previdenciário em beta privado restrito.',
-    noIndex: true,
   });
 
   useEffect(() => {

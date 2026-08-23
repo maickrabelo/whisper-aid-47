@@ -30,16 +30,19 @@ interface Props {
 }
 
 const EXPOSURE_TYPES: Array<{ value: string; label: string }> = [
-  { value: 'HABITUAL_PERMANENTE', label: 'Habitual e permanente' },
-  { value: 'INTERMITENTE', label: 'Intermitente' },
-  { value: 'EVENTUAL', label: 'Eventual' },
+  { value: 'habitual_permanente', label: 'Habitual e permanente' },
+  { value: 'intermitente', label: 'Intermitente' },
+  { value: 'eventual', label: 'Eventual' },
 ];
 
 const CONCLUSION_LABELS: Record<string, string> = {
   PENDING: 'Pendente',
-  CONCLUIDO: 'Concluído',
+  RECONHECIDO: 'Reconhecido',
+  NAO_RECONHECIDO: 'Não reconhecido',
   REVISAO_HUMANA: 'Revisão humana',
 };
+
+const isConcluded = (s: string) => s === 'RECONHECIDO' || s === 'NAO_RECONHECIDO';
 
 const triState = (v: string) => (v === '' ? undefined : v);
 
@@ -51,7 +54,7 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    ghe_id: '', agent_id: '', exposure_type: 'HABITUAL_PERMANENTE',
+    ghe_id: '', agent_id: '', exposure_type: 'habitual_permanente',
     measured_value: '', unit: '', notes: '',
   });
 
@@ -66,7 +69,7 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
   const [engineResult, setEngineResult] = useState<any>(null);
 
   const [concExp, setConcExp] = useState<LtcatExposure | null>(null);
-  const [concStatus, setConcStatus] = useState('CONCLUIDO');
+  const [concStatus, setConcStatus] = useState('RECONHECIDO');
   const [concText, setConcText] = useState('');
   const [concBusy, setConcBusy] = useState(false);
 
@@ -85,7 +88,7 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
 
   const openNew = () => {
     if (ghes.length === 0) { toast.error('Cadastre um GHE antes de adicionar exposições.'); return; }
-    setForm({ ghe_id: ghes[0].id, agent_id: '', exposure_type: 'HABITUAL_PERMANENTE', measured_value: '', unit: '', notes: '' });
+    setForm({ ghe_id: ghes[0].id, agent_id: '', exposure_type: 'habitual_permanente', measured_value: '', unit: '', notes: '' });
     setDialogOpen(true);
   };
 
@@ -184,7 +187,7 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
   // ─── Conclusão humana ──────────────────────────────────────
   const openConclusion = (e: LtcatExposure) => {
     setConcExp(e);
-    setConcStatus(e.conclusion_status === 'PENDING' ? 'CONCLUIDO' : e.conclusion_status);
+    setConcStatus(e.conclusion_status === 'PENDING' ? 'RECONHECIDO' : e.conclusion_status);
     setConcText(e.conclusion_text || '');
   };
 
@@ -278,8 +281,8 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
 
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge
-                    variant={e.conclusion_status === 'CONCLUIDO' ? 'default' : 'secondary'}
-                    className={e.conclusion_status === 'CONCLUIDO' ? 'bg-emerald-600 hover:bg-emerald-600' : ''}
+                    variant={isConcluded(e.conclusion_status) ? 'default' : 'secondary'}
+                    className={e.conclusion_status === 'RECONHECIDO' ? 'bg-emerald-600 hover:bg-emerald-600' : ''}
                   >
                     {CONCLUSION_LABELS[e.conclusion_status] || e.conclusion_status}
                   </Badge>
@@ -479,7 +482,8 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
               <Select value={concStatus} onValueChange={setConcStatus}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CONCLUIDO">Concluído</SelectItem>
+                  <SelectItem value="RECONHECIDO">Reconhecido (gera direito previdenciário)</SelectItem>
+                  <SelectItem value="NAO_RECONHECIDO">Não reconhecido</SelectItem>
                   <SelectItem value="REVISAO_HUMANA">Revisão humana necessária</SelectItem>
                 </SelectContent>
               </Select>

@@ -18,14 +18,15 @@ export interface LTCATReportInput {
 }
 
 const EXPOSURE_TYPE_LABELS: Record<string, string> = {
-  HABITUAL_PERMANENTE: 'Habitual e permanente',
-  INTERMITENTE: 'Intermitente',
-  EVENTUAL: 'Eventual',
+  habitual_permanente: 'Habitual e permanente',
+  intermitente: 'Intermitente',
+  eventual: 'Eventual',
 };
 
 const CONCLUSION_LABELS: Record<string, string> = {
   PENDING: 'Pendente',
-  CONCLUIDO: 'Concluído',
+  RECONHECIDO: 'Reconhecido (gera direito previdenciário)',
+  NAO_RECONHECIDO: 'Não reconhecido',
   REVISAO_HUMANA: 'Revisão humana necessária',
 };
 

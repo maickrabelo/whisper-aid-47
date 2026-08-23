@@ -2178,7 +2178,7 @@ export type Database = {
           threshold_secondary: number | null
           threshold_value: number | null
           unit: string | null
-          valid_from: string
+          valid_from: string | null
           valid_to: string | null
           version_number: number
         }
@@ -2211,7 +2211,7 @@ export type Database = {
           threshold_secondary?: number | null
           threshold_value?: number | null
           unit?: string | null
-          valid_from: string
+          valid_from?: string | null
           valid_to?: string | null
           version_number: number
         }
@@ -2244,7 +2244,7 @@ export type Database = {
           threshold_secondary?: number | null
           threshold_value?: number | null
           unit?: string | null
-          valid_from?: string
+          valid_from?: string | null
           valid_to?: string | null
           version_number?: number
         }
@@ -5210,6 +5210,8 @@ export type Database = {
         | "AUTOMATE_WITH_HUMAN_CONFIRMATION"
         | "HUMAN_DECISION_REQUIRED"
         | "NOT_SAFE_TO_AUTOMATE"
+        | "PARTIALLY_PARAMETERIZABLE"
+        | "NOT_APPLICABLE"
       rule_criterion_enum: "QUANTITATIVE" | "QUALITATIVE" | "MIXED"
       rule_seed_status_enum:
         | "DRAFT"
@@ -5428,6 +5430,8 @@ export const Constants = {
         "AUTOMATE_WITH_HUMAN_CONFIRMATION",
         "HUMAN_DECISION_REQUIRED",
         "NOT_SAFE_TO_AUTOMATE",
+        "PARTIALLY_PARAMETERIZABLE",
+        "NOT_APPLICABLE",
       ],
       rule_criterion_enum: ["QUANTITATIVE", "QUALITATIVE", "MIXED"],
       rule_seed_status_enum: [

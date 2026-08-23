@@ -2002,7 +2002,7 @@ engine_forbidden_actions: [estender o rol por analogia, enquadrar sem confirmaca
 
 ### CHECKSUM JURÍDICO
 ```
-PRESS_HIPER_RULE|v1|SOCIAL_SECURITY|PHYS_PRESS_HIPER|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-2.0.5#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_ACTIVITY_LIST|QUALITATIVE|MET_QUALIT|activity_description|LISTED_IN|null|null|null|null|3atividades->RULE_MATCHED(+human)
+PRESS_HIPER_RULE|v1|SOCIAL_SECURITY|PHYS_PRESS_HIPER|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-2.0.5#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_ACTIVITY_LIST|QUALITATIVE|MET_QUALIT|activity_description|LISTED_IN|null|null|null|null|3atividades->RULE_MATCHED(+human)|mappings:[AnexoIV:2.0.5;T24:02.01.016+02.01.017+02.01.018#por_atividade;02.01.015#generico_so_com_humano#confirmado_oficial_2026-08-23#DTINICIO:2014-01-01]
 ```
 
 ---
@@ -2141,9 +2141,9 @@ outcome_spec: funcao + local compativel -> RULE_MATCHED (tempo exigido = 20 anos
 | Código interno | `ASSOC_MIN_SUB_AF` |
 | Código Anexo IV | 4.0.1 |
 | Descrição Anexo IV | "Mineração subterrânea afastada da frente de produção" |
-| Código Tabela 24 | 04.01.001 — `PENDING` (confirmar; mapeamento externo, **não bloqueia a regra**) |
-| Descrição oficial Tabela 24 | Mineração subterrânea (afastada da frente) |
-| Vigências dos mapeamentos | Anexo IV 4.0.1: 1999-05-06 → vigente · Tabela 24: S-1.3 (jan/2023 → vigente) |
+| Código Tabela 24 | `04.01.001` — **CONFIRMADO ✅ (23/08/2026, fonte oficial)** |
+| Descrição oficial Tabela 24 | "Mineração subterrânea cujas atividades sejam exercidas afastadas das frentes de produção" (literal) |
+| Vigências dos mapeamentos | Anexo IV 4.0.1: 1999-05-06 → vigente · Tabela 24 04.01.001: DTINICIO 01/01/2014, sem data-fim → vigente |
 
 ### AUTOMAÇÃO
 ```yaml
@@ -2166,7 +2166,7 @@ engine_forbidden_actions: [confundir com frente de producao (15 anos), enquadrar
 
 ### CHECKSUM JURÍDICO
 ```
-ASSOC_MIN_SUB_AF|v1|SOCIAL_SECURITY|ASSOC_MIN_SUB_AF|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-4.0.1#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_FUNCTION_LOCATION|QUALITATIVE|MET_QUALIT|function_location|LISTED_IN|20|anos|null|null|afastado->RULE_MATCHED(20anos,+human)
+ASSOC_MIN_SUB_AF|v1|SOCIAL_SECURITY|ASSOC_MIN_SUB_AF|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-4.0.1#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_FUNCTION_LOCATION|QUALITATIVE|MET_QUALIT|function_location|LISTED_IN|20|anos|null|null|afastado->RULE_MATCHED(20anos,+human)|mappings:[AnexoIV:4.0.1;T24:04.01.001#1:1#confirmado_oficial_2026-08-23#DTINICIO:2014-01-01]
 ```
 
 ---
@@ -2223,9 +2223,9 @@ outcome_spec: funcao + local compativel (frente de producao) -> RULE_MATCHED (te
 | Código interno | `ASSOC_MIN_SUB_FP` |
 | Código Anexo IV | 4.0.2 |
 | Descrição Anexo IV | "Mineração subterrânea em frente de produção" |
-| Código Tabela 24 | 04.01.002 — `PENDING` (confirmar; mapeamento externo, **não bloqueia a regra**) |
-| Descrição oficial Tabela 24 | Mineração subterrânea (frente de produção) |
-| Vigências dos mapeamentos | Anexo IV 4.0.2: 1999-05-06 → vigente · Tabela 24: S-1.3 (jan/2023 → vigente) |
+| Código Tabela 24 | `04.01.002` — **CONFIRMADO ✅ (23/08/2026, fonte oficial)** |
+| Descrição oficial Tabela 24 | "Trabalhos em atividades permanentes no subsolo de minerações subterrâneas em frente de produção" (literal) |
+| Vigências dos mapeamentos | Anexo IV 4.0.2: 1999-05-06 → vigente · Tabela 24 04.01.002: DTINICIO 01/01/2014, sem data-fim → vigente |
 
 ### AUTOMAÇÃO
 ```yaml
@@ -2248,7 +2248,7 @@ engine_forbidden_actions: [confundir com area afastada (20 anos), enquadrar sem 
 
 ### CHECKSUM JURÍDICO
 ```
-ASSOC_MIN_SUB_FP|v1|SOCIAL_SECURITY|ASSOC_MIN_SUB_FP|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-4.0.2#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_FUNCTION_LOCATION|QUALITATIVE|MET_QUALIT|function_location|LISTED_IN|15|anos|null|null|frente->RULE_MATCHED(15anos,+human)
+ASSOC_MIN_SUB_FP|v1|SOCIAL_SECURITY|ASSOC_MIN_SUB_FP|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-4.0.2#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_FUNCTION_LOCATION|QUALITATIVE|MET_QUALIT|function_location|LISTED_IN|15|anos|null|null|frente->RULE_MATCHED(15anos,+human)|mappings:[AnexoIV:4.0.2;T24:04.01.002#1:1#confirmado_oficial_2026-08-23#DTINICIO:2014-01-01]
 ```
 
 ---
@@ -2561,11 +2561,11 @@ Permanecem `PENDING_LEGAL_VALIDATION` as nuances do inteiro teor necessárias a 
 | VIB_QUALIT_PERF | YES | YES | NOT_APPLICABLE | YES | NO (C13 não bloqueia o núcleo) | YES | AUTOMATE_WITH_HUMAN_CONFIRMATION | **APPROVE_FOR_SEED** (com `judicial_exception` C13) |
 | BIO_V1 | YES | YES | NOT_APPLICABLE | YES | NO | YES | AUTOMATE_WITH_HUMAN_CONFIRMATION | **APPROVE_FOR_SEED** |
 | BIO_V2 | YES | YES | YES (qualitativa circunstanciada) | YES | NO (C14 — só fora do rol) | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** (com `judicial_exception` C14) |
-| RAD_ION_RULE | YES | YES | YES (dosimetria CNEN) | PARTIAL (Tabela 24 02.01.006–013 `PENDING`) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** (mapeamento Tabela 24 a complementar) |
-| PRESS_HIPER_RULE | YES | YES | YES | PARTIAL (02.01.015–018 `PENDING`) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** (mapeamento Tabela 24 a complementar) |
+| RAD_ION_RULE | YES | YES | YES (dosimetria CNEN) | YES (02.01.006–013 confirmados ✅ — condicional 1:N por atividade; genérico 02.01.006 só com humano) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** |
+| PRESS_HIPER_RULE | YES | YES | YES | YES (02.01.015–018 confirmados ✅ — condicional 1:N por atividade; genérico 02.01.015 só com humano) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** |
 | ASSOC_GENERAL | YES | YES | NOT_APPLICABLE | NOT_APPLICABLE | NO | YES | AUTOMATE_WITH_HUMAN_CONFIRMATION | **APPROVE_FOR_SEED** |
-| ASSOC_MIN_SUB_AF | YES | YES | NOT_APPLICABLE | PARTIAL (04.01.001 `PENDING`) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** (mapeamento Tabela 24 a complementar) |
-| ASSOC_MIN_SUB_FP | YES | YES | NOT_APPLICABLE | PARTIAL (04.01.002 `PENDING`) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** (mapeamento Tabela 24 a complementar) |
+| ASSOC_MIN_SUB_AF | YES | YES | NOT_APPLICABLE | YES (04.01.001 confirmado ✅) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** |
+| ASSOC_MIN_SUB_FP | YES | YES | NOT_APPLICABLE | YES (04.01.002 confirmado ✅) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** |
 | HIST_FRIO | YES | YES | NOT_APPLICABLE | YES (sem código autônomo; 05.01.001 na Zona C) | NO (C4) | YES | PARTIALLY_PARAMETERIZABLE (Zonas A/B) | **APPROVE_FOR_SEED** |
 | EXCEPTIONAL_LEGAL_OVERRIDE | YES | YES | NOT_APPLICABLE | YES (05.01.001) | NO | YES | HUMAN_DECISION_REQUIRED (sempre) | **APPROVE_FOR_SEED** |
 | ELEC_TNU_210 | YES | YES | NOT_APPLICABLE | NOT_APPLICABLE | NO | YES | NOT_APPLICABLE (referência) | **APPROVE_AS_REFERENCE_ONLY** |

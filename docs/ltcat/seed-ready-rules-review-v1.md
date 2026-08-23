@@ -1911,7 +1911,9 @@ engine_forbidden_actions: [enquadrar fora do rol sem revisao, inferir dose sem d
 
 ### CHECKSUM JURÍDICO
 ```
-RAD_ION_RULE|v1|SOCIAL_SECURITY|PHYS_RAD_ION|DECREE+TECHNICAL_STANDARD|L3+L6|INSS_ADMINISTRATIVE+TECHNICAL_ASSESSMENT|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-2.0.3#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|CNEN NN 3.01#dosimetria|null|QUALITATIVE_ACTIVITY_LIST+DOSIMETRY_SUPPORT|QUALITATIVE|MET_DOSIM_CNEN|activity_description|LISTED_IN|null|mSv|EVIDENCE_SUPPORT|NOT_CENTRAL|rol+dosimetria->RULE_MATCHED(+human)|mappings:[AnexoIV:2.0.3;T24:02.01.006-013#condicional_por_atividade#confirmado_oficial_2026-08-23#DTINICIO:2014-01-01]
+RAD_ION_RULE|v1|SOCIAL_SECURITY|PHYS_RAD_ION|DECREE+TECHNICAL_STANDARD|L3+L6|INSS_ADMINISTRATIVE+TECHNICAL_ASSESSMENT|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-2.0.3#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|CNEN NN 3.01#dosimetria|null|QUALITATIVE_ACTIVITY_LIST+DOSIMETRY_SUPPORT|QUALITATIVE|MET_DOSIM_CNEN|activity_description|LISTED_IN|null|mSv|EVIDENCE_SUPPORT|NOT_CENTRAL|rol+dosimetria->RULE_MATCHED(+human)
+
+> Nota: mapeamentos (Anexo IV 2.0.3; Tabela 24 02.01.006–013, condicional 1:N, confirmados oficialmente em 23/08/2026) pertencem à entidade externa versionada `agent_mappings` e **não integram o checksum jurídico da regra** (CANONICAL_SET_V1 inalterado).
 ```
 
 ---
@@ -2003,7 +2005,9 @@ engine_forbidden_actions: [estender o rol por analogia, enquadrar sem confirmaca
 
 ### CHECKSUM JURÍDICO
 ```
-PRESS_HIPER_RULE|v1|SOCIAL_SECURITY|PHYS_PRESS_HIPER|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-2.0.5#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_ACTIVITY_LIST|QUALITATIVE|MET_QUALIT|activity_description|LISTED_IN|null|null|null|null|3atividades->RULE_MATCHED(+human)|mappings:[AnexoIV:2.0.5;T24:02.01.016+02.01.017+02.01.018#por_atividade;02.01.015#generico_so_com_humano#confirmado_oficial_2026-08-23#DTINICIO:2014-01-01]
+PRESS_HIPER_RULE|v1|SOCIAL_SECURITY|PHYS_PRESS_HIPER|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-2.0.5#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_ACTIVITY_LIST|QUALITATIVE|MET_QUALIT|activity_description|LISTED_IN|null|null|null|null|3atividades->RULE_MATCHED(+human)
+
+> Nota: mapeamentos (Anexo IV 2.0.5; Tabela 24 02.01.015–018, condicional 1:N, confirmados oficialmente em 23/08/2026) pertencem à entidade externa versionada `agent_mappings` e **não integram o checksum jurídico da regra** (CANONICAL_SET_V1 inalterado).
 ```
 
 ---
@@ -2167,7 +2171,9 @@ engine_forbidden_actions: [confundir com frente de producao (15 anos), enquadrar
 
 ### CHECKSUM JURÍDICO
 ```
-ASSOC_MIN_SUB_AF|v1|SOCIAL_SECURITY|ASSOC_MIN_SUB_AF|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-4.0.1#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_FUNCTION_LOCATION|QUALITATIVE|MET_QUALIT|function_location|LISTED_IN|20|anos|null|null|afastado->RULE_MATCHED(20anos,+human)|mappings:[AnexoIV:4.0.1;T24:04.01.001#1:1#confirmado_oficial_2026-08-23#DTINICIO:2014-01-01]
+ASSOC_MIN_SUB_AF|v1|SOCIAL_SECURITY|ASSOC_MIN_SUB_AF|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-4.0.1#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_FUNCTION_LOCATION|QUALITATIVE|MET_QUALIT|function_location|LISTED_IN|20|anos|null|null|afastado->RULE_MATCHED(20anos,+human)
+
+> Nota: mapeamentos (Anexo IV 4.0.1; Tabela 24 04.01.001, 1:1, confirmado oficialmente em 23/08/2026) pertencem à entidade externa versionada `agent_mappings` e **não integram o checksum jurídico da regra** (CANONICAL_SET_V1 inalterado).
 ```
 
 ---
@@ -2249,7 +2255,9 @@ engine_forbidden_actions: [confundir com area afastada (20 anos), enquadrar sem 
 
 ### CHECKSUM JURÍDICO
 ```
-ASSOC_MIN_SUB_FP|v1|SOCIAL_SECURITY|ASSOC_MIN_SUB_FP|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-4.0.2#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_FUNCTION_LOCATION|QUALITATIVE|MET_QUALIT|function_location|LISTED_IN|15|anos|null|null|frente->RULE_MATCHED(15anos,+human)|mappings:[AnexoIV:4.0.2;T24:04.01.002#1:1#confirmado_oficial_2026-08-23#DTINICIO:2014-01-01]
+ASSOC_MIN_SUB_FP|v1|SOCIAL_SECURITY|ASSOC_MIN_SUB_FP|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-4.0.2#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_FUNCTION_LOCATION|QUALITATIVE|MET_QUALIT|function_location|LISTED_IN|15|anos|null|null|frente->RULE_MATCHED(15anos,+human)
+
+> Nota: mapeamentos (Anexo IV 4.0.2; Tabela 24 04.01.002, 1:1, confirmado oficialmente em 23/08/2026) pertencem à entidade externa versionada `agent_mappings` e **não integram o checksum jurídico da regra** (CANONICAL_SET_V1 inalterado).
 ```
 
 ---

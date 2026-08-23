@@ -152,4 +152,5 @@ Bloqueios comuns a todas as fichas: códigos individuais da Tabela 24 grupo 01 `
 **Observações finais:**
 1. Dentre as 29 SEED_READY, 4 carregam status `RULE_WITH_JUDICIAL_EXCEPTION` (GEN_ANNEX_IV_SCOPE, HEAT_V4, VIB_QUALIT_PERF, BIO_V2) e 1 é uma exceção judicial documentada (ELEC_TNU_210) — o seed dessas regras deve incluir o registro da exceção e o desvio obrigatório para revisão humana nos casos da órbita da exceção.
 2. Nenhuma regra de EPI para cancerígenos ou biológicos é automatizável enquanto C11 e o debate TNU permanecerem abertos.
-3. Esta matriz **não autoriza seed**. A Fase 2B permanece bloqueada até aprovação nominal do manifesto v2.1 + desta matriz.
+3. (Revisão 1.1) Os 4 mapeamentos parciais da Tabela 24 foram resolvidos na fonte oficial — ver nota §7.1. **Zero** ocorrências de `PARTIAL_ESOCIAL_MAPPING`. A estrutura futura `agent_mappings` deverá suportar `mapping_condition` (1 agente interno → N códigos externos condicionados por atividade, processo, cenário, vigência e evidência).
+4. Esta matriz **não autoriza seed**. A Fase 2B permanece bloqueada até aprovação nominal do manifesto v2.1 + desta matriz.

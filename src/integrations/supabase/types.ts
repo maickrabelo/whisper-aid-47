@@ -642,6 +642,134 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_mappings: {
+        Row: {
+          agent_id: string
+          created_at: string
+          external_catalog_version_id: string
+          external_code: string
+          external_label: string | null
+          id: string
+          mapping_condition: Json
+          notes: string | null
+          priority: number
+          requires_human_confirmation: boolean
+          target_domain: Database["public"]["Enums"]["catalog_type_enum"]
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          external_catalog_version_id: string
+          external_code: string
+          external_label?: string | null
+          id?: string
+          mapping_condition?: Json
+          notes?: string | null
+          priority?: number
+          requires_human_confirmation?: boolean
+          target_domain: Database["public"]["Enums"]["catalog_type_enum"]
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          external_catalog_version_id?: string
+          external_code?: string
+          external_label?: string | null
+          id?: string
+          mapping_condition?: Json
+          notes?: string | null
+          priority?: number
+          requires_human_confirmation?: boolean
+          target_domain?: Database["public"]["Enums"]["catalog_type_enum"]
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_mappings_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "occupational_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_mappings_external_catalog_version_id_fkey"
+            columns: ["external_catalog_version_id"]
+            isOneToOne: false
+            referencedRelation: "external_catalog_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_methodologies: {
+        Row: {
+          active: boolean
+          allowed_units: Json
+          checksum: string | null
+          created_at: string
+          id: string
+          internal_code: string
+          issuing_body: string | null
+          methodology_type: string | null
+          name: string
+          parameters_schema: Json
+          source_id: string | null
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+          version: string | null
+        }
+        Insert: {
+          active?: boolean
+          allowed_units?: Json
+          checksum?: string | null
+          created_at?: string
+          id?: string
+          internal_code: string
+          issuing_body?: string | null
+          methodology_type?: string | null
+          name: string
+          parameters_schema?: Json
+          source_id?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          version?: string | null
+        }
+        Update: {
+          active?: boolean
+          allowed_units?: Json
+          checksum?: string | null
+          created_at?: string
+          id?: string
+          internal_code?: string
+          issuing_body?: string | null
+          methodology_type?: string | null
+          name?: string
+          parameters_schema?: Json
+          source_id?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_methodologies_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "legal_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       beta_feedback: {
         Row: {
           category: string
@@ -1521,6 +1649,48 @@ export type Database = {
         }
         Relationships: []
       }
+      external_catalog_versions: {
+        Row: {
+          catalog_type: Database["public"]["Enums"]["catalog_type_enum"]
+          checksum: string | null
+          created_at: string
+          id: string
+          published_at: string | null
+          source_url: string | null
+          status: string
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+          version_name: string
+        }
+        Insert: {
+          catalog_type: Database["public"]["Enums"]["catalog_type_enum"]
+          checksum?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          version_name: string
+        }
+        Update: {
+          catalog_type?: Database["public"]["Enums"]["catalog_type_enum"]
+          checksum?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          version_name?: string
+        }
+        Relationships: []
+      }
       feature_access: {
         Row: {
           company_id: string | null
@@ -1816,6 +1986,390 @@ export type Database = {
           },
         ]
       }
+      legal_conflicts: {
+        Row: {
+          conflict_code: string
+          created_at: string
+          description: string | null
+          id: string
+          requires_human_review: boolean
+          resolution_note: string | null
+          resolved_at: string | null
+          severity: string
+          status: Database["public"]["Enums"]["legal_conflict_record_status_enum"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          conflict_code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          requires_human_review?: boolean
+          resolution_note?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: Database["public"]["Enums"]["legal_conflict_record_status_enum"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          conflict_code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          requires_human_review?: boolean
+          resolution_note?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: Database["public"]["Enums"]["legal_conflict_record_status_enum"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      legal_rule_audit_log: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          new_state: Json | null
+          previous_state: Json | null
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          new_state?: Json | null
+          previous_state?: Json | null
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          new_state?: Json | null
+          previous_state?: Json | null
+        }
+        Relationships: []
+      }
+      legal_rule_conflicts: {
+        Row: {
+          created_at: string
+          id: string
+          legal_conflict_id: string
+          legal_rule_version_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          legal_conflict_id: string
+          legal_rule_version_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          legal_conflict_id?: string
+          legal_rule_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_rule_conflicts_legal_conflict_id_fkey"
+            columns: ["legal_conflict_id"]
+            isOneToOne: false
+            referencedRelation: "legal_conflicts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_rule_conflicts_legal_rule_version_id_fkey"
+            columns: ["legal_rule_version_id"]
+            isOneToOne: false
+            referencedRelation: "legal_rule_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_rule_source_links: {
+        Row: {
+          created_at: string
+          id: string
+          legal_rule_version_id: string
+          legal_source_id: string
+          source_role: Database["public"]["Enums"]["legal_source_role_enum"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          legal_rule_version_id: string
+          legal_source_id: string
+          source_role: Database["public"]["Enums"]["legal_source_role_enum"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          legal_rule_version_id?: string
+          legal_source_id?: string
+          source_role?: Database["public"]["Enums"]["legal_source_role_enum"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_rule_source_links_legal_rule_version_id_fkey"
+            columns: ["legal_rule_version_id"]
+            isOneToOne: false
+            referencedRelation: "legal_rule_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_rule_source_links_legal_source_id_fkey"
+            columns: ["legal_source_id"]
+            isOneToOne: false
+            referencedRelation: "legal_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_rule_versions: {
+        Row: {
+          authority_context: Json
+          automation_level: Database["public"]["Enums"]["rule_automation_level_enum"]
+          canonical_payload: Json | null
+          created_at: string
+          created_by: string | null
+          criterion: Database["public"]["Enums"]["rule_criterion_enum"] | null
+          epc_behavior: Json
+          epi_behavior: Json
+          evaluation_type: string | null
+          human_confirmation_required: boolean
+          id: string
+          judicial_exception: boolean
+          legal_conflict_status: Database["public"]["Enums"]["legal_conflict_status_enum"]
+          legal_rule_id: string
+          manifest_version: string | null
+          methodology_id: string | null
+          operator: string | null
+          outcome_spec: Json
+          parameter: string | null
+          primary_source_id: string | null
+          production_approved: boolean
+          rule_checksum: string | null
+          seed_status: Database["public"]["Enums"]["rule_seed_status_enum"]
+          temporal_change_type: string | null
+          threshold_secondary: number | null
+          threshold_value: number | null
+          unit: string | null
+          valid_from: string
+          valid_to: string | null
+          version_number: number
+        }
+        Insert: {
+          authority_context?: Json
+          automation_level?: Database["public"]["Enums"]["rule_automation_level_enum"]
+          canonical_payload?: Json | null
+          created_at?: string
+          created_by?: string | null
+          criterion?: Database["public"]["Enums"]["rule_criterion_enum"] | null
+          epc_behavior?: Json
+          epi_behavior?: Json
+          evaluation_type?: string | null
+          human_confirmation_required?: boolean
+          id?: string
+          judicial_exception?: boolean
+          legal_conflict_status?: Database["public"]["Enums"]["legal_conflict_status_enum"]
+          legal_rule_id: string
+          manifest_version?: string | null
+          methodology_id?: string | null
+          operator?: string | null
+          outcome_spec?: Json
+          parameter?: string | null
+          primary_source_id?: string | null
+          production_approved?: boolean
+          rule_checksum?: string | null
+          seed_status?: Database["public"]["Enums"]["rule_seed_status_enum"]
+          temporal_change_type?: string | null
+          threshold_secondary?: number | null
+          threshold_value?: number | null
+          unit?: string | null
+          valid_from: string
+          valid_to?: string | null
+          version_number: number
+        }
+        Update: {
+          authority_context?: Json
+          automation_level?: Database["public"]["Enums"]["rule_automation_level_enum"]
+          canonical_payload?: Json | null
+          created_at?: string
+          created_by?: string | null
+          criterion?: Database["public"]["Enums"]["rule_criterion_enum"] | null
+          epc_behavior?: Json
+          epi_behavior?: Json
+          evaluation_type?: string | null
+          human_confirmation_required?: boolean
+          id?: string
+          judicial_exception?: boolean
+          legal_conflict_status?: Database["public"]["Enums"]["legal_conflict_status_enum"]
+          legal_rule_id?: string
+          manifest_version?: string | null
+          methodology_id?: string | null
+          operator?: string | null
+          outcome_spec?: Json
+          parameter?: string | null
+          primary_source_id?: string | null
+          production_approved?: boolean
+          rule_checksum?: string | null
+          seed_status?: Database["public"]["Enums"]["rule_seed_status_enum"]
+          temporal_change_type?: string | null
+          threshold_secondary?: number | null
+          threshold_value?: number | null
+          unit?: string | null
+          valid_from?: string
+          valid_to?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_rule_versions_legal_rule_id_fkey"
+            columns: ["legal_rule_id"]
+            isOneToOne: false
+            referencedRelation: "legal_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_rule_versions_methodology_id_fkey"
+            columns: ["methodology_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_methodologies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_rule_versions_primary_source_id_fkey"
+            columns: ["primary_source_id"]
+            isOneToOne: false
+            referencedRelation: "legal_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_rules: {
+        Row: {
+          active: boolean
+          agent_id: string | null
+          authority_type:
+            | Database["public"]["Enums"]["legal_authority_type_enum"]
+            | null
+          automation_level: Database["public"]["Enums"]["rule_automation_level_enum"]
+          created_at: string
+          description: string | null
+          domain: Database["public"]["Enums"]["legal_rule_domain_enum"]
+          id: string
+          legal_effect_scope: Json
+          rule_key: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          agent_id?: string | null
+          authority_type?:
+            | Database["public"]["Enums"]["legal_authority_type_enum"]
+            | null
+          automation_level?: Database["public"]["Enums"]["rule_automation_level_enum"]
+          created_at?: string
+          description?: string | null
+          domain: Database["public"]["Enums"]["legal_rule_domain_enum"]
+          id?: string
+          legal_effect_scope?: Json
+          rule_key: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          agent_id?: string | null
+          authority_type?:
+            | Database["public"]["Enums"]["legal_authority_type_enum"]
+            | null
+          automation_level?: Database["public"]["Enums"]["rule_automation_level_enum"]
+          created_at?: string
+          description?: string | null
+          domain?: Database["public"]["Enums"]["legal_rule_domain_enum"]
+          id?: string
+          legal_effect_scope?: Json
+          rule_key?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_rules_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "occupational_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_sources: {
+        Row: {
+          authority_level: string | null
+          authority_type: Database["public"]["Enums"]["legal_authority_type_enum"]
+          checksum: string | null
+          created_at: string
+          description: string | null
+          effective_from: string | null
+          effective_to: string | null
+          id: string
+          issuing_body: string | null
+          number: string | null
+          official_url: string | null
+          publication_date: string | null
+          title: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          authority_level?: string | null
+          authority_type: Database["public"]["Enums"]["legal_authority_type_enum"]
+          checksum?: string | null
+          created_at?: string
+          description?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          id?: string
+          issuing_body?: string | null
+          number?: string | null
+          official_url?: string | null
+          publication_date?: string | null
+          title: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          authority_level?: string | null
+          authority_type?: Database["public"]["Enums"]["legal_authority_type_enum"]
+          checksum?: string | null
+          created_at?: string
+          description?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          id?: string
+          issuing_body?: string | null
+          number?: string | null
+          official_url?: string | null
+          publication_date?: string | null
+          title?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       licensed_partners: {
         Row: {
           approved_at: string | null
@@ -1930,6 +2484,42 @@ export type Database = {
           page_path?: string | null
           success?: boolean
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      occupational_agents: {
+        Row: {
+          active: boolean
+          category: Database["public"]["Enums"]["agent_category_enum"]
+          created_at: string
+          description: string | null
+          id: string
+          internal_code: string
+          name: string
+          synonyms: Json
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category: Database["public"]["Enums"]["agent_category_enum"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          internal_code: string
+          name: string
+          synonyms?: Json
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: Database["public"]["Enums"]["agent_category_enum"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          internal_code?: string
+          name?: string
+          synonyms?: Json
+          updated_at?: string
         }
         Relationships: []
       }
@@ -4428,6 +5018,10 @@ export type Database = {
         Args: { _feature_key: string; _user_id: string }
         Returns: boolean
       }
+      build_legal_rule_canonical_payload: {
+        Args: { _version_id: string }
+        Returns: Json
+      }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       company_has_no_sst: { Args: { _company_id: string }; Returns: boolean }
       company_has_smart_ouvidoria: {
@@ -4497,6 +5091,7 @@ export type Database = {
         Args: { _module_id: string; _user_id: string }
         Returns: boolean
       }
+      legal_checksum: { Args: { payload: Json }; Returns: string }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }
       user_has_aep_access: {
@@ -4522,6 +5117,12 @@ export type Database = {
       }
     }
     Enums: {
+      agent_category_enum:
+        | "PHYSICAL"
+        | "CHEMICAL"
+        | "BIOLOGICAL"
+        | "ASSOCIATION"
+        | "OTHER"
       app_role:
         | "admin"
         | "company"
@@ -4532,6 +5133,58 @@ export type Database = {
         | "sales"
         | "sector_viewer"
       billing_cycle_enum: "monthly" | "quarterly" | "annual"
+      catalog_type_enum:
+        | "ESOCIAL_TABLE_24"
+        | "DEC_3048_ANNEX_IV"
+        | "HISTORICAL_DECREE_53831"
+        | "HISTORICAL_DECREE_83080"
+        | "NR15"
+        | "NR16"
+        | "CAS"
+        | "OTHER"
+      legal_authority_type_enum:
+        | "LAW"
+        | "DECREE"
+        | "ADMINISTRATIVE_INSTRUCTION"
+        | "ESOCIAL_RULE"
+        | "TECHNICAL_STANDARD"
+        | "STF_PRECEDENT"
+        | "STJ_PRECEDENT"
+        | "TNU_PRECEDENT"
+        | "OTHER_JUDICIAL_PRECEDENT"
+      legal_conflict_record_status_enum:
+        | "OPEN"
+        | "UNDER_REVIEW"
+        | "RESOLVED"
+        | "SUPERSEDED"
+      legal_conflict_status_enum:
+        | "NONE"
+        | "RULE_WITH_JUDICIAL_EXCEPTION"
+        | "LEGAL_CONFLICT_REQUIRES_REVIEW"
+        | "NOT_PARAMETERIZED"
+      legal_rule_domain_enum:
+        | "SOCIAL_SECURITY"
+        | "NR15_INSALUBRIDADE"
+        | "NR16_PERICULOSIDADE"
+      legal_source_role_enum:
+        | "PRIMARY"
+        | "COMPLEMENTARY"
+        | "METHODOLOGICAL"
+        | "JUDICIAL_EXCEPTION"
+        | "ESOCIAL_MAPPING"
+        | "HISTORICAL"
+      rule_automation_level_enum:
+        | "SAFE_TO_AUTOMATE"
+        | "AUTOMATE_WITH_HUMAN_CONFIRMATION"
+        | "HUMAN_DECISION_REQUIRED"
+        | "NOT_SAFE_TO_AUTOMATE"
+      rule_criterion_enum: "QUANTITATIVE" | "QUALITATIVE" | "MIXED"
+      rule_seed_status_enum:
+        | "DRAFT"
+        | "REVIEWED"
+        | "APPROVED_FOR_SEED"
+        | "REFERENCE_ONLY"
+        | "BLOCKED"
       subscription_status_enum:
         | "pending"
         | "active"
@@ -4673,6 +5326,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      agent_category_enum: [
+        "PHYSICAL",
+        "CHEMICAL",
+        "BIOLOGICAL",
+        "ASSOCIATION",
+        "OTHER",
+      ],
       app_role: [
         "admin",
         "company",
@@ -4684,6 +5344,66 @@ export const Constants = {
         "sector_viewer",
       ],
       billing_cycle_enum: ["monthly", "quarterly", "annual"],
+      catalog_type_enum: [
+        "ESOCIAL_TABLE_24",
+        "DEC_3048_ANNEX_IV",
+        "HISTORICAL_DECREE_53831",
+        "HISTORICAL_DECREE_83080",
+        "NR15",
+        "NR16",
+        "CAS",
+        "OTHER",
+      ],
+      legal_authority_type_enum: [
+        "LAW",
+        "DECREE",
+        "ADMINISTRATIVE_INSTRUCTION",
+        "ESOCIAL_RULE",
+        "TECHNICAL_STANDARD",
+        "STF_PRECEDENT",
+        "STJ_PRECEDENT",
+        "TNU_PRECEDENT",
+        "OTHER_JUDICIAL_PRECEDENT",
+      ],
+      legal_conflict_record_status_enum: [
+        "OPEN",
+        "UNDER_REVIEW",
+        "RESOLVED",
+        "SUPERSEDED",
+      ],
+      legal_conflict_status_enum: [
+        "NONE",
+        "RULE_WITH_JUDICIAL_EXCEPTION",
+        "LEGAL_CONFLICT_REQUIRES_REVIEW",
+        "NOT_PARAMETERIZED",
+      ],
+      legal_rule_domain_enum: [
+        "SOCIAL_SECURITY",
+        "NR15_INSALUBRIDADE",
+        "NR16_PERICULOSIDADE",
+      ],
+      legal_source_role_enum: [
+        "PRIMARY",
+        "COMPLEMENTARY",
+        "METHODOLOGICAL",
+        "JUDICIAL_EXCEPTION",
+        "ESOCIAL_MAPPING",
+        "HISTORICAL",
+      ],
+      rule_automation_level_enum: [
+        "SAFE_TO_AUTOMATE",
+        "AUTOMATE_WITH_HUMAN_CONFIRMATION",
+        "HUMAN_DECISION_REQUIRED",
+        "NOT_SAFE_TO_AUTOMATE",
+      ],
+      rule_criterion_enum: ["QUANTITATIVE", "QUALITATIVE", "MIXED"],
+      rule_seed_status_enum: [
+        "DRAFT",
+        "REVIEWED",
+        "APPROVED_FOR_SEED",
+        "REFERENCE_ONLY",
+        "BLOCKED",
+      ],
       subscription_status_enum: [
         "pending",
         "active",

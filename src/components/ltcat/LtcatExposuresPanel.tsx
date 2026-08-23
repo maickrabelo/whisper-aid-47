@@ -30,16 +30,19 @@ interface Props {
 }
 
 const EXPOSURE_TYPES: Array<{ value: string; label: string }> = [
-  { value: 'HABITUAL_PERMANENTE', label: 'Habitual e permanente' },
-  { value: 'INTERMITENTE', label: 'Intermitente' },
-  { value: 'EVENTUAL', label: 'Eventual' },
+  { value: 'habitual_permanente', label: 'Habitual e permanente' },
+  { value: 'intermitente', label: 'Intermitente' },
+  { value: 'eventual', label: 'Eventual' },
 ];
 
 const CONCLUSION_LABELS: Record<string, string> = {
   PENDING: 'Pendente',
-  CONCLUIDO: 'Concluído',
+  RECONHECIDO: 'Reconhecido',
+  NAO_RECONHECIDO: 'Não reconhecido',
   REVISAO_HUMANA: 'Revisão humana',
 };
+
+const isConcluded = (s: string) => s === 'RECONHECIDO' || s === 'NAO_RECONHECIDO';
 
 const triState = (v: string) => (v === '' ? undefined : v);
 

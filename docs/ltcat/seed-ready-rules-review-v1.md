@@ -3,10 +3,11 @@
 
 | Campo | Valor |
 |---|---|
-| Versão | 1.0 |
+| Versão | 1.1 |
 | Data | 23/08/2026 |
 | Base | `manifesto-regras-juridicas-v2.1.md` (normalização) + `rule-implementation-readiness-v1.md` (matriz de prontidão) |
 | Escopo | Somente as **29 regras** classificadas `seed_ready = YES` na matriz v1 |
+| Revisão 1.1 | 23/08/2026 — resolução dos 4 mapeamentos parciais da Tabela 24 (RAD_ION_RULE, PRESS_HIPER_RULE, ASSOC_MIN_SUB_AF, ASSOC_MIN_SUB_FP) na fonte oficial do eSocial; adoção da modelagem condicional 1:N em `agent_mappings` |
 | Status | Documento de revisão nominal — **NÃO autoriza seed, migration, tabela, código, `resolveLegalRule` ou alteração de frontend** |
 
 ---
@@ -2581,7 +2582,26 @@ Permanecem `PENDING_LEGAL_VALIDATION` as nuances do inteiro teor necessárias a 
 
 **Observações finais:**
 1. As 4 regras com `judicial_exception` (GEN_ANNEX_IV_SCOPE/C12, HEAT_V4/C6, VIB_QUALIT_PERF/C13, BIO_V2/C14) entram no seed **com o registro obrigatório da exceção** e desvio para revisão humana nos casos da órbita.
-2. As 4 regras com `mappings_confirmed = PARTIAL` (RAD_ION_RULE, PRESS_HIPER_RULE, ASSOC_MIN_SUB_AF, ASSOC_MIN_SUB_FP) entram no seed **sem** os códigos individuais da Tabela 24 — mapeamentos são externos e versionados, a complementar em rodada específica de extração da S-1.3.
+2. ~~As 4 regras com `mappings_confirmed = PARTIAL`~~ **RESOLVIDO na revisão 1.1 (23/08/2026):** RAD_ION_RULE, PRESS_HIPER_RULE, ASSOC_MIN_SUB_AF e ASSOC_MIN_SUB_FP tiveram seus mapeamentos da Tabela 24 confirmados na fonte oficial (ver "Nota de proveniência" abaixo) — não resta nenhum `PARTIAL_ESOCIAL_MAPPING` nesta revisão. RAD_ION_RULE e PRESS_HIPER_RULE entram no seed com **mapeamento condicional 1:N** (ver §"Regra de modelagem de mapeamentos" abaixo).
 3. `EPI_EFFECT_REQUIRES_CONTEXT` e `EXCEPTIONAL_LEGAL_OVERRIDE` têm `seed_ready = YES` **e** `HUMAN_DECISION_REQUIRED` simultaneamente — armazenamento confiável, decisão sempre humana.
 4. C15A resolvido nesta rodada (página oficial CJF/TNU); C15B permanece aberto sem efeito bloqueante.
 5. **Este documento não autoriza seed.** A Fase 2B permanece bloqueada até aprovação nominal desta revisão.
+
+---
+
+# REVISÃO 1.1 (23/08/2026) — RESOLUÇÃO DOS 4 MAPEAMENTOS PARCIAIS DA TABELA 24
+
+## Nota de proveniência — Tabela 24 (Agentes Nocivos e Atividades)
+
+Os códigos 02.01.006–013, 02.01.015–018, 04.01.001 e 04.01.002 foram conferidos **diretamente na consulta pública oficial das Tabelas do eSocial** (serviço oficial Serpro/gov.br — `https://www.gov.br/esocial/pt-br/tabelas-do-esocial/consulta-tabelas-do-esocial`, conteúdo servido por `frontend.esocial.gov.br`), acessada em **23/08/2026**. Todos os 12 códigos constam com **DTINICIO = 01/01/2014 e sem data-fim** (vigentes), nas descrições literais transcritas nos cards R22, R23, R25 e R26. O conteúdo corresponde à tabela de "Agentes Nocivos e Atividades — Aposentadoria Especial" referenciada pelo campo `codAgNoc` do evento S-2240 (leiaute S-1.3). *Nota de nomenclatura: na listagem atual da consulta pública, este conteúdo aparece rotulado como "Tabela 22"; os leiautes SST (Anexo II, S-1.x) o referenciam como "Tabela 24" — os códigos e descrições são idênticos. Registro meramente documental, sem impacto nos mapeamentos.*
+
+## Regra de modelagem de mapeamentos (`agent_mappings`)
+
+Nenhuma relação agente interno → Tabela 24 deve ser assumida como necessariamente 1:1. A estrutura de dados futura (`agent_mappings`) deverá admitir **1 agente interno → N códigos externos**, cada linha condicionada por:
+
+- `mapping_condition` — atividade, processo ou cenário de exposição que resolve o código;
+- `valid_from` / `valid_to` — período de vigência do próprio mapeamento;
+- `evidence_requirement` — evidência exigida para sustentar a escolha;
+- `selection_policy` — `AUTO_SUGGEST` (sugere código específico quando a condição é satisfeita) ou `HUMAN_REQUIRED` (nunca escolhe silenciosamente — aplica-se aos códigos genéricos 02.01.006 e 02.01.015).
+
+Quando a informação for insuficiente para resolver a condição, o motor retorna `REQUIRES_HUMAN_CONFIRMATION` com a lista de códigos candidatos — **nunca** seleciona um código por padrão.

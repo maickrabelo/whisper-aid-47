@@ -3,11 +3,12 @@
 
 | Campo | Valor |
 |---|---|
-| Versão | 1.0 |
+| Versão | 1.1 |
 | Data | 23/08/2026 |
 | Base | `manifesto-regras-juridicas-v2.1.md` (normalização de autoridade) |
 | Propósito | Uma linha por regra, com os atributos de autoridade e a decisão `seed_ready` |
 | Status | Documento de revisão — **não autoriza seed, migration ou código** |
+| Revisão 1.1 | 23/08/2026 — resolução dos 4 mapeamentos parciais da Tabela 24 (RAD_ION, PRESS_HIPER, ASSOC_MIN_SUB_AF/FP) na fonte oficial do eSocial; modelagem condicional 1:N em `agent_mappings` (nota §7.1) |
 
 **Critérios de `seed_ready = YES` (todos obrigatórios):** (1) fonte primária confirmada; (2) artigo/item confirmado; (3) período confirmado; (4) metodologia confirmada quando necessária; (5) consequência definida; (6) nenhum conflito jurídico bloqueante. Qualquer falha → `NO`.
 
@@ -105,11 +106,13 @@ Bloqueios comuns a todas as fichas: códigos individuais da Tabela 24 grupo 01 `
 
 | rule_key | authority_type | legal_effect_scope | valid_from | valid_to | primary_source | conflicts | automation_level | seed_ready |
 |---|---|---|---|---|---|---|---|---|
-| RAD_ION_RULE | DECREE + TECHNICAL_STANDARD (CNEN) | INSS_ADMINISTRATIVE, TECHNICAL_ASSESSMENT | 06/05/1999 | vigente | Anexo IV, 2.0.3 ✅ (rol de atividades); dosimetria CNEN | — (códigos Tabela 24 02.01.006–013 `PENDING` — mapeamento externo, não bloqueia a regra) | PARTIALLY_PARAMETERIZABLE | **YES** |
-| PRESS_HIPER_RULE | DECREE | INSS_ADMINISTRATIVE | 06/05/1999 | vigente | Anexo IV, 2.0.5 ✅ (3 atividades) | — | PARTIALLY_PARAMETERIZABLE | **YES** |
+| RAD_ION_RULE | DECREE + TECHNICAL_STANDARD (CNEN) | INSS_ADMINISTRATIVE, TECHNICAL_ASSESSMENT | 06/05/1999 | vigente | Anexo IV, 2.0.3 ✅ (rol de atividades); dosimetria CNEN; Tabela 24 02.01.006–013 ✅ (condicional 1:N — ver nota §7.1) | — | PARTIALLY_PARAMETERIZABLE | **YES** |
+| PRESS_HIPER_RULE | DECREE | INSS_ADMINISTRATIVE | 06/05/1999 | vigente | Anexo IV, 2.0.5 ✅ (3 atividades); Tabela 24 02.01.015–018 ✅ (condicional 1:N — ver nota §7.1) | — | PARTIALLY_PARAMETERIZABLE | **YES** |
 | ASSOC_GENERAL | DECREE | INSS_ADMINISTRATIVE | 19/11/2003 | vigente | Dec. 4.882/2003, item 4.0.0 ✅ (menor tempo) | — | AUTOMATE_WITH_HUMAN_CONFIRMATION | **YES** |
-| ASSOC_MIN_SUB_AF | DECREE | INSS_ADMINISTRATIVE | 06/05/1999 | vigente | Anexo IV, 4.0.1 ✅ (**20 anos**) | — | PARTIALLY_PARAMETERIZABLE | **YES** |
-| ASSOC_MIN_SUB_FP | DECREE | INSS_ADMINISTRATIVE | 06/05/1999 | vigente | Anexo IV, 4.0.2 ✅ (**15 anos**) | — | PARTIALLY_PARAMETERIZABLE | **YES** |
+| ASSOC_MIN_SUB_AF | DECREE | INSS_ADMINISTRATIVE | 06/05/1999 | vigente | Anexo IV, 4.0.1 ✅ (**20 anos**); Tabela 24 04.01.001 ✅ | — | PARTIALLY_PARAMETERIZABLE | **YES** |
+| ASSOC_MIN_SUB_FP | DECREE | INSS_ADMINISTRATIVE | 06/05/1999 | vigente | Anexo IV, 4.0.2 ✅ (**15 anos**); Tabela 24 04.01.002 ✅ | — | PARTIALLY_PARAMETERIZABLE | **YES** |
+
+**§7.1 — Mapeamentos Tabela 24 resolvidos (revisão 1.1, 23/08/2026):** os 4 mapeamentos antes classificados como parciais foram confirmados na consulta pública oficial das Tabelas do eSocial (DTINICIO 01/01/2014, sem data-fim). `RAD_ION_RULE` e `PRESS_HIPER_RULE` adotam **mapeamento condicional 1:N** (`mapping_condition` por atividade/cenário): RAD_ION → 02.01.006–013 (8 códigos; o genérico 02.01.006 nunca é selecionado silenciosamente) e PRESS_HIPER → 02.01.016/017/018 por atividade + 02.01.015 genérico (sempre com confirmação humana). `ASSOC_MIN_SUB_AF` → 04.01.001 e `ASSOC_MIN_SUB_FP` → 04.01.002 (1:1 confirmados). Detalhamento completo em `seed-ready-rules-review-v1.md` (revisão 1.1). **Não resta nenhum `PARTIAL_ESOCIAL_MAPPING` nesta matriz.**
 
 ## 8. AGENTES HISTÓRICOS FORA DO ANEXO IV E EXCEÇÕES JUDICIAIS
 

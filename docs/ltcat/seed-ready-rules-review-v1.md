@@ -1967,9 +1967,19 @@ outcome_spec: funcao dentro das 3 atividades -> RULE_MATCHED com confirmacao hum
 | Código interno | `PHYS_PRESS_HIPER` |
 | Código Anexo IV | 2.0.5 |
 | Descrição Anexo IV | "Pressão Atmosférica Anormal" (hiperbárica) |
-| Código Tabela 24 | 02.01.015–018 — `PENDING` (confirmar códigos; mapeamento externo, **não bloqueia a regra**) |
-| Descrição oficial Tabela 24 | Pressões hiperbáricas — subcategorias |
-| Vigências dos mapeamentos | Anexo IV 2.0.5: 1999-05-06 → vigente · Tabela 24: S-1.3 (jan/2023 → vigente) |
+| Código Tabela 24 | **RESOLVIDO ✅ (23/08/2026)** — mapeamento condicional 1:N confirmado na fonte oficial (ver tabela abaixo) |
+| Vigências dos mapeamentos | Anexo IV 2.0.5: 1999-05-06 → vigente · Tabela 24 (conteúdo de Agentes Nocivos): DTINICIO 01/01/2014, sem data-fim → vigente |
+
+**Mapeamento condicional `PHYS_PRESS_HIPER` → Tabela 24** (1 agente interno → N códigos externos, resolvidos pela atividade; descrições literais da consulta pública oficial, 23/08/2026):
+
+| mapping_condition (atividade) | table24_code | Descrição oficial (literal) | Correspondência Anexo IV 2.0.5 |
+|---|---|---|---|
+| Trabalho em caixões ou câmaras hiperbáricas | `02.01.016` | "Trabalhos em caixões ou câmaras hiperbáricas" | atividade "caixões/câmaras hiperbáricas" |
+| Trabalho em tubulões ou túneis sob ar comprimido | `02.01.017` | "Trabalhos em tubulões ou túneis sob ar comprimido" | atividade "tubulões/túneis sob ar comprimido" |
+| Operações de mergulho | `02.01.018` | "Operações de mergulho com o uso de escafandros ou outros equipamentos" | atividade "mergulho" |
+| Pressão atmosférica anormal sem atividade específica identificada | `02.01.015` | "Pressão atmosférica anormal" | genérico — somente com confirmação humana |
+
+**Regra de seleção:** as 3 atividades do rol do item 2.0.5 resolvem diretamente para 02.01.016/017/018. O código genérico 02.01.015 **nunca é selecionado silenciosamente** → informação insuficiente implica `REQUIRES_HUMAN_CONFIRMATION` com a lista de candidatos.
 
 ### AUTOMAÇÃO
 ```yaml
@@ -1978,8 +1988,8 @@ automation_level: PARTIALLY_PARAMETERIZABLE
 human_confirmation_required: YES
 judicial_exception: NO
 legal_conflict: NONE
-engine_allowed_actions: [verificar funcao contra as 3 atividades, rotear para confirmacao humana]
-engine_forbidden_actions: [estender o rol por analogia, enquadrar sem confirmacao humana]
+engine_allowed_actions: [verificar funcao contra as 3 atividades, sugerir codigo Tabela 24 pelo mapping_condition, rotear para confirmacao humana]
+engine_forbidden_actions: [estender o rol por analogia, enquadrar sem confirmacao humana, selecionar silenciosamente o generico 02.01.015]
 ```
 
 ### RESULTADOS DO MOTOR

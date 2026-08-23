@@ -281,8 +281,8 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
 
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge
-                    variant={e.conclusion_status === 'CONCLUIDO' ? 'default' : 'secondary'}
-                    className={e.conclusion_status === 'CONCLUIDO' ? 'bg-emerald-600 hover:bg-emerald-600' : ''}
+                    variant={isConcluded(e.conclusion_status) ? 'default' : 'secondary'}
+                    className={e.conclusion_status === 'RECONHECIDO' ? 'bg-emerald-600 hover:bg-emerald-600' : ''}
                   >
                     {CONCLUSION_LABELS[e.conclusion_status] || e.conclusion_status}
                   </Badge>
@@ -482,7 +482,8 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
               <Select value={concStatus} onValueChange={setConcStatus}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CONCLUIDO">Concluído</SelectItem>
+                  <SelectItem value="RECONHECIDO">Reconhecido (gera direito previdenciário)</SelectItem>
+                  <SelectItem value="NAO_RECONHECIDO">Não reconhecido</SelectItem>
                   <SelectItem value="REVISAO_HUMANA">Revisão humana necessária</SelectItem>
                 </SelectContent>
               </Select>

@@ -1871,9 +1871,23 @@ outcome_spec: atividade no rol + dosimetria/laudo de radioprotecao -> RULE_MATCH
 | Código interno | `PHYS_RAD_ION` |
 | Código Anexo IV | 2.0.3 |
 | Descrição Anexo IV | "Radiações Ionizantes" |
-| Código Tabela 24 | 02.01.006–013 — `PENDING` (confirmar códigos individuais na S-1.3; mapeamento externo, **não bloqueia a regra**) |
-| Descrição oficial Tabela 24 | Radiações ionizantes — subcategorias (8 códigos) |
-| Vigências dos mapeamentos | Anexo IV 2.0.3: 1999-05-06 → vigente · Tabela 24: S-1.3 (jan/2023 → vigente) |
+| Código Tabela 24 | **RESOLVIDO ✅ (23/08/2026)** — mapeamento condicional 1:N confirmado na fonte oficial (ver tabela abaixo) |
+| Vigências dos mapeamentos | Anexo IV 2.0.3: 1999-05-06 → vigente · Tabela 24 (conteúdo de Agentes Nocivos): DTINICIO 01/01/2014, sem data-fim → vigente |
+
+**Mapeamento condicional `PHYS_RAD_ION` → Tabela 24** (1 agente interno → N códigos externos, resolvidos pela atividade/cenário de exposição; descrições transcritas literalmente da consulta pública oficial das Tabelas do eSocial, acessada em 23/08/2026 — ver §"Nota de proveniência Tabela 24" no final deste documento):
+
+| mapping_condition (atividade/cenário) | table24_code | Descrição oficial (literal) |
+|---|---|---|
+| Exposição a radiações ionizantes sem atividade específica identificada | `02.01.006` | "Radiações ionizantes" |
+| Extração/beneficiamento de minerais radioativos | `02.01.007` | "Extração e beneficiamento de minerais radioativos" |
+| Minerações com exposição ao radônio | `02.01.008` | "Atividades em minerações com exposição ao radônio" |
+| Manutenção/supervisão em unidades de minerais radioativos | `02.01.009` | "Realização de manutenção e supervisão em unidades de extração, tratamento e beneficiamento de minerais radioativos com exposição às radiações ionizantes" |
+| Reatores nucleares ou fontes radioativas | `02.01.010` | "Operações com reatores nucleares ou com fontes radioativas" |
+| Exposição a raios Alfa/Beta/Gama/X, nêutrons e substâncias radioativas (fins industriais, terapêuticos, diagnósticos) | `02.01.011` | "Trabalhos realizados com exposição aos raios Alfa, Beta, Gama e X, aos nêutrons e às substâncias radioativas para fins industriais, terapêuticos e diagnósticos" |
+| Fabricação/manipulação de produtos radioativos | `02.01.012` | "Fabricação e manipulação de produtos radioativos" |
+| Pesquisas e estudos com radiações ionizantes | `02.01.013` | "Pesquisas e estudos com radiações ionizantes em laboratórios" |
+
+**Regra de seleção:** a atividade concreta determina o código mais específico. Quando a informação for insuficiente para selecionar um código, o motor **não escolhe silenciosamente** (nem mesmo o genérico 02.01.006) → `REQUIRES_HUMAN_CONFIRMATION` com a lista de candidatos.
 
 ### AUTOMAÇÃO
 ```yaml
@@ -1882,8 +1896,8 @@ automation_level: PARTIALLY_PARAMETERIZABLE
 human_confirmation_required: YES
 judicial_exception: NO
 legal_conflict: NONE
-engine_allowed_actions: [verificar atividade contra o rol 2.0.3, exigir evidencia dosimetrica, rotear para confirmacao humana]
-engine_forbidden_actions: [enquadrar fora do rol sem revisao, inferir dose sem dosimetria, emitir codigo Tabela 24 individual antes da confirmacao dos codigos 02.01.006-013]
+engine_allowed_actions: [verificar atividade contra o rol 2.0.3, exigir evidencia dosimetrica, sugerir codigo Tabela 24 pelo mapping_condition, rotear para confirmacao humana]
+engine_forbidden_actions: [enquadrar fora do rol sem revisao, inferir dose sem dosimetria, selecionar silenciosamente codigo Tabela 24 (inclusive o generico 02.01.006) sem confirmacao humana]
 ```
 
 ### RESULTADOS DO MOTOR

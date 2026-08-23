@@ -2502,6 +2502,400 @@ export type Database = {
         }
         Relationships: []
       }
+      ltcat_documents: {
+        Row: {
+          additional_addresses: Json
+          company_id: string
+          created_at: string
+          created_by: string | null
+          emission_date: string | null
+          id: string
+          notes: string | null
+          org_responsible: Json
+          parent_id: string | null
+          published_at: string | null
+          reference_period_end: string | null
+          reference_period_start: string | null
+          responsible: Json
+          status: string
+          title: string
+          updated_at: string
+          validated_at: string | null
+          validated_payload: Json | null
+          version_number: number
+        }
+        Insert: {
+          additional_addresses?: Json
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          emission_date?: string | null
+          id?: string
+          notes?: string | null
+          org_responsible?: Json
+          parent_id?: string | null
+          published_at?: string | null
+          reference_period_end?: string | null
+          reference_period_start?: string | null
+          responsible?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_payload?: Json | null
+          version_number?: number
+        }
+        Update: {
+          additional_addresses?: Json
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          emission_date?: string | null
+          id?: string
+          notes?: string | null
+          org_responsible?: Json
+          parent_id?: string | null
+          published_at?: string | null
+          reference_period_end?: string | null
+          reference_period_start?: string | null
+          responsible?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_payload?: Json | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ltcat_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ltcat_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ltcat_documents_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ltcat_engine_consults: {
+        Row: {
+          consulted_by: string | null
+          created_at: string
+          exposure_id: string | null
+          id: string
+          input: Json
+          ltcat_id: string
+          output: Json
+          rule_key: string
+        }
+        Insert: {
+          consulted_by?: string | null
+          created_at?: string
+          exposure_id?: string | null
+          id?: string
+          input?: Json
+          ltcat_id: string
+          output?: Json
+          rule_key: string
+        }
+        Update: {
+          consulted_by?: string | null
+          created_at?: string
+          exposure_id?: string | null
+          id?: string
+          input?: Json
+          ltcat_id?: string
+          output?: Json
+          rule_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ltcat_engine_consults_exposure_id_fkey"
+            columns: ["exposure_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_exposures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ltcat_engine_consults_ltcat_id_fkey"
+            columns: ["ltcat_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ltcat_epi_epc: {
+        Row: {
+          ca_number: string | null
+          created_at: string
+          description: string
+          effective: boolean
+          exposure_id: string | null
+          ghe_id: string | null
+          id: string
+          ltcat_id: string
+          notes: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          ca_number?: string | null
+          created_at?: string
+          description: string
+          effective?: boolean
+          exposure_id?: string | null
+          ghe_id?: string | null
+          id?: string
+          ltcat_id: string
+          notes?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          ca_number?: string | null
+          created_at?: string
+          description?: string
+          effective?: boolean
+          exposure_id?: string | null
+          ghe_id?: string | null
+          id?: string
+          ltcat_id?: string
+          notes?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ltcat_epi_epc_exposure_id_fkey"
+            columns: ["exposure_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_exposures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ltcat_epi_epc_ghe_id_fkey"
+            columns: ["ghe_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_ghes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ltcat_epi_epc_ltcat_id_fkey"
+            columns: ["ltcat_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ltcat_evaluations: {
+        Row: {
+          calibration_date: string | null
+          created_at: string
+          evaluation_date: string | null
+          exposure_id: string
+          id: string
+          instrument_name: string | null
+          instrument_serial: string | null
+          ltcat_id: string
+          methodology_code: string | null
+          notes: string | null
+          report_reference: string | null
+          result_value: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          calibration_date?: string | null
+          created_at?: string
+          evaluation_date?: string | null
+          exposure_id: string
+          id?: string
+          instrument_name?: string | null
+          instrument_serial?: string | null
+          ltcat_id: string
+          methodology_code?: string | null
+          notes?: string | null
+          report_reference?: string | null
+          result_value?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          calibration_date?: string | null
+          created_at?: string
+          evaluation_date?: string | null
+          exposure_id?: string
+          id?: string
+          instrument_name?: string | null
+          instrument_serial?: string | null
+          ltcat_id?: string
+          methodology_code?: string | null
+          notes?: string | null
+          report_reference?: string | null
+          result_value?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ltcat_evaluations_exposure_id_fkey"
+            columns: ["exposure_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_exposures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ltcat_evaluations_ltcat_id_fkey"
+            columns: ["ltcat_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ltcat_exposures: {
+        Row: {
+          agent_code: string
+          agent_name: string
+          concluded_at: string | null
+          conclusion_status: string
+          conclusion_text: string | null
+          created_at: string
+          engine_consulted_at: string | null
+          engine_input: Json | null
+          engine_output: Json | null
+          engine_rule_key: string | null
+          exposure_type: string | null
+          ghe_id: string
+          id: string
+          ltcat_id: string
+          measured_value: number | null
+          notes: string | null
+          source: string
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_code: string
+          agent_name: string
+          concluded_at?: string | null
+          conclusion_status?: string
+          conclusion_text?: string | null
+          created_at?: string
+          engine_consulted_at?: string | null
+          engine_input?: Json | null
+          engine_output?: Json | null
+          engine_rule_key?: string | null
+          exposure_type?: string | null
+          ghe_id: string
+          id?: string
+          ltcat_id: string
+          measured_value?: number | null
+          notes?: string | null
+          source?: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_code?: string
+          agent_name?: string
+          concluded_at?: string | null
+          conclusion_status?: string
+          conclusion_text?: string | null
+          created_at?: string
+          engine_consulted_at?: string | null
+          engine_input?: Json | null
+          engine_output?: Json | null
+          engine_rule_key?: string | null
+          exposure_type?: string | null
+          ghe_id?: string
+          id?: string
+          ltcat_id?: string
+          measured_value?: number | null
+          notes?: string | null
+          source?: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ltcat_exposures_ghe_id_fkey"
+            columns: ["ghe_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_ghes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ltcat_exposures_ltcat_id_fkey"
+            columns: ["ltcat_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ltcat_ghes: {
+        Row: {
+          activities_description: string | null
+          created_at: string
+          id: string
+          ltcat_id: string
+          name: string
+          roles_meta: Json
+          sector: string | null
+          sort_order: number
+          updated_at: string
+          worker_count: number
+        }
+        Insert: {
+          activities_description?: string | null
+          created_at?: string
+          id?: string
+          ltcat_id: string
+          name: string
+          roles_meta?: Json
+          sector?: string | null
+          sort_order?: number
+          updated_at?: string
+          worker_count?: number
+        }
+        Update: {
+          activities_description?: string | null
+          created_at?: string
+          id?: string
+          ltcat_id?: string
+          name?: string
+          roles_meta?: Json
+          sector?: string | null
+          sort_order?: number
+          updated_at?: string
+          worker_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ltcat_ghes_ltcat_id_fkey"
+            columns: ["ltcat_id"]
+            isOneToOne: false
+            referencedRelation: "ltcat_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       occupational_agents: {
         Row: {
           active: boolean
@@ -5115,10 +5509,12 @@ export type Database = {
         Args: { _entity_id: string; _entity_type: string }
         Returns: boolean
       }
+      ltcat_create_revision: { Args: { _ltcat_id: string }; Returns: string }
       ltcat_find_applicable_rules: {
         Args: { _agent_code: string; _exposure_date: string }
         Returns: Json
       }
+      ltcat_user_can_access: { Args: { _company_id: string }; Returns: boolean }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }
       resolve_legal_rule: {

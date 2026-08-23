@@ -5115,8 +5115,16 @@ export type Database = {
         Args: { _entity_id: string; _entity_type: string }
         Returns: boolean
       }
+      ltcat_find_applicable_rules: {
+        Args: { _agent_code: string; _exposure_date: string }
+        Returns: Json
+      }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }
+      resolve_legal_rule: {
+        Args: { _input?: Json; _rule_key: string }
+        Returns: Json
+      }
       user_has_aep_access: {
         Args: { _aep_id: string; _user_id: string }
         Returns: boolean
@@ -5175,6 +5183,7 @@ export type Database = {
         | "STJ_PRECEDENT"
         | "TNU_PRECEDENT"
         | "OTHER_JUDICIAL_PRECEDENT"
+        | "INTERNAL_GOVERNANCE_RULE"
       legal_conflict_record_status_enum:
         | "OPEN"
         | "UNDER_REVIEW"
@@ -5387,6 +5396,7 @@ export const Constants = {
         "STJ_PRECEDENT",
         "TNU_PRECEDENT",
         "OTHER_JUDICIAL_PRECEDENT",
+        "INTERNAL_GOVERNANCE_RULE",
       ],
       legal_conflict_record_status_enum: [
         "OPEN",

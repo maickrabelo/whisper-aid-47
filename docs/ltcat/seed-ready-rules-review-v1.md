@@ -3,10 +3,11 @@
 
 | Campo | Valor |
 |---|---|
-| Versão | 1.0 |
+| Versão | 1.1 |
 | Data | 23/08/2026 |
 | Base | `manifesto-regras-juridicas-v2.1.md` (normalização) + `rule-implementation-readiness-v1.md` (matriz de prontidão) |
 | Escopo | Somente as **29 regras** classificadas `seed_ready = YES` na matriz v1 |
+| Revisão 1.1 | 23/08/2026 — resolução dos 4 mapeamentos parciais da Tabela 24 (RAD_ION_RULE, PRESS_HIPER_RULE, ASSOC_MIN_SUB_AF, ASSOC_MIN_SUB_FP) na fonte oficial do eSocial; adoção da modelagem condicional 1:N em `agent_mappings` |
 | Status | Documento de revisão nominal — **NÃO autoriza seed, migration, tabela, código, `resolveLegalRule` ou alteração de frontend** |
 
 ---
@@ -1871,9 +1872,23 @@ outcome_spec: atividade no rol + dosimetria/laudo de radioprotecao -> RULE_MATCH
 | Código interno | `PHYS_RAD_ION` |
 | Código Anexo IV | 2.0.3 |
 | Descrição Anexo IV | "Radiações Ionizantes" |
-| Código Tabela 24 | 02.01.006–013 — `PENDING` (confirmar códigos individuais na S-1.3; mapeamento externo, **não bloqueia a regra**) |
-| Descrição oficial Tabela 24 | Radiações ionizantes — subcategorias (8 códigos) |
-| Vigências dos mapeamentos | Anexo IV 2.0.3: 1999-05-06 → vigente · Tabela 24: S-1.3 (jan/2023 → vigente) |
+| Código Tabela 24 | **RESOLVIDO ✅ (23/08/2026)** — mapeamento condicional 1:N confirmado na fonte oficial (ver tabela abaixo) |
+| Vigências dos mapeamentos | Anexo IV 2.0.3: 1999-05-06 → vigente · Tabela 24 (conteúdo de Agentes Nocivos): DTINICIO 01/01/2014, sem data-fim → vigente |
+
+**Mapeamento condicional `PHYS_RAD_ION` → Tabela 24** (1 agente interno → N códigos externos, resolvidos pela atividade/cenário de exposição; descrições transcritas literalmente da consulta pública oficial das Tabelas do eSocial, acessada em 23/08/2026 — ver §"Nota de proveniência Tabela 24" no final deste documento):
+
+| mapping_condition (atividade/cenário) | table24_code | Descrição oficial (literal) |
+|---|---|---|
+| Exposição a radiações ionizantes sem atividade específica identificada | `02.01.006` | "Radiações ionizantes" |
+| Extração/beneficiamento de minerais radioativos | `02.01.007` | "Extração e beneficiamento de minerais radioativos" |
+| Minerações com exposição ao radônio | `02.01.008` | "Atividades em minerações com exposição ao radônio" |
+| Manutenção/supervisão em unidades de minerais radioativos | `02.01.009` | "Realização de manutenção e supervisão em unidades de extração, tratamento e beneficiamento de minerais radioativos com exposição às radiações ionizantes" |
+| Reatores nucleares ou fontes radioativas | `02.01.010` | "Operações com reatores nucleares ou com fontes radioativas" |
+| Exposição a raios Alfa/Beta/Gama/X, nêutrons e substâncias radioativas (fins industriais, terapêuticos, diagnósticos) | `02.01.011` | "Trabalhos realizados com exposição aos raios Alfa, Beta, Gama e X, aos nêutrons e às substâncias radioativas para fins industriais, terapêuticos e diagnósticos" |
+| Fabricação/manipulação de produtos radioativos | `02.01.012` | "Fabricação e manipulação de produtos radioativos" |
+| Pesquisas e estudos com radiações ionizantes | `02.01.013` | "Pesquisas e estudos com radiações ionizantes em laboratórios" |
+
+**Regra de seleção:** a atividade concreta determina o código mais específico. Quando a informação for insuficiente para selecionar um código, o motor **não escolhe silenciosamente** (nem mesmo o genérico 02.01.006) → `REQUIRES_HUMAN_CONFIRMATION` com a lista de candidatos.
 
 ### AUTOMAÇÃO
 ```yaml
@@ -1882,8 +1897,8 @@ automation_level: PARTIALLY_PARAMETERIZABLE
 human_confirmation_required: YES
 judicial_exception: NO
 legal_conflict: NONE
-engine_allowed_actions: [verificar atividade contra o rol 2.0.3, exigir evidencia dosimetrica, rotear para confirmacao humana]
-engine_forbidden_actions: [enquadrar fora do rol sem revisao, inferir dose sem dosimetria, emitir codigo Tabela 24 individual antes da confirmacao dos codigos 02.01.006-013]
+engine_allowed_actions: [verificar atividade contra o rol 2.0.3, exigir evidencia dosimetrica, sugerir codigo Tabela 24 pelo mapping_condition, rotear para confirmacao humana]
+engine_forbidden_actions: [enquadrar fora do rol sem revisao, inferir dose sem dosimetria, selecionar silenciosamente codigo Tabela 24 (inclusive o generico 02.01.006) sem confirmacao humana]
 ```
 
 ### RESULTADOS DO MOTOR
@@ -1897,6 +1912,8 @@ engine_forbidden_actions: [enquadrar fora do rol sem revisao, inferir dose sem d
 ### CHECKSUM JURÍDICO
 ```
 RAD_ION_RULE|v1|SOCIAL_SECURITY|PHYS_RAD_ION|DECREE+TECHNICAL_STANDARD|L3+L6|INSS_ADMINISTRATIVE+TECHNICAL_ASSESSMENT|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-2.0.3#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|CNEN NN 3.01#dosimetria|null|QUALITATIVE_ACTIVITY_LIST+DOSIMETRY_SUPPORT|QUALITATIVE|MET_DOSIM_CNEN|activity_description|LISTED_IN|null|mSv|EVIDENCE_SUPPORT|NOT_CENTRAL|rol+dosimetria->RULE_MATCHED(+human)
+
+> Nota: mapeamentos (Anexo IV 2.0.3; Tabela 24 02.01.006–013, condicional 1:N, confirmados oficialmente em 23/08/2026) pertencem à entidade externa versionada `agent_mappings` e **não integram o checksum jurídico da regra** (CANONICAL_SET_V1 inalterado).
 ```
 
 ---
@@ -1953,9 +1970,19 @@ outcome_spec: funcao dentro das 3 atividades -> RULE_MATCHED com confirmacao hum
 | Código interno | `PHYS_PRESS_HIPER` |
 | Código Anexo IV | 2.0.5 |
 | Descrição Anexo IV | "Pressão Atmosférica Anormal" (hiperbárica) |
-| Código Tabela 24 | 02.01.015–018 — `PENDING` (confirmar códigos; mapeamento externo, **não bloqueia a regra**) |
-| Descrição oficial Tabela 24 | Pressões hiperbáricas — subcategorias |
-| Vigências dos mapeamentos | Anexo IV 2.0.5: 1999-05-06 → vigente · Tabela 24: S-1.3 (jan/2023 → vigente) |
+| Código Tabela 24 | **RESOLVIDO ✅ (23/08/2026)** — mapeamento condicional 1:N confirmado na fonte oficial (ver tabela abaixo) |
+| Vigências dos mapeamentos | Anexo IV 2.0.5: 1999-05-06 → vigente · Tabela 24 (conteúdo de Agentes Nocivos): DTINICIO 01/01/2014, sem data-fim → vigente |
+
+**Mapeamento condicional `PHYS_PRESS_HIPER` → Tabela 24** (1 agente interno → N códigos externos, resolvidos pela atividade; descrições literais da consulta pública oficial, 23/08/2026):
+
+| mapping_condition (atividade) | table24_code | Descrição oficial (literal) | Correspondência Anexo IV 2.0.5 |
+|---|---|---|---|
+| Trabalho em caixões ou câmaras hiperbáricas | `02.01.016` | "Trabalhos em caixões ou câmaras hiperbáricas" | atividade "caixões/câmaras hiperbáricas" |
+| Trabalho em tubulões ou túneis sob ar comprimido | `02.01.017` | "Trabalhos em tubulões ou túneis sob ar comprimido" | atividade "tubulões/túneis sob ar comprimido" |
+| Operações de mergulho | `02.01.018` | "Operações de mergulho com o uso de escafandros ou outros equipamentos" | atividade "mergulho" |
+| Pressão atmosférica anormal sem atividade específica identificada | `02.01.015` | "Pressão atmosférica anormal" | genérico — somente com confirmação humana |
+
+**Regra de seleção:** as 3 atividades do rol do item 2.0.5 resolvem diretamente para 02.01.016/017/018. O código genérico 02.01.015 **nunca é selecionado silenciosamente** → informação insuficiente implica `REQUIRES_HUMAN_CONFIRMATION` com a lista de candidatos.
 
 ### AUTOMAÇÃO
 ```yaml
@@ -1964,8 +1991,8 @@ automation_level: PARTIALLY_PARAMETERIZABLE
 human_confirmation_required: YES
 judicial_exception: NO
 legal_conflict: NONE
-engine_allowed_actions: [verificar funcao contra as 3 atividades, rotear para confirmacao humana]
-engine_forbidden_actions: [estender o rol por analogia, enquadrar sem confirmacao humana]
+engine_allowed_actions: [verificar funcao contra as 3 atividades, sugerir codigo Tabela 24 pelo mapping_condition, rotear para confirmacao humana]
+engine_forbidden_actions: [estender o rol por analogia, enquadrar sem confirmacao humana, selecionar silenciosamente o generico 02.01.015]
 ```
 
 ### RESULTADOS DO MOTOR
@@ -1979,6 +2006,8 @@ engine_forbidden_actions: [estender o rol por analogia, enquadrar sem confirmaca
 ### CHECKSUM JURÍDICO
 ```
 PRESS_HIPER_RULE|v1|SOCIAL_SECURITY|PHYS_PRESS_HIPER|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-2.0.5#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_ACTIVITY_LIST|QUALITATIVE|MET_QUALIT|activity_description|LISTED_IN|null|null|null|null|3atividades->RULE_MATCHED(+human)
+
+> Nota: mapeamentos (Anexo IV 2.0.5; Tabela 24 02.01.015–018, condicional 1:N, confirmados oficialmente em 23/08/2026) pertencem à entidade externa versionada `agent_mappings` e **não integram o checksum jurídico da regra** (CANONICAL_SET_V1 inalterado).
 ```
 
 ---
@@ -2117,9 +2146,9 @@ outcome_spec: funcao + local compativel -> RULE_MATCHED (tempo exigido = 20 anos
 | Código interno | `ASSOC_MIN_SUB_AF` |
 | Código Anexo IV | 4.0.1 |
 | Descrição Anexo IV | "Mineração subterrânea afastada da frente de produção" |
-| Código Tabela 24 | 04.01.001 — `PENDING` (confirmar; mapeamento externo, **não bloqueia a regra**) |
-| Descrição oficial Tabela 24 | Mineração subterrânea (afastada da frente) |
-| Vigências dos mapeamentos | Anexo IV 4.0.1: 1999-05-06 → vigente · Tabela 24: S-1.3 (jan/2023 → vigente) |
+| Código Tabela 24 | `04.01.001` — **CONFIRMADO ✅ (23/08/2026, fonte oficial)** |
+| Descrição oficial Tabela 24 | "Mineração subterrânea cujas atividades sejam exercidas afastadas das frentes de produção" (literal) |
+| Vigências dos mapeamentos | Anexo IV 4.0.1: 1999-05-06 → vigente · Tabela 24 04.01.001: DTINICIO 01/01/2014, sem data-fim → vigente |
 
 ### AUTOMAÇÃO
 ```yaml
@@ -2143,6 +2172,8 @@ engine_forbidden_actions: [confundir com frente de producao (15 anos), enquadrar
 ### CHECKSUM JURÍDICO
 ```
 ASSOC_MIN_SUB_AF|v1|SOCIAL_SECURITY|ASSOC_MIN_SUB_AF|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-4.0.1#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_FUNCTION_LOCATION|QUALITATIVE|MET_QUALIT|function_location|LISTED_IN|20|anos|null|null|afastado->RULE_MATCHED(20anos,+human)
+
+> Nota: mapeamentos (Anexo IV 4.0.1; Tabela 24 04.01.001, 1:1, confirmado oficialmente em 23/08/2026) pertencem à entidade externa versionada `agent_mappings` e **não integram o checksum jurídico da regra** (CANONICAL_SET_V1 inalterado).
 ```
 
 ---
@@ -2199,9 +2230,9 @@ outcome_spec: funcao + local compativel (frente de producao) -> RULE_MATCHED (te
 | Código interno | `ASSOC_MIN_SUB_FP` |
 | Código Anexo IV | 4.0.2 |
 | Descrição Anexo IV | "Mineração subterrânea em frente de produção" |
-| Código Tabela 24 | 04.01.002 — `PENDING` (confirmar; mapeamento externo, **não bloqueia a regra**) |
-| Descrição oficial Tabela 24 | Mineração subterrânea (frente de produção) |
-| Vigências dos mapeamentos | Anexo IV 4.0.2: 1999-05-06 → vigente · Tabela 24: S-1.3 (jan/2023 → vigente) |
+| Código Tabela 24 | `04.01.002` — **CONFIRMADO ✅ (23/08/2026, fonte oficial)** |
+| Descrição oficial Tabela 24 | "Trabalhos em atividades permanentes no subsolo de minerações subterrâneas em frente de produção" (literal) |
+| Vigências dos mapeamentos | Anexo IV 4.0.2: 1999-05-06 → vigente · Tabela 24 04.01.002: DTINICIO 01/01/2014, sem data-fim → vigente |
 
 ### AUTOMAÇÃO
 ```yaml
@@ -2225,6 +2256,8 @@ engine_forbidden_actions: [confundir com area afastada (20 anos), enquadrar sem 
 ### CHECKSUM JURÍDICO
 ```
 ASSOC_MIN_SUB_FP|v1|SOCIAL_SECURITY|ASSOC_MIN_SUB_FP|DECREE|L3|INSS_ADMINISTRATIVE|1999-05-06|null|AGENT_LIST_CHANGE|Dec. 3.048/1999#AnexoIV-4.0.2#planalto.gov.br/ccivil_03/decreto/d3048compilado.htm|null|null|QUALITATIVE_FUNCTION_LOCATION|QUALITATIVE|MET_QUALIT|function_location|LISTED_IN|15|anos|null|null|frente->RULE_MATCHED(15anos,+human)
+
+> Nota: mapeamentos (Anexo IV 4.0.2; Tabela 24 04.01.002, 1:1, confirmado oficialmente em 23/08/2026) pertencem à entidade externa versionada `agent_mappings` e **não integram o checksum jurídico da regra** (CANONICAL_SET_V1 inalterado).
 ```
 
 ---
@@ -2537,11 +2570,11 @@ Permanecem `PENDING_LEGAL_VALIDATION` as nuances do inteiro teor necessárias a 
 | VIB_QUALIT_PERF | YES | YES | NOT_APPLICABLE | YES | NO (C13 não bloqueia o núcleo) | YES | AUTOMATE_WITH_HUMAN_CONFIRMATION | **APPROVE_FOR_SEED** (com `judicial_exception` C13) |
 | BIO_V1 | YES | YES | NOT_APPLICABLE | YES | NO | YES | AUTOMATE_WITH_HUMAN_CONFIRMATION | **APPROVE_FOR_SEED** |
 | BIO_V2 | YES | YES | YES (qualitativa circunstanciada) | YES | NO (C14 — só fora do rol) | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** (com `judicial_exception` C14) |
-| RAD_ION_RULE | YES | YES | YES (dosimetria CNEN) | PARTIAL (Tabela 24 02.01.006–013 `PENDING`) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** (mapeamento Tabela 24 a complementar) |
-| PRESS_HIPER_RULE | YES | YES | YES | PARTIAL (02.01.015–018 `PENDING`) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** (mapeamento Tabela 24 a complementar) |
+| RAD_ION_RULE | YES | YES | YES (dosimetria CNEN) | YES (02.01.006–013 confirmados ✅ — condicional 1:N por atividade; genérico 02.01.006 só com humano) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** |
+| PRESS_HIPER_RULE | YES | YES | YES | YES (02.01.015–018 confirmados ✅ — condicional 1:N por atividade; genérico 02.01.015 só com humano) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** |
 | ASSOC_GENERAL | YES | YES | NOT_APPLICABLE | NOT_APPLICABLE | NO | YES | AUTOMATE_WITH_HUMAN_CONFIRMATION | **APPROVE_FOR_SEED** |
-| ASSOC_MIN_SUB_AF | YES | YES | NOT_APPLICABLE | PARTIAL (04.01.001 `PENDING`) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** (mapeamento Tabela 24 a complementar) |
-| ASSOC_MIN_SUB_FP | YES | YES | NOT_APPLICABLE | PARTIAL (04.01.002 `PENDING`) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** (mapeamento Tabela 24 a complementar) |
+| ASSOC_MIN_SUB_AF | YES | YES | NOT_APPLICABLE | YES (04.01.001 confirmado ✅) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** |
+| ASSOC_MIN_SUB_FP | YES | YES | NOT_APPLICABLE | YES (04.01.002 confirmado ✅) | NO | YES | PARTIALLY_PARAMETERIZABLE | **APPROVE_FOR_SEED** |
 | HIST_FRIO | YES | YES | NOT_APPLICABLE | YES (sem código autônomo; 05.01.001 na Zona C) | NO (C4) | YES | PARTIALLY_PARAMETERIZABLE (Zonas A/B) | **APPROVE_FOR_SEED** |
 | EXCEPTIONAL_LEGAL_OVERRIDE | YES | YES | NOT_APPLICABLE | YES (05.01.001) | NO | YES | HUMAN_DECISION_REQUIRED (sempre) | **APPROVE_FOR_SEED** |
 | ELEC_TNU_210 | YES | YES | NOT_APPLICABLE | NOT_APPLICABLE | NO | YES | NOT_APPLICABLE (referência) | **APPROVE_AS_REFERENCE_ONLY** |
@@ -2557,7 +2590,26 @@ Permanecem `PENDING_LEGAL_VALIDATION` as nuances do inteiro teor necessárias a 
 
 **Observações finais:**
 1. As 4 regras com `judicial_exception` (GEN_ANNEX_IV_SCOPE/C12, HEAT_V4/C6, VIB_QUALIT_PERF/C13, BIO_V2/C14) entram no seed **com o registro obrigatório da exceção** e desvio para revisão humana nos casos da órbita.
-2. As 4 regras com `mappings_confirmed = PARTIAL` (RAD_ION_RULE, PRESS_HIPER_RULE, ASSOC_MIN_SUB_AF, ASSOC_MIN_SUB_FP) entram no seed **sem** os códigos individuais da Tabela 24 — mapeamentos são externos e versionados, a complementar em rodada específica de extração da S-1.3.
+2. ~~As 4 regras com `mappings_confirmed = PARTIAL`~~ **RESOLVIDO na revisão 1.1 (23/08/2026):** RAD_ION_RULE, PRESS_HIPER_RULE, ASSOC_MIN_SUB_AF e ASSOC_MIN_SUB_FP tiveram seus mapeamentos da Tabela 24 confirmados na fonte oficial (ver "Nota de proveniência" abaixo) — não resta nenhum `PARTIAL_ESOCIAL_MAPPING` nesta revisão. RAD_ION_RULE e PRESS_HIPER_RULE entram no seed com **mapeamento condicional 1:N** (ver §"Regra de modelagem de mapeamentos" abaixo).
 3. `EPI_EFFECT_REQUIRES_CONTEXT` e `EXCEPTIONAL_LEGAL_OVERRIDE` têm `seed_ready = YES` **e** `HUMAN_DECISION_REQUIRED` simultaneamente — armazenamento confiável, decisão sempre humana.
 4. C15A resolvido nesta rodada (página oficial CJF/TNU); C15B permanece aberto sem efeito bloqueante.
 5. **Este documento não autoriza seed.** A Fase 2B permanece bloqueada até aprovação nominal desta revisão.
+
+---
+
+# REVISÃO 1.1 (23/08/2026) — RESOLUÇÃO DOS 4 MAPEAMENTOS PARCIAIS DA TABELA 24
+
+## Nota de proveniência — Tabela 24 (Agentes Nocivos e Atividades)
+
+Os códigos 02.01.006–013, 02.01.015–018, 04.01.001 e 04.01.002 foram conferidos **diretamente na consulta pública oficial das Tabelas do eSocial** (serviço oficial Serpro/gov.br — `https://www.gov.br/esocial/pt-br/tabelas-do-esocial/consulta-tabelas-do-esocial`, conteúdo servido por `frontend.esocial.gov.br`), acessada em **23/08/2026**. Todos os 12 códigos constam com **DTINICIO = 01/01/2014 e sem data-fim** (vigentes), nas descrições literais transcritas nos cards R22, R23, R25 e R26. O conteúdo corresponde à tabela de "Agentes Nocivos e Atividades — Aposentadoria Especial" referenciada pelo campo `codAgNoc` do evento S-2240 (leiaute S-1.3). *Nota de nomenclatura: na listagem atual da consulta pública, este conteúdo aparece rotulado como "Tabela 22"; os leiautes SST (Anexo II, S-1.x) o referenciam como "Tabela 24" — os códigos e descrições são idênticos. Registro meramente documental, sem impacto nos mapeamentos.*
+
+## Regra de modelagem de mapeamentos (`agent_mappings`)
+
+Nenhuma relação agente interno → Tabela 24 deve ser assumida como necessariamente 1:1. A estrutura de dados futura (`agent_mappings`) deverá admitir **1 agente interno → N códigos externos**, cada linha condicionada por:
+
+- `mapping_condition` — atividade, processo ou cenário de exposição que resolve o código;
+- `valid_from` / `valid_to` — período de vigência do próprio mapeamento;
+- `evidence_requirement` — evidência exigida para sustentar a escolha;
+- `selection_policy` — `AUTO_SUGGEST` (sugere código específico quando a condição é satisfeita) ou `HUMAN_REQUIRED` (nunca escolhe silenciosamente — aplica-se aos códigos genéricos 02.01.006 e 02.01.015).
+
+Quando a informação for insuficiente para resolver a condição, o motor retorna `REQUIRES_HUMAN_CONFIRMATION` com a lista de códigos candidatos — **nunca** seleciona um código por padrão.

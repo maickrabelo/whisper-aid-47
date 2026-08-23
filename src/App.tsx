@@ -75,6 +75,7 @@ const AcceptInvitation = React.lazy(() => import("./pages/AcceptInvitation"));
 const PGRDashboard = React.lazy(() => import("./pages/PGRDashboard"));
 const PGRKanban = React.lazy(() => import("./pages/PGRKanban"));
 const LTCATHub = React.lazy(() => import("./pages/LTCATHub"));
+const LTCATDetail = React.lazy(() => import("./pages/LTCATDetail"));
 const PGRHub = React.lazy(() => import("./pages/PGRHub"));
 const AcceptSectorInvitation = React.lazy(() => import("./pages/AcceptSectorInvitation"));
 const SectorViewerDashboard = React.lazy(() => import("./pages/SectorViewerDashboard"));
@@ -194,6 +195,7 @@ const App = () => (
                 <Route path="/sst/treinamentos" element={<SSTTrainings />} />
                 <Route path="/empresa/treinamentos" element={<CompanyTrainings />} />
                 <Route path="/ltcat" element={<FeatureGuard featureKey="LTCAT_BETA"><LTCATHub /></FeatureGuard>} />
+                <Route path="/ltcat/:id" element={<FeatureGuard featureKey="LTCAT_BETA"><LTCATDetail /></FeatureGuard>} />
                 <Route path="/pgr" element={<PGRHub />} />
                 <Route path="/pgr/:companyId" element={<PGRDashboard />} />
                 <Route path="/pgr/:companyId/kanban" element={<PGRKanban />} />

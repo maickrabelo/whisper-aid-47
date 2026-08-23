@@ -1,0 +1,10 @@
+REVOKE EXECUTE ON FUNCTION public.legal_sources_material_guard() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.assessment_methodologies_material_guard() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.occupational_agents_material_guard() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.agent_mappings_material_guard() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.legal_conflicts_material_guard() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.legal_sources_material_guard() TO service_role;
+GRANT EXECUTE ON FUNCTION public.assessment_methodologies_material_guard() TO service_role;
+GRANT EXECUTE ON FUNCTION public.occupational_agents_material_guard() TO service_role;
+GRANT EXECUTE ON FUNCTION public.agent_mappings_material_guard() TO service_role;
+GRANT EXECUTE ON FUNCTION public.legal_conflicts_material_guard() TO service_role;

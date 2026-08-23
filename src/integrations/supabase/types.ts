@@ -2031,32 +2031,44 @@ export type Database = {
       legal_rule_audit_log: {
         Row: {
           action: string
+          actor_identifier: string | null
           changed_at: string
           changed_by: string | null
+          correlation_id: string | null
           entity_id: string | null
           entity_type: string
           id: string
           new_state: Json | null
+          operation_context: Json
+          origin: string
           previous_state: Json | null
         }
         Insert: {
           action: string
+          actor_identifier?: string | null
           changed_at?: string
           changed_by?: string | null
+          correlation_id?: string | null
           entity_id?: string | null
           entity_type: string
           id?: string
           new_state?: Json | null
+          operation_context?: Json
+          origin?: string
           previous_state?: Json | null
         }
         Update: {
           action?: string
+          actor_identifier?: string | null
           changed_at?: string
           changed_by?: string | null
+          correlation_id?: string | null
           entity_id?: string | null
           entity_type?: string
           id?: string
           new_state?: Json | null
+          operation_context?: Json
+          origin?: string
           previous_state?: Json | null
         }
         Relationships: []
@@ -2141,6 +2153,7 @@ export type Database = {
           authority_context: Json
           automation_level: Database["public"]["Enums"]["rule_automation_level_enum"]
           canonical_payload: Json | null
+          canonical_schema_version: string
           created_at: string
           created_by: string | null
           criterion: Database["public"]["Enums"]["rule_criterion_enum"] | null
@@ -2173,6 +2186,7 @@ export type Database = {
           authority_context?: Json
           automation_level?: Database["public"]["Enums"]["rule_automation_level_enum"]
           canonical_payload?: Json | null
+          canonical_schema_version?: string
           created_at?: string
           created_by?: string | null
           criterion?: Database["public"]["Enums"]["rule_criterion_enum"] | null
@@ -2205,6 +2219,7 @@ export type Database = {
           authority_context?: Json
           automation_level?: Database["public"]["Enums"]["rule_automation_level_enum"]
           canonical_payload?: Json | null
+          canonical_schema_version?: string
           created_at?: string
           created_by?: string | null
           criterion?: Database["public"]["Enums"]["rule_criterion_enum"] | null
@@ -5040,6 +5055,10 @@ export type Database = {
         Args: { _company_id: string; _sst_manager_id: string }
         Returns: boolean
       }
+      finalize_legal_rule_version: {
+        Args: { _version_id: string }
+        Returns: Json
+      }
       generate_tracking_code: { Args: never; Returns: string }
       get_company_features: {
         Args: { _company_id: string }
@@ -5092,6 +5111,10 @@ export type Database = {
         Returns: boolean
       }
       legal_checksum: { Args: { payload: Json }; Returns: string }
+      legal_entity_frozen: {
+        Args: { _entity_id: string; _entity_type: string }
+        Returns: boolean
+      }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }
       user_has_aep_access: {

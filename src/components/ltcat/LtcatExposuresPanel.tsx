@@ -54,7 +54,7 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    ghe_id: '', agent_id: '', exposure_type: 'HABITUAL_PERMANENTE',
+    ghe_id: '', agent_id: '', exposure_type: 'habitual_permanente',
     measured_value: '', unit: '', notes: '',
   });
 
@@ -69,7 +69,7 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
   const [engineResult, setEngineResult] = useState<any>(null);
 
   const [concExp, setConcExp] = useState<LtcatExposure | null>(null);
-  const [concStatus, setConcStatus] = useState('CONCLUIDO');
+  const [concStatus, setConcStatus] = useState('RECONHECIDO');
   const [concText, setConcText] = useState('');
   const [concBusy, setConcBusy] = useState(false);
 
@@ -88,7 +88,7 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
 
   const openNew = () => {
     if (ghes.length === 0) { toast.error('Cadastre um GHE antes de adicionar exposições.'); return; }
-    setForm({ ghe_id: ghes[0].id, agent_id: '', exposure_type: 'HABITUAL_PERMANENTE', measured_value: '', unit: '', notes: '' });
+    setForm({ ghe_id: ghes[0].id, agent_id: '', exposure_type: 'habitual_permanente', measured_value: '', unit: '', notes: '' });
     setDialogOpen(true);
   };
 
@@ -187,7 +187,7 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
   // ─── Conclusão humana ──────────────────────────────────────
   const openConclusion = (e: LtcatExposure) => {
     setConcExp(e);
-    setConcStatus(e.conclusion_status === 'PENDING' ? 'CONCLUIDO' : e.conclusion_status);
+    setConcStatus(e.conclusion_status === 'PENDING' ? 'RECONHECIDO' : e.conclusion_status);
     setConcText(e.conclusion_text || '');
   };
 

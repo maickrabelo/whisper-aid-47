@@ -170,7 +170,75 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const checkTrialStatus = async (companyId: string | null, sstManagerId: string | null) => {
+  // Localiza uma assinatura ATIVA vinculada ao usuário (direta, via empresa pai ou
+  // via outros perfis da mesma gestora SST). Usada tanto para o status de pagamento
+  // quanto como salvaguarda do bloqueio de trial: se existe assinatura paga ativa,
+  // o usuário NUNCA pode ser bloqueado por trial expirado.
+  const findActiveSubscription = async (
+    userId: string | null,
+    companyId: string | null,
+    sstManagerId: string | null,
+  ): Promise<{ id: string; status: string; current_period_end: string | null } | null> => {
+    try {
+      // 1) Assinatura direta do usuário
+      if (userId) {
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('id, status, current_period_end')
+          .eq('owner_user_id', userId)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (sub) return sub as any;
+      }
+
+      // 2) Assinatura pai da empresa
+      if (companyId) {
+        const { data: comp } = await supabase
+          .from('companies')
+          .select('parent_subscription_id')
+          .eq('id', companyId)
+          .maybeSingle();
+        const parentId = (comp as any)?.parent_subscription_id;
+        if (parentId) {
+          const { data: parentSub } = await supabase
+            .from('subscriptions')
+            .select('id, status, current_period_end')
+            .eq('id', parentId)
+            .eq('status', 'active')
+            .maybeSingle();
+          if (parentSub) return parentSub as any;
+        }
+      }
+
+      // 3) Assinatura de qualquer perfil vinculado à mesma gestora SST
+      if (sstManagerId) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('sst_manager_id', sstManagerId);
+        const ownerIds = (profs ?? []).map((p: any) => p.id);
+        if (ownerIds.length > 0) {
+          const { data: mgrSub } = await supabase
+            .from('subscriptions')
+            .select('id, status, current_period_end')
+            .in('owner_user_id', ownerIds)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (mgrSub) return mgrSub as any;
+        }
+      }
+      return null;
+    } catch (e) {
+      console.error('findActiveSubscription error', e);
+      return null;
+    }
+  };
+
+  const checkTrialStatus = async (userId: string | null, companyId: string | null, sstManagerId: string | null) => {
     // Skip trial check if no company or SST manager linked
     if (!companyId && !sstManagerId) {
       setIsTrialExpired(false);
@@ -189,22 +257,44 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const trialStatuses = ['trial', 'trialing'];
 
-    const company = companyResult?.data;
-    if (company?.subscription_status && trialStatuses.includes(company.subscription_status) && company?.trial_ends_at) {
-      setTrialEndsAt(company.trial_ends_at);
-      setIsTrialExpired(new Date() > new Date(company.trial_ends_at));
+    const expiredTrialEndsAt = (() => {
+      const company = companyResult?.data;
+      if (company?.subscription_status && trialStatuses.includes(company.subscription_status) && company?.trial_ends_at) {
+        if (new Date() > new Date(company.trial_ends_at)) return company.trial_ends_at as string;
+        // Trial ainda vigente
+        setTrialEndsAt(company.trial_ends_at);
+        setIsTrialExpired(false);
+        return null;
+      }
+      const sstManager = sstResult?.data;
+      if (sstManager?.subscription_status && trialStatuses.includes(sstManager.subscription_status) && sstManager?.trial_ends_at) {
+        if (new Date() > new Date(sstManager.trial_ends_at)) return sstManager.trial_ends_at as string;
+        setTrialEndsAt(sstManager.trial_ends_at);
+        setIsTrialExpired(false);
+        return null;
+      }
+      return undefined; // sem trial configurado
+    })();
+
+    if (expiredTrialEndsAt === undefined) {
+      setIsTrialExpired(false);
+      setTrialEndsAt(null);
       return;
     }
 
-    const sstManager = sstResult?.data;
-    if (sstManager?.subscription_status && trialStatuses.includes(sstManager.subscription_status) && sstManager?.trial_ends_at) {
-      setTrialEndsAt(sstManager.trial_ends_at);
-      setIsTrialExpired(new Date() > new Date(sstManager.trial_ends_at));
+    if (expiredTrialEndsAt === null) return; // trial vigente já tratado acima
+
+    // Salvaguarda: trial "expirado" mas existe assinatura paga ativa vinculada
+    // (status desnormalizado desatualizado) -> NUNCA bloquear um pagante.
+    const activeSub = await findActiveSubscription(userId, companyId, sstManagerId);
+    if (activeSub) {
+      setIsTrialExpired(false);
+      setTrialEndsAt(null);
       return;
     }
 
-    setIsTrialExpired(false);
-    setTrialEndsAt(null);
+    setTrialEndsAt(expiredTrialEndsAt);
+    setIsTrialExpired(true);
   };
 
   const checkPaymentStatus = async (userId: string | null, companyId: string | null, sstManagerId: string | null) => {

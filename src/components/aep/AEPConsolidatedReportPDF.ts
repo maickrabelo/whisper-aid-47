@@ -386,14 +386,6 @@ export async function generateAEPConsolidatedReportPDF(input: Input): Promise<vo
     y += rows * 4 + 1;
   }));
 
-  // Footer todas as páginas
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(7); doc.setTextColor(150);
-    doc.text(`Documento consolidado AEP — ${company.name} — página ${i}/${pageCount}`, PAGE_W / 2, PAGE_H - 8, { align: 'center' });
-    doc.setTextColor(0);
-  }
 
   const safeName = company.name.replace(/\s+/g, '_').replace(/[^\w-]/g, '');
   doc.save(`AEP-Consolidado-${safeName}-${new Date().toISOString().split('T')[0]}.pdf`);

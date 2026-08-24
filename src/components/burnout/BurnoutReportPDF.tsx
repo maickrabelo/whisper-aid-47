@@ -220,9 +220,6 @@ export function BurnoutReportPDF({
 
       yPos += 35;
       
-      pdf.setFontSize(10);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, yPos, { align: 'center' });
 
       // ========== PÁGINA 2: METODOLOGIA ==========
       pdf.addPage();

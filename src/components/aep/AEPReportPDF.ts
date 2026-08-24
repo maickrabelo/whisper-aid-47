@@ -270,14 +270,6 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
     if ((sig.orgResponsibleCpf || '').trim()) { doc.text(`CPF: ${sig.orgResponsibleCpf!.trim()}`, MARGIN, y); y += 4; }
   }
 
-  // Rodapé
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(7); doc.setTextColor(150);
-    doc.text(`AEP v${aep.version || 1} — ${company.name} — Página ${i}/${pageCount}`, PAGE_W / 2, 290, { align: 'center' });
-    doc.setTextColor(0);
-  }
 
   doc.save(`AEP-${(aep.setor_nome || 'setor').replace(/\s+/g, '_')}-v${aep.version || 1}.pdf`);
 }

@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
-import fundoPsico from '@/assets/fundo-psico.jpg.asset.json';
+import fundoPsico from '@/assets/fundo-psico-v2.jpg.asset.json';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import {
   COPSOQ_QUESTIONS,

@@ -5,7 +5,7 @@ import { toast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import { renderCoverBackground } from '@/lib/pdfLogos';
-import fundoPsico from '@/assets/fundo-psico.jpg.asset.json';
+import fundoPsico from '@/assets/fundo-psico-v2.jpg.asset.json';
 import {
   HSEITCategory,
   HSEIT_CATEGORY_LABELS,

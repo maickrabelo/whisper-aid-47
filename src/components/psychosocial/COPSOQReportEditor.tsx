@@ -8,14 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, Plus, Trash2, PenLine, Save } from "lucide-react";
 import { toast } from "sonner";
-import { generateCOPSOQReport, COPSOQ_RECOMMENDATIONS } from "./COPSOQReportPDF";
-import {
-  ALL_CATEGORIES,
-  COPSOQ_CATEGORY_LABELS,
-  COPSOQCategory,
-  getRiskLevel,
-  RISK_LEVEL_LABELS,
-} from "@/data/copsoqQuestions";
+import { generateCOPSOQReport, COPSOQ_RECOMMENDATIONS, GENERIC_COPSOQ_RECOMMENDATION } from "./COPSOQReportPDF";
+import { RISK_LEVEL_LABELS } from "@/data/copsoqQuestions";
+import { getCOPSOQVersionData } from "@/lib/copsoqVersion";
 import { DEFAULT_RECOMMENDED_PERIODICITY, PsychosocialReportDraftConfig, saveReportDraft } from "@/lib/psychosocialReportDrafts";
 import { ReportSignatureFields, SignatureFieldsValue } from "./ReportSignatureFields";
 
@@ -77,6 +72,7 @@ export function COPSOQReportEditor({
   open,
   onOpenChange,
   assessment,
+  version,
   companyName,
   companyId,
   responses,
@@ -91,6 +87,11 @@ export function COPSOQReportEditor({
 }: COPSOQReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Dados específicos da versão do questionário (curta x média)
+  const vd = getCOPSOQVersionData(version);
+  const VCATS = vd.allCategories;
+  const VLABELS = vd.categoryLabels;
 
   const defaultsAppliedRef = useRef(false);
   const loadedConfigRef = useRef(false);
@@ -127,9 +128,9 @@ export function COPSOQReportEditor({
     if (patch.orgResponsibleRole !== undefined) setOrgResponsibleRole(patch.orgResponsibleRole);
   };
 
-  const dimensions = ALL_CATEGORIES
+  const dimensions = VCATS
     .filter(cat => typeof categoryAverages[cat] === 'number' && categoryAverages[cat] > 0)
-    .map(cat => ({ category: cat, average: categoryAverages[cat], level: getRiskLevel(categoryAverages[cat]) }));
+    .map(cat => ({ category: cat, average: categoryAverages[cat], level: vd.getRiskLevel(categoryAverages[cat]) }));
 
   // Carrega a última versão salva (apenas uma vez por abertura)
   useEffect(() => {
@@ -420,7 +421,7 @@ export function COPSOQReportEditor({
                     variant="outline"
                     onClick={() => setActionItems(items => [...items, {
                       id: crypto.randomUUID(),
-                      category: ALL_CATEGORIES[0],
+                      category: VCATS[0],
                       priority: 'short_term',
                       description: '',
                       recommendation: '',
@@ -445,8 +446,8 @@ export function COPSOQReportEditor({
                           <Select value={item.category} onValueChange={(v) => updateAction(item.id, 'category', v)}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {ALL_CATEGORIES.map(cat => (
-                                <SelectItem key={cat} value={cat}>{COPSOQ_CATEGORY_LABELS[cat]}</SelectItem>
+                              {VCATS.map(cat => (
+                                <SelectItem key={cat} value={cat}>{VLABELS[cat] || cat}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>

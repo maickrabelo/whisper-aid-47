@@ -3,11 +3,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Printer } from 'lucide-react';
 import { HSEIT_QUESTIONS_SORTED, HSEIT_LIKERT_OPTIONS, HSEIT_CATEGORY_LABELS } from '@/data/hseitQuestions';
 import { COPSOQ_QUESTIONS_SORTED, COPSOQ_SCALES, COPSOQ_CATEGORY_LABELS } from '@/data/copsoqQuestions';
+import { COPSOQ_MEDIUM_QUESTIONS_SORTED, COPSOQ_MEDIUM_CATEGORY_LABELS } from '@/data/copsoqMediumQuestions';
 import { BURNOUT_QUESTIONS_SORTED, BURNOUT_LIKERT_OPTIONS, BURNOUT_CATEGORY_LABELS } from '@/data/burnoutQuestions';
 import { gptwQuestions, npsQuestion, openQuestions, likertOptions as gptwLikert, gptwCategories } from '@/data/gptwQuestions';
 import { soiaQuestions, soiaOpenQuestions, soiaCategories } from '@/data/soiaQuestions';
 
-type Variant = 'hseit' | 'copsoq' | 'burnout' | 'climate-gptw' | 'climate-soia';
+type Variant = 'hseit' | 'copsoq' | 'copsoq-medium' | 'burnout' | 'climate-gptw' | 'climate-soia';
 
 interface PrintItem {
   number: number | string;
@@ -89,6 +90,20 @@ function buildCopsoq(): { title: string; subtitle: string; instructions: string;
   };
 }
 
+function buildCopsoqMedium(): { title: string; subtitle: string; instructions: string; items: PrintItem[] } {
+  return {
+    title: 'Questionário COPSOQ II',
+    subtitle: 'Copenhagen Psychosocial Questionnaire — Versão Média (76 questões · Silva et al., 2011)',
+    instructions: 'Para cada questão, marque <strong>uma</strong> opção, observando que algumas perguntas utilizam escalas diferentes (frequência, extensão, satisfação, saúde).',
+    items: COPSOQ_MEDIUM_QUESTIONS_SORTED.map(q => ({
+      number: q.number,
+      text: q.text,
+      category: COPSOQ_MEDIUM_CATEGORY_LABELS[q.category],
+      options: ((COPSOQ_SCALES as any)[q.scaleType] || COPSOQ_SCALES.frequency).map((o: any) => `${o.value} – ${o.label}`),
+    })),
+  };
+}
+
 function buildBurnout(): { title: string; subtitle: string; instructions: string; items: PrintItem[] } {
   return {
     title: 'Questionário de Burnout',
@@ -156,6 +171,7 @@ function buildSoia(): { title: string; subtitle: string; instructions: string; i
 const builders: Record<Variant, () => { title: string; subtitle: string; instructions: string; items: PrintItem[] }> = {
   hseit: buildHseit,
   copsoq: buildCopsoq,
+  'copsoq-medium': buildCopsoqMedium,
   burnout: buildBurnout,
   'climate-gptw': buildGptw,
   'climate-soia': buildSoia,
@@ -215,6 +231,21 @@ interface Props {
 }
 
 export default function PrintQuestionnaireButton({ variant, className, buttonClassName }: Props) {
+  if (variant === 'copsoq') {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className={buttonClassName ?? 'gap-2'}>
+            <Printer className="h-4 w-4" /> Imprimir questionário
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="bg-popover z-50">
+          <DropdownMenuItem onClick={() => openPrintWindow('copsoq')}>Versão Curta (41 questões)</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => openPrintWindow('copsoq-medium')}>Versão Média (76 questões)</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
   if (variant === 'climate') {
     return (
       <DropdownMenu>

@@ -339,7 +339,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
           'Relacionamentos', 'Função', 'Mudanças'
         ];
       } else {
-        dimensions = Object.values(COPSOQ_CATEGORY_LABELS);
+        dimensions = Array.from(new Set([...Object.values(COPSOQ_CATEGORY_LABELS), ...Object.values(COPSOQ_MEDIUM_CATEGORY_LABELS)]));
       }
       const inserts = dimensions.map(d => ({
         pgr_document_id: pgrDocumentId,

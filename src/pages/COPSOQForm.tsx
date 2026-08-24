@@ -1,397 +1,317 @@
-import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { CheckCircle2, ChevronLeft, ChevronRight, Loader2, Sparkles, Info } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { COPSOQ_SCALES } from "@/data/copsoqQuestions";
-import { MEDIUM_SECTION_NOTES } from "@/data/copsoqMediumQuestions";
-import { getCOPSOQVersionData, type COPSOQGenericQuestion } from "@/lib/copsoqVersion";
-import { buildResponsePayload, buildDepartmentsPayload } from "@/lib/surveyResponsePayload";
-import SoniaFormChat from "@/components/sonia/SoniaFormChat";
-import { useAiAccess } from "@/hooks/useAiAccess";
-import { useAccessLogger } from "@/hooks/useAccessLogger";
+import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText, Building2, Info } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from '@/hooks/use-toast';
+import { COPSOQ_SCALES } from '@/data/copsoqQuestions';
+import { MEDIUM_SECTION_NOTES } from '@/data/copsoqMediumQuestions';
+import { getCOPSOQVersionData, type COPSOQGenericQuestion } from '@/lib/copsoqVersion';
+import SoniaFormChat from '@/components/sonia/SoniaFormChat';
+
 
 interface Assessment {
   id: string;
   title: string;
   description: string | null;
-  company_id: string;
-  start_date: string | null;
-  end_date: string | null;
   is_active: boolean;
-  collection_mode: string | null;
-  multi_sector_enabled: boolean;
-  questionnaire_version: string | null;
+  multi_sector_enabled?: boolean | null;
+  questionnaire_version?: string | null;
+  companies: { name: string; logo_url: string | null; };
 }
 
-const questionsPerPage = 7;
+interface Department { id: string; name: string; }
 
-// Question card component
-const QuestionCard = ({
-  question,
-  categoryLabel,
-  selectedValue,
-  onAnswer
-}: {
+const QuestionCard = memo(({ question, categoryLabel, selectedValue, onAnswer }: {
   question: COPSOQGenericQuestion;
   categoryLabel: string;
-  selectedValue?: number;
-  onAnswer: (value: number) => void;
+  selectedValue: number | undefined;
+  onAnswer: (questionNumber: number, value: number) => void;
 }) => {
-  const scale = COPSOQ_SCALES[question.scaleType];
-
+  const options = COPSOQ_SCALES[question.scaleType];
   return (
-    <Card className={`transition-all duration-300 ${selectedValue !== undefined ? 'border-primary/50 bg-primary/5' : ''}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-4">
+    <Card className={selectedValue !== undefined ? 'border-primary/30' : ''}>
+      <CardContent className="pt-6">
+        <div className="flex items-start gap-3 mb-4">
+          <span className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm font-medium text-primary">{question.number}</span>
           <div className="flex-1">
-            <Badge variant="outline" className="mb-2 text-xs">
-              {categoryLabel}
-            </Badge>
-            <CardTitle className="text-base font-medium leading-relaxed">
-              {question.text}
-            </CardTitle>
+            <p className="text-foreground font-medium mb-1">{question.text}</p>
+            <p className="text-xs text-muted-foreground">Dimensão: {categoryLabel}</p>
           </div>
-          <span className="text-sm text-muted-foreground font-mono shrink-0">
-            {question.number}
-          </span>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          {scale.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => onAnswer(option.value)}
-              className={`px-3 py-2.5 text-sm rounded-md border-2 transition-all duration-200 font-medium ${
-                selectedValue === option.value
-                  ? 'border-primary bg-primary text-primary-foreground shadow-md scale-[1.02]'
-                  : 'border-border bg-background hover:border-primary/50 hover:bg-primary/5'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+          {options.map(option => {
+            const isSelected = selectedValue === option.value;
+            return (
+              <button key={option.value} type="button" onClick={() => onAnswer(question.number, option.value)}
+                className={`flex items-center justify-center px-4 py-2 rounded-lg border-2 cursor-pointer transition-all text-sm
+                  ${isSelected ? 'border-primary bg-primary/10 text-primary font-medium' : 'border-border hover:border-primary/50 hover:bg-muted'}`}>
+                {option.label}
+              </button>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
   );
-};
+});
+QuestionCard.displayName = 'COPSOQQuestionCard';
 
 export default function COPSOQForm() {
-  const { assessmentId } = useParams();
-  const navigate = useNavigate();
-  const { logAccess } = useAccessLogger();
-  const [assessment, setAssessment] = useState<Assessment | null>(null);
-  const [companyName, setCompanyName] = useState("");
-  const [respondentName, setRespondentName] = useState("");
-  const [department, setDepartment] = useState("");
-  const [departments, setDepartments] = useState<string[]>([]);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [currentPage, setCurrentPage] = useState(0);
+  const { companySlug, assessmentId } = useParams();
+  const topRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const [aiMode, setAiMode] = useState(false);
+  const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showDepartmentError, setShowDepartmentError] = useState(false);
 
-  // Verifica se a empresa vinculada à avaliação tem acesso à SOnIA
-  const { aiEnabled, loading: aiLoading } = useAiAccess(assessment?.company_id);
-
-  useEffect(() => {
-    if (assessmentId) fetchAssessment();
-  }, [assessmentId]);
-
-  const fetchAssessment = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("copsoq_assessments")
-        .select("*")
-        .eq("id", assessmentId)
-        .eq("is_active", true)
-        .single();
-
-      if (error) throw error;
-      if (!data) { toast.error("Avaliação não encontrada ou inativa"); navigate("/"); return; }
-
-      const today = new Date().toISOString().split('T')[0];
-      if (data.start_date && data.start_date > today) { toast.error("Esta avaliação ainda não iniciou"); navigate("/"); return; }
-      if (data.end_date && data.end_date < today) { toast.error("Esta avaliação já foi encerrada"); navigate("/"); return; }
-
-      setAssessment(data as unknown as Assessment);
-      logAccess('form_view', { module: 'copsoq', assessment_id: assessmentId, action: 'view' });
-
-      const { data: companyData } = await supabase
-        .from("companies")
-        .select("name")
-        .eq("id", data.company_id)
-        .single();
-      if (companyData) setCompanyName(companyData.name);
-
-      const { data: deptData } = await supabase
-        .from("copsoq_departments")
-        .select("name")
-        .eq("assessment_id", assessmentId)
-        .order("name");
-      if (deptData) setDepartments(deptData.map(d => d.name));
-    } catch (error) {
-      console.error("Error fetching assessment:", error);
-      logAccess('error', { module: 'copsoq', assessment_id: assessmentId, action: 'fetch_error', error: String(error) });
-      toast.error("Erro ao carregar avaliação");
-      navigate("/");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Dados do questionário conforme a versão configurada na avaliação
+  // Dados do questionário conforme a versão configurada na avaliação (curta/média)
   const versionData = useMemo(
-    () => getCOPSOQVersionData(assessment?.questionnaire_version),
-    [assessment?.questionnaire_version]
+    () => getCOPSOQVersionData((assessment as any)?.questionnaire_version),
+    [(assessment as any)?.questionnaire_version]
   );
   const questions = versionData.questions;
   const categoryLabels = versionData.categoryLabels;
-  const defaultScale = COPSOQ_SCALES.always_never;
 
+  const questionsPerPage = 7;
   const totalPages = Math.ceil(questions.length / questionsPerPage);
-  const currentQuestions = useMemo(
-    () => questions.slice(currentPage * questionsPerPage, (currentPage + 1) * questionsPerPage),
-    [questions, currentPage]
-  );
+  const currentQuestions = useMemo(() => questions.slice(currentPage * questionsPerPage, (currentPage + 1) * questionsPerPage), [questions, currentPage]);
 
-  const handleAnswer = (questionNumber: number, value: number) => {
-    setAnswers(prev => ({ ...prev, [questionNumber]: value }));
+  useEffect(() => { fetchAssessment(); }, [companySlug, assessmentId]);
+
+  const fetchAssessment = async () => {
+    try {
+      setIsLoading(true); setError(null);
+      const { data: a, error: e } = await supabase.from('copsoq_assessments' as any).select('*').eq('id', assessmentId).maybeSingle();
+      if (e) throw e;
+      if (!a) { setError('Avaliação não encontrada'); return; }
+      if (!(a as any).is_active) { setError('Esta avaliação não está mais disponível'); return; }
+      const { data: companyData } = await supabase.from('companies_public' as any).select('name, logo_url').eq('id', (a as any).company_id).maybeSingle();
+      setAssessment({ ...(a as any), companies: (companyData as any) ?? null } as unknown as Assessment);
+      const { data: depts } = await supabase.from('copsoq_departments' as any).select('id, name').eq('assessment_id', assessmentId).order('order_index');
+      setDepartments((depts as any[]) || []);
+    } catch (e) { console.error(e); setError('Erro ao carregar a avaliação'); }
+    finally { setIsLoading(false); }
   };
 
+  const handleAnswer = useCallback((qn: number, v: number) => setAnswers(prev => ({ ...prev, [qn]: v })), []);
   const getProgress = () => (Object.keys(answers).length / questions.length) * 100;
+  const isMultiSector = !!assessment?.multi_sector_enabled;
+  const hasSectorSelection = isMultiSector ? selectedDepartments.length > 0 : !!selectedDepartment;
+
+  const canGoNext = () => {
+    if (currentPage === 0 && departments.length > 0 && !hasSectorSelection) return false;
+    return currentQuestions.every(q => answers[q.number] !== undefined);
+  };
+  const scrollToTop = useCallback(() => { topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); window.scrollTo({ top: 0, behavior: 'smooth' }); }, []);
 
   const handleNext = () => {
-    const unanswered = currentQuestions.filter(q => answers[q.number] === undefined);
-    if (unanswered.length > 0) {
-      toast.warning(`Responda todas as questões antes de avançar (${unanswered.length} pendente${unanswered.length > 1 ? 's' : ''})`);
+    if (currentPage === 0 && departments.length > 0 && !hasSectorSelection) {
+      setShowDepartmentError(true);
+      toast({ title: 'Setor obrigatório', description: isMultiSector ? 'Selecione pelo menos um setor.' : 'Selecione o setor em que você trabalha.', variant: 'destructive' });
       return;
     }
-    if (currentPage < totalPages - 1) {
-      setCurrentPage(prev => prev + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    if (!canGoNext()) { toast({ title: 'Questões obrigatórias', description: 'Responda todas antes de avançar.', variant: 'destructive' }); return; }
+    if (currentPage < totalPages - 1) { setCurrentPage(p => p + 1); setTimeout(scrollToTop, 50); }
   };
+  const handlePrev = () => { if (currentPage > 0) { setCurrentPage(p => p - 1); setTimeout(scrollToTop, 50); } };
 
-  const handlePrevious = () => {
-    if (currentPage > 0) {
-      setCurrentPage(prev => prev - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+  const buildResponsePayload = () => {
+    const finalDepartments = isMultiSector ? selectedDepartments : (selectedDepartment ? [selectedDepartment] : []);
+    return {
+      assessment_id: assessment!.id,
+      department: finalDepartments[0] || null,
+      departments: finalDepartments.length > 0 ? finalDepartments : null,
+      respondent_token: crypto.randomUUID(),
+      demographics: {},
+      completed_at: new Date().toISOString(),
+    };
   };
 
   const handleSubmit = async () => {
+    if (!assessment) return;
+    if (departments.length > 0 && !hasSectorSelection) { toast({ title: 'Setor obrigatório', variant: 'destructive' }); return; }
     const unanswered = questions.filter(q => answers[q.number] === undefined);
-    if (unanswered.length > 0) {
-      toast.error(`Ainda há ${unanswered.length} questões sem resposta`);
-      return;
-    }
-
-    setIsSubmitting(true);
+    if (unanswered.length > 0) { toast({ title: 'Questões não respondidas', description: `Faltam ${unanswered.length} questão(ões).`, variant: 'destructive' }); return; }
     try {
-      const { data: response, error: responseError } = await supabase
-        .from("copsoq_responses")
-        .insert(buildResponsePayload({ assessmentId: assessmentId!, respondentName, department }))
-        .select().single();
-
-      if (responseError) throw responseError;
-
-      const answersData = questions.map(q => ({
-        response_id: response.id,
-        question_number: q.number,
-        answer_value: answers[q.number],
-      }));
-
-      const { error: answersError } = await supabase.from("copsoq_answers").insert(answersData);
-      if (answersError) throw answersError;
-
-      const { error: updateError } = await supabase
-        .from("copsoq_responses")
-        .update(buildDepartmentsPayload(department, departments.length))
-        .eq("id", response.id);
-
-      if (updateError) throw updateError;
-
-      setIsComplete(true);
-      toast.success("Avaliação enviada com sucesso!");
-    } catch (error) {
-      console.error("Error submitting assessment:", error);
-      logAccess('error', { module: 'copsoq', assessment_id: assessmentId, action: 'submit_error', error: String(error) });
-      toast.error("Erro ao enviar avaliação. Tente novamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
+      setIsSubmitting(true);
+      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert(buildResponsePayload()).select('id').single();
+      if (re) throw re;
+      const answersData = Object.entries(answers).map(([qn, v]) => ({ response_id: (response as any).id, question_number: parseInt(qn), answer_value: v }));
+      const { error: ae } = await supabase.from('copsoq_answers' as any).insert(answersData);
+      if (ae) throw ae;
+      setIsCompleted(true);
+    } catch (e) { console.error(e); toast({ title: 'Erro ao enviar', description: 'Tente novamente.', variant: 'destructive' }); }
+    finally { setIsSubmitting(false); }
   };
 
-  if (isLoading) {
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (error) return <div className="min-h-screen flex items-center justify-center bg-background p-4"><Card className="max-w-md w-full"><CardContent className="pt-6 text-center"><AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" /><h2 className="text-xl font-semibold mb-2">Avaliação Indisponível</h2><p className="text-muted-foreground">{error}</p></CardContent></Card></div>;
+  if (isCompleted) return <div className="min-h-screen flex items-center justify-center bg-background p-4"><Card className="max-w-md w-full"><CardContent className="pt-6 text-center"><div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle2 className="h-8 w-8 text-green-600" /></div><h2 className="text-2xl font-bold text-foreground mb-2">Obrigado!</h2><p className="text-muted-foreground mb-4">Sua avaliação foi enviada com sucesso. Suas respostas são anônimas.</p><div className="p-4 bg-muted rounded-lg"><p className="text-sm text-muted-foreground">Você pode fechar esta página.</p></div></CardContent></Card></div>;
+
+  const isAiMode = (assessment as any)?.collection_mode === 'ai';
+  const defaultScale = COPSOQ_SCALES['frequency'];
+
+  const handleAiComplete = async (aiAnswers: Record<number, number>) => {
+    if (!assessment) return;
+    try {
+      setIsSubmitting(true);
+      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert(buildResponsePayload()).select('id').single();
+      if (re) throw re;
+      const data = Object.entries(aiAnswers).map(([qn, v]) => ({ response_id: (response as any).id, question_number: parseInt(qn), answer_value: v }));
+      const { error: ae } = await supabase.from('copsoq_answers' as any).insert(data);
+      if (ae) throw ae;
+      setIsCompleted(true);
+    } catch (e) { console.error(e); toast({ title: 'Erro ao enviar', variant: 'destructive' }); }
+    finally { setIsSubmitting(false); }
+  };
+
+  const SectorPicker = ({ compact = false }: { compact?: boolean }) => (
+    isMultiSector ? (
+      <div className="space-y-2">
+        <div className="flex gap-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-xs text-foreground/90">
+          <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+          <p>Marque todos os setores em que você atua. Sua resposta será contabilizada em cada um.</p>
+        </div>
+        {departments.map(d => {
+          const checked = selectedDepartments.includes(d.name);
+          return (
+            <label key={d.id} className="flex items-center gap-3 p-2 rounded-md border cursor-pointer hover:bg-muted/50">
+              <Checkbox
+                checked={checked}
+                onCheckedChange={(c) => {
+                  setSelectedDepartments(prev => c ? [...prev, d.name] : prev.filter(x => x !== d.name));
+                  setShowDepartmentError(false);
+                }}
+              />
+              <span className="text-sm">{d.name}</span>
+            </label>
+          );
+        })}
+      </div>
+    ) : (
+      <Select value={selectedDepartment} onValueChange={v => { setSelectedDepartment(v); setShowDepartmentError(false); }}>
+        <SelectTrigger className={showDepartmentError && !selectedDepartment ? 'border-destructive' : ''}>
+          <SelectValue placeholder={compact ? 'Selecione' : 'Escolha seu setor'} />
+        </SelectTrigger>
+        <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
+      </Select>
+    )
+  );
+
+  if (isAiMode) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando avaliação...</p>
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
+        <div className="container mx-auto px-4">
+          {departments.length > 0 && !hasSectorSelection ? (
+            <div className="max-w-md mx-auto">
+              <Card><CardHeader><CardTitle>{isMultiSector ? 'Selecione seus setores' : 'Selecione seu setor'}</CardTitle></CardHeader>
+              <CardContent><SectorPicker compact /></CardContent></Card>
+            </div>
+          ) : (
+            <SoniaFormChat
+              questions={questions}
+              likertOptions={defaultScale}
+              getOptions={(q) => COPSOQ_SCALES[(q as COPSOQGenericQuestion).scaleType] || defaultScale}
+              categoryLabels={categoryLabels}
+              onComplete={handleAiComplete}
+              assessmentTitle={assessment?.title || 'COPSOQ II'}
+              toolName="COPSOQ II"
+            />
+          )}
         </div>
       </div>
     );
   }
 
-  if (isComplete) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <div className="mx-auto mb-4 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-              <CheckCircle2 className="h-10 w-10 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">Avaliação Concluída!</CardTitle>
-            <CardDescription className="text-base mt-2">
-              Obrigado por participar da avaliação COPSOQ II. Suas respostas são anônimas e contribuirão para melhorar o ambiente de trabalho.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div className="flex-1">
-                <CardTitle className="text-2xl mb-2">
-                  Avaliação COPSOQ II
-                  <span className="text-base font-normal text-muted-foreground ml-2">
-                    ({versionData.versionLabel} — {versionData.versionDescription})
-                  </span>
-                </CardTitle>
-                <CardDescription className="text-base">{assessment?.title}</CardDescription>
-                {companyName && <Badge variant="secondary" className="mt-2">{companyName}</Badge>}
-              </div>
-              <div className="text-right shrink-0">
-                <div className="text-sm text-muted-foreground mb-1">Progresso</div>
-                <div className="text-2xl font-bold text-primary">
-                  {Object.keys(answers).length}/{questions.length}
-                </div>
-              </div>
-            </div>
-            <Progress value={getProgress()} className="h-2 mt-4" />
-          </CardHeader>
-        </Card>
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      <div ref={topRef} />
+      <header className="bg-card border-b sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            {assessment?.companies?.logo_url ? (
+              <img src={assessment.companies.logo_url} alt={assessment.companies.name} className="h-10 w-10 object-contain" />
+            ) : (
+              <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center"><Building2 className="h-5 w-5 text-primary" /></div>
+            )}
+            <div><h1 className="font-semibold text-foreground">{assessment?.companies?.name}</h1><p className="text-sm text-muted-foreground">{assessment?.title}</p></div>
+          </div>
+        </div>
+      </header>
 
-        {/* AI Assistant Button */}
-        {!aiLoading && aiEnabled && !aiMode && currentPage === 0 && (
-          <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">Prefere responder com ajuda da SOnIA?</p>
-                    <p className="text-xs text-muted-foreground">Nossa IA guia você pergunta por pergunta</p>
-                  </div>
+      <main className="container mx-auto px-4 py-8 max-w-2xl">
+        {currentPage === 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex items-center gap-3 mb-2"><FileText className="h-6 w-6 text-primary" /><CardTitle>Avaliação COPSOQ II — {versionData.versionLabel}</CardTitle></div>
+              <CardDescription>{assessment?.description || 'Esta avaliação tem como objetivo identificar fatores de risco psicossocial no ambiente de trabalho. Suas respostas são completamente anônimas.'}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {departments.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    {isMultiSector ? 'Selecione todos os setores em que você atua' : 'Selecione seu setor'} <span className="text-destructive">*</span>
+                  </Label>
+                  <SectorPicker />
+                  {showDepartmentError && !hasSectorSelection && (
+                    <p className="text-sm text-destructive">{isMultiSector ? 'Selecione ao menos um setor.' : 'Selecione o setor.'}</p>
+                  )}
                 </div>
-                <Button onClick={() => setAiMode(true)} size="sm" className="gap-2 shrink-0">
-                  <Sparkles className="h-4 w-4" />
-                  Responder com IA
-                </Button>
-              </div>
+              )}
             </CardContent>
           </Card>
         )}
 
-        {/* AI Chat Mode */}
-        {aiMode ? (
-          <SoniaFormChat
-            questions={questions}
-            likertOptions={defaultScale}
-            getOptions={(q) => COPSOQ_SCALES[(q as COPSOQGenericQuestion).scaleType] || defaultScale}
-            categoryLabels={categoryLabels}
-            onComplete={(aiAnswers) => { setAnswers(aiAnswers); setAiMode(false); setCurrentPage(totalPages); }}
-            assessmentTitle={assessment?.title || "COPSOQ II"}
-            toolName="COPSOQ II"
-          />
-        ) : (
-          <>
-            {/* Respondent Info */}
-            {currentPage === 0 && (
-              <Card className="mb-6">
-                <CardHeader><CardTitle className="text-lg">Suas Informações (Opcional)</CardTitle></CardHeader>
-                <CardContent className="grid sm:grid-cols-2 gap-4">
-                  <Input placeholder="Seu nome (opcional)" value={respondentName} onChange={e => setRespondentName(e.target.value)} />
-                  {assessment?.multi_sector_enabled !== false && (
-                    departments.length > 0 ? (
-                      <Select value={department} onValueChange={setDepartment}>
-                        <SelectTrigger><SelectValue placeholder="Selecione seu setor (opcional)" /></SelectTrigger>
-                        <SelectContent>
-                          {departments.map(dept => <SelectItem key={dept} value={dept}>{dept}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input placeholder="Setor/Departamento (opcional)" value={department} onChange={e => setDepartment(e.target.value)} />
-                    )
-                  )}
-                </CardContent>
-              </Card>
-            )}
+        <div className="mb-6">
+          <div className="flex justify-between text-sm text-muted-foreground mb-2"><span>Progresso</span><span>{Object.keys(answers).length} de {questions.length} questões</span></div>
+          <Progress value={getProgress()} className="h-2" />
+        </div>
 
-            {/* Questions */}
-            <div className="space-y-4 mb-6">
-              {currentQuestions.map(q => (
-                <div key={q.number} className="space-y-4">
-                  {versionData.version === 'medium' && MEDIUM_SECTION_NOTES[q.number] && (
-                    <div className="flex gap-2 p-3 rounded-md bg-primary/5 border border-primary/20 text-sm text-foreground/90">
-                      <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                      <p>{MEDIUM_SECTION_NOTES[q.number]}</p>
-                    </div>
-                  )}
-                  <QuestionCard
-                    question={q}
-                    categoryLabel={categoryLabels[q.category] || q.category}
-                    selectedValue={answers[q.number]}
-                    onAnswer={(value) => handleAnswer(q.number, value)}
-                  />
+        <div className="space-y-4">
+          {currentQuestions.map(q => (
+            <div key={q.number} className="space-y-4">
+              {versionData.version === 'medium' && MEDIUM_SECTION_NOTES[q.number] && (
+                <div className="flex gap-2 p-3 rounded-md bg-primary/5 border border-primary/20 text-sm text-foreground/90">
+                  <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                  <p>{MEDIUM_SECTION_NOTES[q.number]}</p>
                 </div>
-              ))}
+              )}
+              <QuestionCard
+                question={q}
+                categoryLabel={categoryLabels[q.category] || q.category}
+                selectedValue={answers[q.number]}
+                onAnswer={handleAnswer}
+              />
             </div>
+          ))}
+        </div>
 
-            {/* Navigation */}
-            <Card>
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <Button variant="outline" onClick={handlePrevious} disabled={currentPage === 0}>
-                    <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
-                  </Button>
-                  <span className="text-sm text-muted-foreground">Página {currentPage + 1} de {totalPages}</span>
-                  {currentPage < totalPages - 1 ? (
-                    <Button onClick={handleNext}>Próxima <ChevronRight className="h-4 w-4 ml-2" /></Button>
-                  ) : (
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={isSubmitting || Object.keys(answers).length < questions.length}
-                      className="bg-primary hover:bg-primary/90"
-                    >
-                      {isSubmitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enviando...</> : <><CheckCircle2 className="h-4 w-4 mr-2" />Finalizar Avaliação</>}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </>
-        )}
-      </div>
+        <div className="flex justify-between items-center mt-8">
+          <Button variant="outline" onClick={handlePrev} disabled={currentPage === 0} className="gap-2"><ChevronLeft className="h-4 w-4" />Anterior</Button>
+          <span className="text-sm text-muted-foreground">Página {currentPage + 1} de {totalPages}</span>
+          {currentPage === totalPages - 1 ? (
+            <Button onClick={handleSubmit} disabled={isSubmitting || Object.keys(answers).length < questions.length} className="gap-2">
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Enviar Respostas
+            </Button>
+          ) : (
+            <Button onClick={handleNext} className="gap-2">Próximo<ChevronRight className="h-4 w-4" /></Button>
+          )}
+        </div>
+      </main>
+      <footer className="border-t mt-12 py-6"><div className="container mx-auto px-4 text-center"><p className="text-sm text-muted-foreground">Suas respostas são anônimas e confidenciais.</p></div></footer>
     </div>
   );
 }

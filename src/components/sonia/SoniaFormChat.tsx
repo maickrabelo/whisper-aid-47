@@ -24,6 +24,8 @@ interface SoniaFormChatProps {
   onComplete: (answers: Record<number, number>) => void;
   assessmentTitle: string;
   toolName: string;
+  /** Opcional: retorna as opções de resposta específicas de cada questão (ex.: versão média do COPSOQ tem escalas diferentes por bloco). */
+  getOptions?: (question: Question) => LikertOption[];
 }
 
 const ENCOURAGEMENTS = [
@@ -48,6 +50,7 @@ export default function SoniaFormChat({
   onComplete,
   assessmentTitle,
   toolName,
+  getOptions,
 }: SoniaFormChatProps) {
   const { hasAccess: aiEnabled, isLoading: aiLoading } = useAiAccess();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -133,7 +136,7 @@ export default function SoniaFormChat({
                 </div>
                 <div className="flex justify-end">
                   <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-2 text-sm">
-                    {likertOptions.find(o => o.value === answers[q.number])?.label || "—"}
+                    {(getOptions ? getOptions(q) : likertOptions).find(o => o.value === answers[q.number])?.label || "—"}
                   </div>
                 </div>
                 {(i + 1) % 7 === 0 && i + 1 < currentIndex && (
@@ -170,7 +173,7 @@ export default function SoniaFormChat({
                   </div>
                 </div>
                 <div className="ml-11 flex flex-col gap-2">
-                  {likertOptions.map(option => (
+                  {(getOptions ? getOptions(currentQuestion) : likertOptions).map(option => (
                     <button
                       key={option.value}
                       onClick={() => handleAnswer(option.value)}

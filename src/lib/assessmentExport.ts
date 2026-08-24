@@ -5,10 +5,7 @@ import {
   HSEIT_CATEGORY_LABELS,
   HSEIT_LIKERT_OPTIONS,
 } from '@/data/hseitQuestions';
-import {
-  COPSOQ_QUESTIONS_SORTED,
-  COPSOQ_CATEGORY_LABELS,
-} from '@/data/copsoqQuestions';
+import { getCOPSOQVersionData } from '@/lib/copsoqVersion';
 import {
   BURNOUT_QUESTIONS,
   BURNOUT_CATEGORY_LABELS,
@@ -48,7 +45,7 @@ const BURNOUT_LABELS: Record<number, string> = BURNOUT_LIKERT_OPTIONS.reduce(
   {} as Record<number, string>
 );
 
-function getQuestions(type: AssessmentType): QuestionMeta[] {
+function getQuestions(type: AssessmentType, copsoqVersion?: string | null): QuestionMeta[] {
   if (type === 'hseit') {
     return HSEIT_QUESTIONS_SORTED.map(q => ({
       number: q.number,
@@ -58,11 +55,12 @@ function getQuestions(type: AssessmentType): QuestionMeta[] {
     }));
   }
   if (type === 'copsoq') {
-    return COPSOQ_QUESTIONS_SORTED.map(q => ({
+    const vd = getCOPSOQVersionData(copsoqVersion);
+    return vd.questions.map(q => ({
       number: q.number,
       text: q.text,
       category: q.category,
-      categoryLabel: COPSOQ_CATEGORY_LABELS[q.category],
+      categoryLabel: vd.categoryLabels[q.category] || q.category,
     }));
   }
   if (type === 'burnout') {
@@ -151,7 +149,7 @@ async function fetchAssessmentData(config: ExportConfig): Promise<FetchedData> {
     assessment,
     responses: responses || [],
     answers,
-    questions: getQuestions(assessmentType),
+    questions: getQuestions(assessmentType, assessmentType === 'copsoq' ? (assessment as any)?.questionnaire_version : null),
     scaleLabels: getScaleLabels(assessmentType),
   };
 }

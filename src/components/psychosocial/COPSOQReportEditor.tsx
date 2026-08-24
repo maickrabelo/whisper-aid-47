@@ -8,14 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2, Plus, Trash2, PenLine, Save } from "lucide-react";
 import { toast } from "sonner";
-import { generateCOPSOQReport, COPSOQ_RECOMMENDATIONS } from "./COPSOQReportPDF";
-import {
-  ALL_CATEGORIES,
-  COPSOQ_CATEGORY_LABELS,
-  COPSOQCategory,
-  getRiskLevel,
-  RISK_LEVEL_LABELS,
-} from "@/data/copsoqQuestions";
+import { generateCOPSOQReport, COPSOQ_RECOMMENDATIONS, GENERIC_COPSOQ_RECOMMENDATION } from "./COPSOQReportPDF";
+import { RISK_LEVEL_LABELS } from "@/data/copsoqQuestions";
+import { getCOPSOQVersionData } from "@/lib/copsoqVersion";
 import { DEFAULT_RECOMMENDED_PERIODICITY, PsychosocialReportDraftConfig, saveReportDraft } from "@/lib/psychosocialReportDrafts";
 import { ReportSignatureFields, SignatureFieldsValue } from "./ReportSignatureFields";
 
@@ -30,7 +25,7 @@ interface Response {
 
 export interface COPSOQActionItem {
   id: string;
-  category: COPSOQCategory;
+  category: string;
   priority: 'immediate' | 'short_term' | 'medium_term';
   description: string;
   recommendation: string;
@@ -48,6 +43,8 @@ interface COPSOQReportEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   assessment: { id: string; title: string; description: string | null; createdAt: string };
+  /** Versão do questionário da avaliação ('short' | 'medium') */
+  version?: string | null;
   companyName: string;
   companyId?: string | null;
   responses: Response[];
@@ -77,6 +74,7 @@ export function COPSOQReportEditor({
   open,
   onOpenChange,
   assessment,
+  version,
   companyName,
   companyId,
   responses,
@@ -91,6 +89,11 @@ export function COPSOQReportEditor({
 }: COPSOQReportEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Dados específicos da versão do questionário (curta x média)
+  const vd = getCOPSOQVersionData(version);
+  const VCATS = vd.allCategories;
+  const VLABELS = vd.categoryLabels;
 
   const defaultsAppliedRef = useRef(false);
   const loadedConfigRef = useRef(false);
@@ -127,9 +130,9 @@ export function COPSOQReportEditor({
     if (patch.orgResponsibleRole !== undefined) setOrgResponsibleRole(patch.orgResponsibleRole);
   };
 
-  const dimensions = ALL_CATEGORIES
+  const dimensions = VCATS
     .filter(cat => typeof categoryAverages[cat] === 'number' && categoryAverages[cat] > 0)
-    .map(cat => ({ category: cat, average: categoryAverages[cat], level: getRiskLevel(categoryAverages[cat]) }));
+    .map(cat => ({ category: cat, average: categoryAverages[cat], level: vd.getRiskLevel(categoryAverages[cat]) }));
 
   // Carrega a última versão salva (apenas uma vez por abertura)
   useEffect(() => {
@@ -169,10 +172,10 @@ export function COPSOQReportEditor({
       `Este relatório apresenta os resultados da avaliação de riscos psicossociais COPSOQ II realizada na ${companyName}.\n\n` +
       `A avaliação contou com ${responses.length} respostas válidas distribuídas em ${departments.length || 1} setor(es).\n\n` +
       (critical.length > 0
-        ? `Foram identificadas ${critical.length} dimensão(ões) em nível de risco que requerem atenção imediata: ${critical.map(d => COPSOQ_CATEGORY_LABELS[d.category]).join(', ')}.`
+        ? `Foram identificadas ${critical.length} dimensão(ões) em nível de risco que requerem atenção imediata: ${critical.map(d => (VLABELS[d.category] || d.category)).join(', ')}.`
         : 'Não foram identificadas dimensões em nível de risco no consolidado.') +
       (intermediate.length > 0
-        ? `\n\n${intermediate.length} dimensão(ões) estão em nível intermediário e merecem monitoramento: ${intermediate.map(d => COPSOQ_CATEGORY_LABELS[d.category]).join(', ')}.`
+        ? `\n\n${intermediate.length} dimensão(ões) estão em nível intermediário e merecem monitoramento: ${intermediate.map(d => (VLABELS[d.category] || d.category)).join(', ')}.`
         : '')
     );
 
@@ -181,15 +184,15 @@ export function COPSOQReportEditor({
         id: crypto.randomUUID(),
         category: d.category,
         priority: 'immediate' as const,
-        description: `Dimensão "${COPSOQ_CATEGORY_LABELS[d.category]}" apresenta indicadores de risco (média: ${d.average.toFixed(2)}).`,
-        recommendation: COPSOQ_RECOMMENDATIONS[d.category].risk,
+        description: `Dimensão "${(VLABELS[d.category] || d.category)}" apresenta indicadores de risco (média: ${d.average.toFixed(2)}).`,
+        recommendation: (COPSOQ_RECOMMENDATIONS[d.category] || GENERIC_COPSOQ_RECOMMENDATION).risk,
       })),
       ...intermediate.map(d => ({
         id: crypto.randomUUID(),
         category: d.category,
         priority: 'short_term' as const,
-        description: `Dimensão "${COPSOQ_CATEGORY_LABELS[d.category]}" apresenta indicadores intermediários (média: ${d.average.toFixed(2)}).`,
-        recommendation: COPSOQ_RECOMMENDATIONS[d.category].intermediate,
+        description: `Dimensão "${(VLABELS[d.category] || d.category)}" apresenta indicadores intermediários (média: ${d.average.toFixed(2)}).`,
+        recommendation: (COPSOQ_RECOMMENDATIONS[d.category] || GENERIC_COPSOQ_RECOMMENDATION).intermediate,
       })),
     ]);
 
@@ -260,6 +263,7 @@ export function COPSOQReportEditor({
           createdAt: assessment.createdAt,
         },
         companyName,
+        version,
         responses,
         selectedDepartment,
         departments,
@@ -361,7 +365,7 @@ export function COPSOQReportEditor({
                             'border-l-green-500 bg-green-50'
                           }`}
                         >
-                          <div className="font-medium">{COPSOQ_CATEGORY_LABELS[d.category]}</div>
+                          <div className="font-medium">{(VLABELS[d.category] || d.category)}</div>
                           <div className="text-sm text-muted-foreground">
                             Média: {d.average.toFixed(2)} - {RISK_LEVEL_LABELS[d.level]}
                           </div>
@@ -420,7 +424,7 @@ export function COPSOQReportEditor({
                     variant="outline"
                     onClick={() => setActionItems(items => [...items, {
                       id: crypto.randomUUID(),
-                      category: ALL_CATEGORIES[0],
+                      category: VCATS[0],
                       priority: 'short_term',
                       description: '',
                       recommendation: '',
@@ -445,8 +449,8 @@ export function COPSOQReportEditor({
                           <Select value={item.category} onValueChange={(v) => updateAction(item.id, 'category', v)}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {ALL_CATEGORIES.map(cat => (
-                                <SelectItem key={cat} value={cat}>{COPSOQ_CATEGORY_LABELS[cat]}</SelectItem>
+                              {VCATS.map(cat => (
+                                <SelectItem key={cat} value={cat}>{VLABELS[cat] || cat}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>

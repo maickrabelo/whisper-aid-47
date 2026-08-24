@@ -14,7 +14,7 @@ import {
   type HSEITDimensionScore,
 } from "@/lib/hseitDimensionScoring";
 import {
-  computeCOPSOQDimensions,
+  computeCOPSOQDimensionsByVersion,
   copsoqRiskToSevProb,
   isHighRisk as isHighRiskCOPSOQ,
   type COPSOQDimensionScore,
@@ -46,6 +46,7 @@ interface AssessmentOption {
   title: string;
   created_at: string;
   respondents: number;
+  questionnaireVersion?: string | null;
 }
 
 interface Dimension {
@@ -81,7 +82,7 @@ export function ImportAssessmentDialog({ open, onOpenChange, type, companyId, on
       try {
         const { data: ass } = await supabase
           .from(tableAssessments as any)
-          .select('id, title, created_at')
+          .select(type === 'copsoq' ? 'id, title, created_at, questionnaire_version' : 'id, title, created_at')
           .eq('company_id', companyId)
           .order('created_at', { ascending: false });
         const list = (ass as any[]) || [];
@@ -93,7 +94,7 @@ export function ImportAssessmentDialog({ open, onOpenChange, type, companyId, on
             .select('id', { count: 'exact', head: true })
             .eq('assessment_id', a.id)
             .not('completed_at', 'is', null);
-          return { id: a.id, title: a.title, created_at: a.created_at, respondents: count || 0 };
+          return { id: a.id, title: a.title, created_at: a.created_at, respondents: count || 0, questionnaireVersion: a.questionnaire_version ?? null };
         }));
         setAssessments(enriched.filter(a => a.respondents > 0));
       } catch (e: any) {
@@ -144,7 +145,8 @@ export function ImportAssessmentDialog({ open, onOpenChange, type, companyId, on
           };
         });
       } else {
-        const scored: COPSOQDimensionScore[] = computeCOPSOQDimensions(rows);
+        const ver = assessments.find(a => a.id === assessmentId)?.questionnaireVersion;
+        const scored: COPSOQDimensionScore[] = computeCOPSOQDimensionsByVersion(ver, rows);
         dims = scored.map(d => {
           const sp = copsoqRiskToSevProb(d.riskLevel);
           return {

@@ -12,6 +12,7 @@ import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download, Wheat, X, Info }
 import { toast } from "sonner";
 import { usePgrTerminology } from "@/hooks/usePgrTerminology";
 import { COPSOQ_CATEGORY_LABELS } from "@/data/copsoqQuestions";
+import { COPSOQ_MEDIUM_CATEGORY_LABELS } from "@/data/copsoqMediumQuestions";
 import { AEPBadge } from "@/components/aep/AEPBadge";
 
 type MatrixSize = 3 | 4 | 5;
@@ -339,7 +340,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId, documentType }: { pgrD
           'Relacionamentos', 'Função', 'Mudanças'
         ];
       } else {
-        dimensions = Object.values(COPSOQ_CATEGORY_LABELS);
+        dimensions = Array.from(new Set<string>([...Object.values(COPSOQ_CATEGORY_LABELS), ...Object.values(COPSOQ_MEDIUM_CATEGORY_LABELS)]));
       }
       const inserts = dimensions.map(d => ({
         pgr_document_id: pgrDocumentId,

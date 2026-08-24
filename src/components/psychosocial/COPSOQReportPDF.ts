@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
-import fundoPsico from '@/assets/fundo-psico.jpg.asset.json';
+import fundoPsico from '@/assets/fundo-psico-v2.jpg.asset.json';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import {
   COPSOQ_QUESTIONS,
@@ -351,9 +351,8 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
 
   y = ph - 25;
   setText(9, false, COLORS.muted);
-  pdf.text(`Gerado em ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}`, pw / 2, y, { align: 'center' });
   if (input.sstName) {
-    pdf.text(`Elaborado por ${input.sstName}`, pw / 2, y + 5, { align: 'center' });
+    pdf.text(`Elaborado por ${input.sstName}`, pw / 2, y, { align: 'center' });
   }
 
   // ══════════════════════════════════════════
@@ -454,13 +453,6 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
 
   const finalizeDocument = () => {
     drawSignatureBlock();
-    const totalPages = (pdf as any).internal.getNumberOfPages();
-    for (let p = 2; p <= totalPages; p++) {
-      pdf.setPage(p);
-      setText(8, false, COLORS.muted);
-      pdf.text(`Página ${p} de ${totalPages}`, pw - margin, ph - 8, { align: 'right' });
-      pdf.text('Relatório COPSOQ II', margin, ph - 8);
-    }
     const safeName = input.companyName.replace(/[^\w]+/g, '_').substring(0, 40);
     pdf.save(`Relatorio_COPSOQ_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);
   };

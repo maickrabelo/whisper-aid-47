@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
-import fundoPsico from '@/assets/fundo-psico.jpg.asset.json';
+import fundoPsico from '@/assets/fundo-psico-v2.jpg.asset.json';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import {
   HSEITCategory,
@@ -985,18 +985,6 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   y = Math.max(leftY, rightY, sigTop + 10) + 5;
   pdf.text(`Local e Data: _______________, ${new Date().toLocaleDateString('pt-BR')}`, m + 20, y);
 
-  // ═══ RODAPÉ EM TODAS AS PÁGINAS ═══
-  const totalPages = (pdf as any).internal.pages.length - 1;
-  for (let i = 1; i <= totalPages; i++) {
-    pdf.setPage(i);
-    pdf.setFontSize(7);
-    pdf.setFont('helvetica', 'normal');
-    setColor(150, 150, 150);
-    pdf.text(`Página ${i} de ${totalPages}`, pw / 2, ph - 8, { align: 'center' });
-    pdf.text('PGR — Riscos Psicossociais — CONFIDENCIAL', m, ph - 8);
-    pdf.setDrawColor(200, 200, 200);
-    pdf.line(m, ph - 12, pw - m, ph - 12);
-  }
 
   // Save
   const fileName = `PGR_Riscos_Psicossociais_${data.assessment.companyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;

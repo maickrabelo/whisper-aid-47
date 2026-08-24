@@ -162,7 +162,6 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
   doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', PAGE_W / 2, 212.5, { align: 'center' });
 
   setText(8, false, MUTED);
-  doc.text('Documento gerado pela plataforma Sr.SMS — módulo LTCAT (beta privado)', PAGE_W / 2, PAGE_H - 24, { align: 'center' });
   doc.text('Sem valor oficial para fins de transmissão ao eSocial ou ao INSS nesta fase de validação', PAGE_W / 2, PAGE_H - 19, { align: 'center' });
 
   // ─── INTERIOR ──────────────────────────────────────────────
@@ -354,8 +353,6 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
     doc.setFontSize(7.5);
     doc.setTextColor(RED[0], RED[1], RED[2]);
     doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', MARGIN, PAGE_H - 10);
-    doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
-    doc.text(`Gerado em ${todayBR()} — Página ${i} de ${totalPages}`, PAGE_W - MARGIN, PAGE_H - 10, { align: 'right' });
   }
 
   const safeName = sanitizePdfText(input.company.name || 'empresa').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_');

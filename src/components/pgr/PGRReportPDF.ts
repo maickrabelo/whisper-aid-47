@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
-import fundoPgr from '@/assets/fundo-pgr.jpg.asset.json';
+import fundoPgr from '@/assets/fundo-pgr-v2.jpg.asset.json';
 
 // ─────────────────────────────────────────────────────────────
 // Tipos
@@ -199,11 +199,9 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     doc.line(MARGIN, MARGIN + 3, PAGE_W - MARGIN, MARGIN + 3);
   };
 
+  // Rodapé removido: sem textos de geração ou paginação
   const addFooter = () => {
     if (state.skipChrome) return;
-    setText(TYPE.caption, false, COLORS.muted);
-    doc.text(input.company.name || 'Empresa', MARGIN, PAGE_H - MARGIN + 2);
-    doc.text(`Página ${state.page}`, PAGE_W - MARGIN, PAGE_H - MARGIN + 2, { align: 'right' });
   };
 
   const newPage = () => {
@@ -523,13 +521,6 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   doc.text(`Revisão ${String(input.pgr.version).padStart(2, '0')}  •  Emitido em ${todayBR()}`,
     PAGE_W / 2, 190, { align: 'center' });
 
-  // Rodapé capa
-
-  setText(8, false, COLORS.muted);
-  doc.text('Documento gerado pela plataforma Sr.SMS — Gestão de Riscos Psicossociais',
-    PAGE_W / 2, PAGE_H - 24, { align: 'center' });
-  doc.text('Conforme NR-01 (item 1.5) e diretrizes do Gerenciamento de Riscos Ocupacionais (GRO)',
-    PAGE_W / 2, PAGE_H - 19, { align: 'center' });
 
   // ─── INTERIOR ─────────────────────────────────────────────
   newPage();

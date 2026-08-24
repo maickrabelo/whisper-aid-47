@@ -37,6 +37,7 @@ export default function COPSOQManagement() {
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   const [collectionMode, setCollectionMode] = useState<string>('form');
+  const [questionnaireVersion, setQuestionnaireVersion] = useState<'short' | 'medium'>('short');
   const [multiSectorEnabled, setMultiSectorEnabled] = useState(false);
   const [showUnallocatedDialog, setShowUnallocatedDialog] = useState(false);
   const [pendingRemaining, setPendingRemaining] = useState(0);
@@ -98,6 +99,7 @@ export default function COPSOQManagement() {
         setEndDate(a.end_date ? a.end_date.split('T')[0] : '');
         setIsActive(a.is_active);
         setCollectionMode(a.collection_mode || 'form');
+        setQuestionnaireVersion(a.questionnaire_version === 'medium' ? 'medium' : 'short');
         setMultiSectorEnabled(!!a.multi_sector_enabled);
         const { data: depts } = await supabase.from('copsoq_departments' as any).select('*').eq('assessment_id', id).order('order_index');
         setDepartments((depts as any[]) || []);
@@ -135,7 +137,7 @@ export default function COPSOQManagement() {
   const persistAssessment = async () => {
     try {
       setIsSaving(true);
-      const data: any = { company_id: selectedCompany, title, description: description || null, start_date: startDate || null, end_date: endDate || null, is_active: isActive, created_by: user?.id, collection_mode: 'form', multi_sector_enabled: multiSectorEnabled };
+      const data: any = { company_id: selectedCompany, title, description: description || null, start_date: startDate || null, end_date: endDate || null, is_active: isActive, created_by: user?.id, collection_mode: 'form', multi_sector_enabled: multiSectorEnabled, questionnaire_version: questionnaireVersion };
       let assessmentId = id;
 
       if (isEditing) {
@@ -215,6 +217,34 @@ export default function COPSOQManagement() {
                   </div>
                 </div>
                 <div className="space-y-2"><Label>Título *</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Avaliação COPSOQ II 2024" /></div>
+                <div className="space-y-2">
+                  <Label>Versão do questionário *</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {([
+                      { value: 'short', title: 'Versão Curta', desc: '41 questões · 23 dimensões', detail: 'Aplicação rápida (~10 min de resposta)' },
+                      { value: 'medium', title: 'Versão Média', desc: '76 questões · 29 dimensões', detail: 'Silva et al. (2011) — cobertura ampliada (~20 min)' },
+                    ] as const).map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        disabled={isEditing}
+                        onClick={() => setQuestionnaireVersion(opt.value)}
+                        className={`text-left p-3 rounded-lg border-2 transition-all ${
+                          questionnaireVersion === opt.value
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/40'
+                        } ${isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                      >
+                        <div className="font-medium text-sm">{opt.title}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{opt.desc}</div>
+                        <div className="text-xs text-muted-foreground">{opt.detail}</div>
+                      </button>
+                    ))}
+                  </div>
+                  {isEditing
+                    ? <p className="text-xs text-muted-foreground">A versão não pode ser alterada após a criação da avaliação.</p>
+                    : <p className="text-xs text-muted-foreground">A versão define o questionário aplicado aos colaboradores e não poderá ser alterada depois.</p>}
+                </div>
                 <div className="space-y-2"><Label>Descrição</Label><Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva o objetivo..." rows={3} /></div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2"><Label>Data de Início</Label><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
@@ -282,15 +312,24 @@ export default function COPSOQManagement() {
               <CardHeader><CardTitle>Sobre o COPSOQ II</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground space-y-2">
                 <p>O COPSOQ II (Copenhagen Psychosocial Questionnaire) é um instrumento validado internacionalmente para avaliação de fatores psicossociais no trabalho.</p>
-                <p>A versão curta contém 41 questões que avaliam 23 dimensões organizadas em 6 grupos:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Exigências do Trabalho</li>
-                  <li>Organização e Conteúdo</li>
-                  <li>Relações e Liderança</li>
-                  <li>Interface Trabalho-Indivíduo</li>
-                  <li>Saúde e Bem-estar</li>
-                  <li>Valores no Local de Trabalho</li>
-                </ul>
+                {questionnaireVersion === 'medium' ? (
+                  <>
+                    <p>A <strong>versão média</strong> (Silva et al., 2011) contém 76 questões que avaliam 29 dimensões, incluindo recompensas, confiança horizontal/vertical, autoeficácia, problemas para dormir e sintomas depressivos.</p>
+                    <p>A interpretação é feita por dimensão, com classificação em semáforo (favorável, intermediário, risco) por tercis da escala.</p>
+                  </>
+                ) : (
+                  <>
+                    <p>A <strong>versão curta</strong> contém 41 questões que avaliam 23 dimensões organizadas em 6 grupos:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Exigências do Trabalho</li>
+                      <li>Organização e Conteúdo</li>
+                      <li>Relações e Liderança</li>
+                      <li>Interface Trabalho-Indivíduo</li>
+                      <li>Saúde e Bem-estar</li>
+                      <li>Valores no Local de Trabalho</li>
+                    </ul>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

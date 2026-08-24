@@ -2,12 +2,14 @@
 // Questionário de Avaliação de Riscos Psicossociais
 // ~41 questões divididas em 23 dimensões
 
+export type COPSOQScaleType = 'frequency' | 'intensity' | 'satisfaction' | 'extent' | 'health';
+
 export interface COPSOQQuestion {
   number: number;
   text: string;
   category: COPSOQCategory;
   isInverted: boolean; // Se true, pontuação alta = desfavorável, precisa inverter
-  scaleType: 'frequency' | 'intensity' | 'satisfaction' | 'extent';
+  scaleType: COPSOQScaleType;
 }
 
 export type COPSOQCategory =
@@ -130,6 +132,14 @@ export const COPSOQ_SCALES = {
     { value: 3, label: 'Moderadamente' },
     { value: 4, label: 'Muito' },
     { value: 5, label: 'Extremamente' },
+  ],
+  // Escala exclusiva do item de Saúde Geral (versão média, item 61)
+  health: [
+    { value: 1, label: 'Excelente' },
+    { value: 2, label: 'Muito boa' },
+    { value: 3, label: 'Boa' },
+    { value: 4, label: 'Razoável' },
+    { value: 5, label: 'Deficitária' },
   ],
 };
 

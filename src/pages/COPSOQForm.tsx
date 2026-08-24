@@ -9,7 +9,9 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText, Building2, Info } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { COPSOQ_QUESTIONS_SORTED, COPSOQ_SCALES, COPSOQ_CATEGORY_LABELS, type COPSOQQuestion } from '@/data/copsoqQuestions';
+import { COPSOQ_SCALES } from '@/data/copsoqQuestions';
+import { MEDIUM_SECTION_NOTES } from '@/data/copsoqMediumQuestions';
+import { getCOPSOQVersionData, type COPSOQGenericQuestion } from '@/lib/copsoqVersion';
 import SoniaFormChat from '@/components/sonia/SoniaFormChat';
 
 
@@ -19,13 +21,15 @@ interface Assessment {
   description: string | null;
   is_active: boolean;
   multi_sector_enabled?: boolean | null;
+  questionnaire_version?: string | null;
   companies: { name: string; logo_url: string | null; };
 }
 
 interface Department { id: string; name: string; }
 
-const QuestionCard = memo(({ question, selectedValue, onAnswer }: {
-  question: COPSOQQuestion;
+const QuestionCard = memo(({ question, categoryLabel, selectedValue, onAnswer }: {
+  question: COPSOQGenericQuestion;
+  categoryLabel: string;
   selectedValue: number | undefined;
   onAnswer: (questionNumber: number, value: number) => void;
 }) => {
@@ -37,7 +41,7 @@ const QuestionCard = memo(({ question, selectedValue, onAnswer }: {
           <span className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm font-medium text-primary">{question.number}</span>
           <div className="flex-1">
             <p className="text-foreground font-medium mb-1">{question.text}</p>
-            <p className="text-xs text-muted-foreground">Dimensão: {COPSOQ_CATEGORY_LABELS[question.category]}</p>
+            <p className="text-xs text-muted-foreground">Dimensão: {categoryLabel}</p>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
@@ -73,9 +77,17 @@ export default function COPSOQForm() {
   const [error, setError] = useState<string | null>(null);
   const [showDepartmentError, setShowDepartmentError] = useState(false);
 
+  // Dados do questionário conforme a versão configurada na avaliação (curta/média)
+  const versionData = useMemo(
+    () => getCOPSOQVersionData((assessment as any)?.questionnaire_version),
+    [(assessment as any)?.questionnaire_version]
+  );
+  const questions = versionData.questions;
+  const categoryLabels = versionData.categoryLabels;
+
   const questionsPerPage = 7;
-  const totalPages = Math.ceil(COPSOQ_QUESTIONS_SORTED.length / questionsPerPage);
-  const currentQuestions = useMemo(() => COPSOQ_QUESTIONS_SORTED.slice(currentPage * questionsPerPage, (currentPage + 1) * questionsPerPage), [currentPage]);
+  const totalPages = Math.ceil(questions.length / questionsPerPage);
+  const currentQuestions = useMemo(() => questions.slice(currentPage * questionsPerPage, (currentPage + 1) * questionsPerPage), [questions, currentPage]);
 
   useEffect(() => { fetchAssessment(); }, [companySlug, assessmentId]);
 
@@ -95,7 +107,7 @@ export default function COPSOQForm() {
   };
 
   const handleAnswer = useCallback((qn: number, v: number) => setAnswers(prev => ({ ...prev, [qn]: v })), []);
-  const getProgress = () => (Object.keys(answers).length / COPSOQ_QUESTIONS_SORTED.length) * 100;
+  const getProgress = () => (Object.keys(answers).length / questions.length) * 100;
   const isMultiSector = !!assessment?.multi_sector_enabled;
   const hasSectorSelection = isMultiSector ? selectedDepartments.length > 0 : !!selectedDepartment;
 
@@ -131,7 +143,7 @@ export default function COPSOQForm() {
   const handleSubmit = async () => {
     if (!assessment) return;
     if (departments.length > 0 && !hasSectorSelection) { toast({ title: 'Setor obrigatório', variant: 'destructive' }); return; }
-    const unanswered = COPSOQ_QUESTIONS_SORTED.filter(q => answers[q.number] === undefined);
+    const unanswered = questions.filter(q => answers[q.number] === undefined);
     if (unanswered.length > 0) { toast({ title: 'Questões não respondidas', description: `Faltam ${unanswered.length} questão(ões).`, variant: 'destructive' }); return; }
     try {
       setIsSubmitting(true);
@@ -209,7 +221,15 @@ export default function COPSOQForm() {
               <CardContent><SectorPicker compact /></CardContent></Card>
             </div>
           ) : (
-            <SoniaFormChat questions={COPSOQ_QUESTIONS_SORTED} likertOptions={defaultScale} categoryLabels={COPSOQ_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'COPSOQ II'} toolName="COPSOQ II" />
+            <SoniaFormChat
+              questions={questions}
+              likertOptions={defaultScale}
+              getOptions={(q) => COPSOQ_SCALES[(q as COPSOQGenericQuestion).scaleType] || defaultScale}
+              categoryLabels={categoryLabels}
+              onComplete={handleAiComplete}
+              assessmentTitle={assessment?.title || 'COPSOQ II'}
+              toolName="COPSOQ II"
+            />
           )}
         </div>
       </div>
@@ -236,7 +256,7 @@ export default function COPSOQForm() {
         {currentPage === 0 && (
           <Card className="mb-6">
             <CardHeader>
-              <div className="flex items-center gap-3 mb-2"><FileText className="h-6 w-6 text-primary" /><CardTitle>Avaliação COPSOQ II</CardTitle></div>
+              <div className="flex items-center gap-3 mb-2"><FileText className="h-6 w-6 text-primary" /><CardTitle>Avaliação COPSOQ II — {versionData.versionLabel}</CardTitle></div>
               <CardDescription>{assessment?.description || 'Esta avaliação tem como objetivo identificar fatores de risco psicossocial no ambiente de trabalho. Suas respostas são completamente anônimas.'}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -256,17 +276,34 @@ export default function COPSOQForm() {
         )}
 
         <div className="mb-6">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2"><span>Progresso</span><span>{Object.keys(answers).length} de {COPSOQ_QUESTIONS_SORTED.length} questões</span></div>
+          <div className="flex justify-between text-sm text-muted-foreground mb-2"><span>Progresso</span><span>{Object.keys(answers).length} de {questions.length} questões</span></div>
           <Progress value={getProgress()} className="h-2" />
         </div>
 
-        <div className="space-y-4">{currentQuestions.map(q => <QuestionCard key={q.number} question={q} selectedValue={answers[q.number]} onAnswer={handleAnswer} />)}</div>
+        <div className="space-y-4">
+          {currentQuestions.map(q => (
+            <div key={q.number} className="space-y-4">
+              {versionData.version === 'medium' && MEDIUM_SECTION_NOTES[q.number] && (
+                <div className="flex gap-2 p-3 rounded-md bg-primary/5 border border-primary/20 text-sm text-foreground/90">
+                  <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                  <p>{MEDIUM_SECTION_NOTES[q.number]}</p>
+                </div>
+              )}
+              <QuestionCard
+                question={q}
+                categoryLabel={categoryLabels[q.category] || q.category}
+                selectedValue={answers[q.number]}
+                onAnswer={handleAnswer}
+              />
+            </div>
+          ))}
+        </div>
 
         <div className="flex justify-between items-center mt-8">
           <Button variant="outline" onClick={handlePrev} disabled={currentPage === 0} className="gap-2"><ChevronLeft className="h-4 w-4" />Anterior</Button>
           <span className="text-sm text-muted-foreground">Página {currentPage + 1} de {totalPages}</span>
           {currentPage === totalPages - 1 ? (
-            <Button onClick={handleSubmit} disabled={isSubmitting || Object.keys(answers).length < COPSOQ_QUESTIONS_SORTED.length} className="gap-2">
+            <Button onClick={handleSubmit} disabled={isSubmitting || Object.keys(answers).length < questions.length} className="gap-2">
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Enviar Respostas
             </Button>
           ) : (

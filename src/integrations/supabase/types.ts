@@ -1420,6 +1420,7 @@ export type Database = {
           id: string
           is_active: boolean
           multi_sector_enabled: boolean
+          questionnaire_version: string
           start_date: string | null
           title: string
           updated_at: string
@@ -1434,6 +1435,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           multi_sector_enabled?: boolean
+          questionnaire_version?: string
           start_date?: string | null
           title: string
           updated_at?: string
@@ -1448,6 +1450,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           multi_sector_enabled?: boolean
+          questionnaire_version?: string
           start_date?: string | null
           title?: string
           updated_at?: string

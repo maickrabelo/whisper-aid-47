@@ -6,9 +6,17 @@ import {
   type COPSOQCategory,
   type RiskLevel,
 } from '@/data/copsoqQuestions';
+import {
+  COPSOQ_MEDIUM_CATEGORY_LABELS,
+  MEDIUM_ALL_CATEGORIES,
+  calculateMediumCategoryAverage,
+  getMediumRiskLevel,
+  type COPSOQMediumCategory,
+} from '@/data/copsoqMediumQuestions';
+import { normalizeCOPSOQVersion } from '@/lib/copsoqVersion';
 
 export interface COPSOQDimensionScore {
-  category: COPSOQCategory;
+  category: string;
   label: string;
   average: number;
   riskLevel: RiskLevel;
@@ -30,6 +38,29 @@ export function computeCOPSOQDimensions(rawAnswers: COPSOQAnswerRow[]): COPSOQDi
       riskLevel: getRiskLevel(avg),
     };
   }).filter(d => d.average > 0);
+}
+
+export function computeCOPSOQMediumDimensions(rawAnswers: COPSOQAnswerRow[]): COPSOQDimensionScore[] {
+  const answers = rawAnswers.map(a => ({ questionNumber: a.question_number, value: a.answer_value }));
+  return MEDIUM_ALL_CATEGORIES.map(cat => {
+    const avg = calculateMediumCategoryAverage(answers, cat);
+    return {
+      category: cat,
+      label: COPSOQ_MEDIUM_CATEGORY_LABELS[cat],
+      average: avg,
+      riskLevel: getMediumRiskLevel(avg),
+    };
+  }).filter(d => d.average > 0);
+}
+
+/** Despacha o cálculo de dimensões conforme a versão do questionário da avaliação. */
+export function computeCOPSOQDimensionsByVersion(
+  version: string | null | undefined,
+  rawAnswers: COPSOQAnswerRow[]
+): COPSOQDimensionScore[] {
+  return normalizeCOPSOQVersion(version) === 'medium'
+    ? computeCOPSOQMediumDimensions(rawAnswers)
+    : computeCOPSOQDimensions(rawAnswers);
 }
 
 // COPSOQ has 3 levels (favorable/intermediate/risk). Map to AEP severity/prob (matrix 5)

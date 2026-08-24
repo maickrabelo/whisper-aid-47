@@ -353,8 +353,6 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
     doc.setFontSize(7.5);
     doc.setTextColor(RED[0], RED[1], RED[2]);
     doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', MARGIN, PAGE_H - 10);
-    doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
-    doc.text(`Gerado em ${todayBR()} — Página ${i} de ${totalPages}`, PAGE_W - MARGIN, PAGE_H - 10, { align: 'right' });
   }
 
   const safeName = sanitizePdfText(input.company.name || 'empresa').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_');

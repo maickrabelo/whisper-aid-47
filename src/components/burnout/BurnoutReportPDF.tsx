@@ -564,17 +564,6 @@ export function BurnoutReportPDF({
         );
       }
 
-      // ========== RODAPÉ EM TODAS AS PÁGINAS ==========
-      const totalPages = (pdf as any).internal.pages.length - 1;
-      for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(8);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(150, 150, 150);
-        pdf.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
-        pdf.text('Relatório de Burnout - Confidencial', margin, pageHeight - 8);
-        pdf.text(assessment.companies?.name || '', pageWidth - margin, pageHeight - 8, { align: 'right' });
-      }
 
       // Salvar
       const fileName = `Relatorio_Burnout_${assessment.companies?.name?.replace(/\s+/g, '_') || 'Empresa'}_${new Date().toISOString().split('T')[0]}.pdf`;

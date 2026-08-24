@@ -299,10 +299,6 @@ export function HSEITReportPDF({
       pdf.text(`Categorias Críticas: ${criticalCount} | Favoráveis: ${favorableCount}`, margin + 10, yPos);
 
       yPos += 25;
-      
-      pdf.setFontSize(10);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, yPos, { align: 'center' });
 
       // ========== PÁGINA 2: METODOLOGIA ==========
       pdf.addPage();
@@ -538,16 +534,6 @@ export function HSEITReportPDF({
       addText('- Mês 4-6: Monitorar indicadores e ajustar ações', 5);
       addText('- Mês 6: Reaplicar avaliação para medir progresso', 5);
 
-      // ========== RODAPÉ EM TODAS AS PÁGINAS ==========
-      const totalPages = (pdf as any).internal.pages.length - 1;
-      for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(8);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(150, 150, 150);
-        pdf.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
-        pdf.text('Relatório HSE-IT - Confidencial', margin, pageHeight - 8);
-      }
 
       // Salvar
       const fileName = `Relatorio_HSEIT_${assessment.companies?.name?.replace(/\s+/g, '_') || 'Empresa'}_${new Date().toISOString().split('T')[0]}.pdf`;

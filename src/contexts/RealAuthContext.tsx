@@ -542,7 +542,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setProfile(userProfile);
             setCompanies(userCompanies);
             setActiveCompanyId(userProfile?.company_id ?? null);
-            await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+            await checkTrialStatus(session.user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
             await checkPaymentStatus(session.user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
 
             sendAccessLog({
@@ -581,7 +581,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setProfile(userProfile);
           setCompanies(userCompanies);
           setActiveCompanyId(userProfile?.company_id ?? null);
-          await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+          await checkTrialStatus(session.user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
           await checkPaymentStatus(session.user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
 
           // Redirect if user is already logged in and on the login page
@@ -659,7 +659,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const refreshTrialStatus = async () => {
     await Promise.all([
-      checkTrialStatus(profile?.company_id ?? null, profile?.sst_manager_id ?? null),
+      checkTrialStatus(user?.id ?? null, profile?.company_id ?? null, profile?.sst_manager_id ?? null),
       checkPaymentStatus(user?.id ?? null, profile?.company_id ?? null, profile?.sst_manager_id ?? null),
     ]);
   };

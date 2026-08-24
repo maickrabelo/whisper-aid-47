@@ -227,6 +227,17 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   const margin = 15;
   let y = 0;
 
+  // Dados específicos da versão do questionário (curta x média)
+  const vd = getCOPSOQVersionData(input.version);
+  const QUESTIONS = vd.questions;
+  const LABELS: Record<string, string> = vd.categoryLabels;
+  const CATS = vd.allCategories;
+  const GROUPS = vd.categoryGroups;
+  const calcCatAvg = vd.calculateCategoryAverage;
+  const calcOverallAvg = vd.calculateOverallAverage;
+  const riskOf = vd.getRiskLevel;
+  const normScore = vd.normalizeScore;
+
   const setText = (size: number, bold = false, color: [number, number, number] = COLORS.text) => {
     pdf.setFontSize(size);
     pdf.setFont('helvetica', bold ? 'bold' : 'normal');

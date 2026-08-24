@@ -20,13 +20,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, PieChart, Pie, Legend
 } from 'recharts';
 import {
-  COPSOQ_QUESTIONS, COPSOQ_CATEGORY_LABELS, COPSOQCategory,
-  calculateCategoryAverage, calculateOverallAverage, getRiskLevel, normalizeScore,
-  RISK_LEVEL_LABELS, RISK_LEVEL_COLORS, ALL_CATEGORIES, CATEGORY_GROUPS
+  RISK_LEVEL_LABELS, RISK_LEVEL_COLORS
 } from '@/data/copsoqQuestions';
+import { getCOPSOQVersionData } from '@/lib/copsoqVersion';
 import { AssessmentComparison } from '@/components/psychosocial/AssessmentComparison';
 
-interface Assessment { id: string; title: string; description: string | null; createdAt: string; multiSectorEnabled?: boolean; companies: { id: string; name: string; }; }
+interface Assessment { id: string; title: string; description: string | null; createdAt: string; multiSectorEnabled?: boolean; questionnaireVersion?: string | null; companies: { id: string; name: string; }; }
 interface Answer { questionNumber: number; value: number; }
 interface Response { id: string; department: string | null; departments: string[]; completedAt: string | null; answers: Answer[]; }
 
@@ -60,10 +59,10 @@ export default function COPSOQResults() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const { data: ad, error: ae } = await supabase.from('copsoq_assessments' as any).select('id, title, description, created_at, multi_sector_enabled, companies(id, name)').eq('id', id).single();
+      const { data: ad, error: ae } = await supabase.from('copsoq_assessments' as any).select('id, title, description, created_at, multi_sector_enabled, questionnaire_version, companies(id, name)').eq('id', id).single();
       if (ae) throw ae;
       const a = ad as any;
-      setAssessment({ id: a.id, title: a.title, description: a.description, createdAt: a.created_at, multiSectorEnabled: !!a.multi_sector_enabled, companies: a.companies });
+      setAssessment({ id: a.id, title: a.title, description: a.description, createdAt: a.created_at, multiSectorEnabled: !!a.multi_sector_enabled, questionnaireVersion: a.questionnaire_version ?? 'short', companies: a.companies });
 
       const { data: rd, error: re } = await supabase.from('copsoq_responses' as any).select('id, department, departments, completed_at').eq('assessment_id', id).not('completed_at', 'is', null);
       if (re) throw re;
@@ -100,43 +99,45 @@ export default function COPSOQResults() {
   const filteredResponses = useMemo(() => selectedDepartment === 'all' ? responses : responses.filter(r => r.departments.includes(selectedDepartment)), [responses, selectedDepartment]);
   const aggregatedAnswers = useMemo(() => filteredResponses.flatMap(r => r.answers), [filteredResponses]);
 
+  const vd = useMemo(() => getCOPSOQVersionData(assessment?.questionnaireVersion), [assessment?.questionnaireVersion]);
+
   const categoryAverages = useMemo(() => {
     if (aggregatedAnswers.length === 0) return {};
     const avgs: Record<string, number> = {};
-    ALL_CATEGORIES.forEach(cat => { avgs[cat] = calculateCategoryAverage(aggregatedAnswers, cat); });
+    vd.allCategories.forEach(cat => { avgs[cat] = vd.calculateCategoryAverage(aggregatedAnswers, cat); });
     return avgs;
-  }, [aggregatedAnswers]);
+  }, [aggregatedAnswers, vd]);
 
-  const overallAverage = useMemo(() => calculateOverallAverage(aggregatedAnswers), [aggregatedAnswers]);
-  const overallRisk = getRiskLevel(overallAverage);
+  const overallAverage = useMemo(() => vd.calculateOverallAverage(aggregatedAnswers), [aggregatedAnswers, vd]);
+  const overallRisk = vd.getRiskLevel(overallAverage);
 
   const radarData = useMemo(() => {
-    // Select key categories for radar (max ~10 for readability)
-    const keyCats: COPSOQCategory[] = ['quantitativeDemands', 'workPace', 'emotionalDemands', 'influence', 'developmentPossibilities', 'leadershipQuality', 'socialSupport', 'socialCommunity', 'burnout', 'stress'];
-    return keyCats.map(cat => ({ category: COPSOQ_CATEGORY_LABELS[cat].replace(/\s+/g, '\n').substring(0, 20), value: categoryAverages[cat] || 0, fullMark: 5 }));
-  }, [categoryAverages]);
+    // Select key categories for radar (max ~10 for readability; presentes em ambas as versões)
+    const keyCats: string[] = ['quantitativeDemands', 'workPace', 'emotionalDemands', 'influence', 'developmentPossibilities', 'leadershipQuality', 'socialSupport', 'socialCommunity', 'burnout', 'stress'];
+    return keyCats.map(cat => ({ category: (vd.categoryLabels[cat] || cat).replace(/\s+/g, '\n').substring(0, 20), value: categoryAverages[cat] || 0, fullMark: 5 }));
+  }, [categoryAverages, vd]);
 
   const riskDistribution = useMemo(() => {
     const dist = { favorable: 0, intermediate: 0, risk: 0 };
-    Object.values(categoryAverages).forEach(avg => { dist[getRiskLevel(avg)]++; });
+    Object.values(categoryAverages).forEach(avg => { dist[vd.getRiskLevel(avg)]++; });
     return [
       { name: 'Favorável', value: dist.favorable, color: '#22c55e' },
       { name: 'Intermediário', value: dist.intermediate, color: '#eab308' },
       { name: 'Risco', value: dist.risk, color: '#ef4444' },
     ];
-  }, [categoryAverages]);
+  }, [categoryAverages, vd]);
 
-  const riskCount = useMemo(() => Object.values(categoryAverages).filter(avg => getRiskLevel(avg) === 'risk').length, [categoryAverages]);
+  const riskCount = useMemo(() => Object.values(categoryAverages).filter(avg => vd.getRiskLevel(avg) === 'risk').length, [categoryAverages, vd]);
 
   const questionAverages = useMemo(() => {
     const groups: Record<number, number[]> = {};
     aggregatedAnswers.forEach(a => { if (!groups[a.questionNumber]) groups[a.questionNumber] = []; groups[a.questionNumber].push(a.value); });
-    return COPSOQ_QUESTIONS.map(q => {
+    return vd.questions.map(q => {
       const values = groups[q.number] || [];
-      const normalizedAvg = values.length > 0 ? values.reduce((s, v) => s + normalizeScore(v, q.isInverted), 0) / values.length : 0;
-      return { number: q.number, text: q.text, category: COPSOQ_CATEGORY_LABELS[q.category], average: normalizedAvg, riskLevel: getRiskLevel(normalizedAvg), responseCount: values.length };
+      const normalizedAvg = values.length > 0 ? values.reduce((s, v) => s + vd.normalizeScore(v, q.isInverted), 0) / values.length : 0;
+      return { number: q.number, text: q.text, category: vd.categoryLabels[q.category] || q.category, average: normalizedAvg, riskLevel: vd.getRiskLevel(normalizedAvg), responseCount: values.length };
     }).sort((a, b) => a.average - b.average);
-  }, [aggregatedAnswers]);
+  }, [aggregatedAnswers, vd]);
 
   if (authLoading || isLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
@@ -213,6 +214,7 @@ export default function COPSOQResults() {
             description: assessment.description,
             createdAt: assessment.createdAt,
           }}
+          version={assessment.questionnaireVersion}
           companyName={assessment.companies?.name || ''}
           companyId={assessment.companies?.id || null}
           responses={responses}
@@ -274,7 +276,7 @@ export default function COPSOQResults() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardTitle>Distribuição de Risco</CardTitle><CardDescription>Classificação das 23 dimensões</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Distribuição de Risco</CardTitle><CardDescription>Classificação das {vd.dimensionCount} dimensões</CardDescription></CardHeader>
             <CardContent>
               <div className="h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -291,18 +293,18 @@ export default function COPSOQResults() {
         </div>
 
         {/* Category Details by Group */}
-        {Object.entries(CATEGORY_GROUPS).map(([groupName, cats]) => (
+        {Object.entries(vd.categoryGroups).map(([groupName, cats]) => (
           <Card key={groupName} className="mb-6">
             <CardHeader><CardTitle>{groupName}</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {cats.map(cat => {
                   const avg = categoryAverages[cat] || 0;
-                  const risk = getRiskLevel(avg);
+                  const risk = vd.getRiskLevel(avg);
                   return (
                     <div key={cat} className="flex items-center justify-between p-3 rounded-lg border">
                       <div className="flex-1">
-                        <p className="font-medium text-sm">{COPSOQ_CATEGORY_LABELS[cat]}</p>
+                        <p className="font-medium text-sm">{vd.categoryLabels[cat] || cat}</p>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-bold">{avg.toFixed(2)}</span>
@@ -326,7 +328,7 @@ export default function COPSOQResults() {
               companyId={assessment.companies.id}
               currentCategoryAverages={Object.entries(categoryAverages).map(([cat, avg]) => ({
                 category: cat,
-                label: COPSOQ_CATEGORY_LABELS[cat as COPSOQCategory],
+                label: vd.categoryLabels[cat] || cat,
                 average: avg,
               }))}
               assessmentType="copsoq"

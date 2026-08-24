@@ -43,6 +43,8 @@ interface COPSOQReportEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   assessment: { id: string; title: string; description: string | null; createdAt: string };
+  /** Versão do questionário da avaliação ('short' | 'medium') */
+  version?: string | null;
   companyName: string;
   companyId?: string | null;
   responses: Response[];
@@ -261,6 +263,7 @@ export function COPSOQReportEditor({
           createdAt: assessment.createdAt,
         },
         companyName,
+        version,
         responses,
         selectedDepartment,
         departments,

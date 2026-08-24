@@ -152,7 +152,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       setActiveCompanyId(companyId);
       setProfile(prev => prev ? { ...prev, company_id: companyId } : prev);
-      await checkTrialStatus(companyId, profile?.sst_manager_id ?? null);
+      await checkTrialStatus(user.id, companyId, profile?.sst_manager_id ?? null);
       await checkPaymentStatus(user?.id ?? null, companyId, profile?.sst_manager_id ?? null);
       
       const selected = companies.find(c => c.id === companyId);
@@ -170,7 +170,75 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const checkTrialStatus = async (companyId: string | null, sstManagerId: string | null) => {
+  // Localiza uma assinatura ATIVA vinculada ao usuário (direta, via empresa pai ou
+  // via outros perfis da mesma gestora SST). Usada tanto para o status de pagamento
+  // quanto como salvaguarda do bloqueio de trial: se existe assinatura paga ativa,
+  // o usuário NUNCA pode ser bloqueado por trial expirado.
+  const findActiveSubscription = async (
+    userId: string | null,
+    companyId: string | null,
+    sstManagerId: string | null,
+  ): Promise<{ id: string; status: string; current_period_end: string | null } | null> => {
+    try {
+      // 1) Assinatura direta do usuário
+      if (userId) {
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('id, status, current_period_end')
+          .eq('owner_user_id', userId)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (sub) return sub as any;
+      }
+
+      // 2) Assinatura pai da empresa
+      if (companyId) {
+        const { data: comp } = await supabase
+          .from('companies')
+          .select('parent_subscription_id')
+          .eq('id', companyId)
+          .maybeSingle();
+        const parentId = (comp as any)?.parent_subscription_id;
+        if (parentId) {
+          const { data: parentSub } = await supabase
+            .from('subscriptions')
+            .select('id, status, current_period_end')
+            .eq('id', parentId)
+            .eq('status', 'active')
+            .maybeSingle();
+          if (parentSub) return parentSub as any;
+        }
+      }
+
+      // 3) Assinatura de qualquer perfil vinculado à mesma gestora SST
+      if (sstManagerId) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('sst_manager_id', sstManagerId);
+        const ownerIds = (profs ?? []).map((p: any) => p.id);
+        if (ownerIds.length > 0) {
+          const { data: mgrSub } = await supabase
+            .from('subscriptions')
+            .select('id, status, current_period_end')
+            .in('owner_user_id', ownerIds)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (mgrSub) return mgrSub as any;
+        }
+      }
+      return null;
+    } catch (e) {
+      console.error('findActiveSubscription error', e);
+      return null;
+    }
+  };
+
+  const checkTrialStatus = async (userId: string | null, companyId: string | null, sstManagerId: string | null) => {
     // Skip trial check if no company or SST manager linked
     if (!companyId && !sstManagerId) {
       setIsTrialExpired(false);
@@ -189,22 +257,44 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const trialStatuses = ['trial', 'trialing'];
 
-    const company = companyResult?.data;
-    if (company?.subscription_status && trialStatuses.includes(company.subscription_status) && company?.trial_ends_at) {
-      setTrialEndsAt(company.trial_ends_at);
-      setIsTrialExpired(new Date() > new Date(company.trial_ends_at));
+    const expiredTrialEndsAt = (() => {
+      const company = companyResult?.data;
+      if (company?.subscription_status && trialStatuses.includes(company.subscription_status) && company?.trial_ends_at) {
+        if (new Date() > new Date(company.trial_ends_at)) return company.trial_ends_at as string;
+        // Trial ainda vigente
+        setTrialEndsAt(company.trial_ends_at);
+        setIsTrialExpired(false);
+        return null;
+      }
+      const sstManager = sstResult?.data;
+      if (sstManager?.subscription_status && trialStatuses.includes(sstManager.subscription_status) && sstManager?.trial_ends_at) {
+        if (new Date() > new Date(sstManager.trial_ends_at)) return sstManager.trial_ends_at as string;
+        setTrialEndsAt(sstManager.trial_ends_at);
+        setIsTrialExpired(false);
+        return null;
+      }
+      return undefined; // sem trial configurado
+    })();
+
+    if (expiredTrialEndsAt === undefined) {
+      setIsTrialExpired(false);
+      setTrialEndsAt(null);
       return;
     }
 
-    const sstManager = sstResult?.data;
-    if (sstManager?.subscription_status && trialStatuses.includes(sstManager.subscription_status) && sstManager?.trial_ends_at) {
-      setTrialEndsAt(sstManager.trial_ends_at);
-      setIsTrialExpired(new Date() > new Date(sstManager.trial_ends_at));
+    if (expiredTrialEndsAt === null) return; // trial vigente já tratado acima
+
+    // Salvaguarda: trial "expirado" mas existe assinatura paga ativa vinculada
+    // (status desnormalizado desatualizado) -> NUNCA bloquear um pagante.
+    const activeSub = await findActiveSubscription(userId, companyId, sstManagerId);
+    if (activeSub) {
+      setIsTrialExpired(false);
+      setTrialEndsAt(null);
       return;
     }
 
-    setIsTrialExpired(false);
-    setTrialEndsAt(null);
+    setTrialEndsAt(expiredTrialEndsAt);
+    setIsTrialExpired(true);
   };
 
   const checkPaymentStatus = async (userId: string | null, companyId: string | null, sstManagerId: string | null) => {
@@ -215,60 +305,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     try {
-      // Find most recent active subscription for this user (owner, company parent, or via SST manager profiles)
-      const orClauses: string[] = [];
-      if (userId) orClauses.push(`owner_user_id.eq.${userId}`);
-
-      let subQuery = supabase
-        .from('subscriptions')
-        .select('id, status, current_period_end, owner_user_id')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      // Primary lookup: owner_user_id
-      let { data: sub } = userId
-        ? await subQuery.eq('owner_user_id', userId).maybeSingle()
-        : { data: null } as any;
-
-      // Fallback: company.parent_subscription_id
-      if (!sub && companyId) {
-        const { data: comp } = await supabase
-          .from('companies')
-          .select('parent_subscription_id')
-          .eq('id', companyId)
-          .maybeSingle();
-        const parentId = (comp as any)?.parent_subscription_id;
-        if (parentId) {
-          const { data: parentSub } = await supabase
-            .from('subscriptions')
-            .select('id, status, current_period_end')
-            .eq('id', parentId)
-            .eq('status', 'active')
-            .maybeSingle();
-          sub = parentSub as any;
-        }
-      }
-
-      // Fallback: any active subscription owned by profiles sharing the sst_manager_id
-      if (!sub && sstManagerId) {
-        const { data: profs } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('sst_manager_id', sstManagerId);
-        const ownerIds = (profs ?? []).map((p: any) => p.id);
-        if (ownerIds.length > 0) {
-          const { data: mgrSub } = await supabase
-            .from('subscriptions')
-            .select('id, status, current_period_end')
-            .in('owner_user_id', ownerIds)
-            .eq('status', 'active')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          sub = mgrSub as any;
-        }
-      }
+      // Mesma busca centralizada usada pela salvaguarda de trial
+      const sub = await findActiveSubscription(userId, companyId, sstManagerId);
 
       if (!sub || !(sub as any).current_period_end) {
         setPaymentStatus('ok');
@@ -316,7 +354,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setProfile(userProfile);
       setCompanies(userCompanies);
       setActiveCompanyId(userProfile?.company_id ?? null);
-      await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+      await checkTrialStatus(user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
       await checkPaymentStatus(user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
     }
   };
@@ -452,7 +490,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setProfile(userProfile);
             setCompanies(userCompanies);
             setActiveCompanyId(userProfile?.company_id ?? null);
-            await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+            await checkTrialStatus(session.user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
             await checkPaymentStatus(session.user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
 
             sendAccessLog({
@@ -491,7 +529,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setProfile(userProfile);
           setCompanies(userCompanies);
           setActiveCompanyId(userProfile?.company_id ?? null);
-          await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+          await checkTrialStatus(session.user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
           await checkPaymentStatus(session.user.id, userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
 
           // Redirect if user is already logged in and on the login page
@@ -569,7 +607,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const refreshTrialStatus = async () => {
     await Promise.all([
-      checkTrialStatus(profile?.company_id ?? null, profile?.sst_manager_id ?? null),
+      checkTrialStatus(user?.id ?? null, profile?.company_id ?? null, profile?.sst_manager_id ?? null),
       checkPaymentStatus(user?.id ?? null, profile?.company_id ?? null, profile?.sst_manager_id ?? null),
     ]);
   };

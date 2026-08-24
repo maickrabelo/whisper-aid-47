@@ -25,7 +25,7 @@ interface Response {
 
 export interface COPSOQActionItem {
   id: string;
-  category: COPSOQCategory;
+  category: string;
   priority: 'immediate' | 'short_term' | 'medium_term';
   description: string;
   recommendation: string;
@@ -170,10 +170,10 @@ export function COPSOQReportEditor({
       `Este relatório apresenta os resultados da avaliação de riscos psicossociais COPSOQ II realizada na ${companyName}.\n\n` +
       `A avaliação contou com ${responses.length} respostas válidas distribuídas em ${departments.length || 1} setor(es).\n\n` +
       (critical.length > 0
-        ? `Foram identificadas ${critical.length} dimensão(ões) em nível de risco que requerem atenção imediata: ${critical.map(d => COPSOQ_CATEGORY_LABELS[d.category]).join(', ')}.`
+        ? `Foram identificadas ${critical.length} dimensão(ões) em nível de risco que requerem atenção imediata: ${critical.map(d => (VLABELS[d.category] || d.category)).join(', ')}.`
         : 'Não foram identificadas dimensões em nível de risco no consolidado.') +
       (intermediate.length > 0
-        ? `\n\n${intermediate.length} dimensão(ões) estão em nível intermediário e merecem monitoramento: ${intermediate.map(d => COPSOQ_CATEGORY_LABELS[d.category]).join(', ')}.`
+        ? `\n\n${intermediate.length} dimensão(ões) estão em nível intermediário e merecem monitoramento: ${intermediate.map(d => (VLABELS[d.category] || d.category)).join(', ')}.`
         : '')
     );
 
@@ -182,15 +182,15 @@ export function COPSOQReportEditor({
         id: crypto.randomUUID(),
         category: d.category,
         priority: 'immediate' as const,
-        description: `Dimensão "${COPSOQ_CATEGORY_LABELS[d.category]}" apresenta indicadores de risco (média: ${d.average.toFixed(2)}).`,
-        recommendation: COPSOQ_RECOMMENDATIONS[d.category].risk,
+        description: `Dimensão "${(VLABELS[d.category] || d.category)}" apresenta indicadores de risco (média: ${d.average.toFixed(2)}).`,
+        recommendation: (COPSOQ_RECOMMENDATIONS[d.category] || GENERIC_COPSOQ_RECOMMENDATION).risk,
       })),
       ...intermediate.map(d => ({
         id: crypto.randomUUID(),
         category: d.category,
         priority: 'short_term' as const,
-        description: `Dimensão "${COPSOQ_CATEGORY_LABELS[d.category]}" apresenta indicadores intermediários (média: ${d.average.toFixed(2)}).`,
-        recommendation: COPSOQ_RECOMMENDATIONS[d.category].intermediate,
+        description: `Dimensão "${(VLABELS[d.category] || d.category)}" apresenta indicadores intermediários (média: ${d.average.toFixed(2)}).`,
+        recommendation: (COPSOQ_RECOMMENDATIONS[d.category] || GENERIC_COPSOQ_RECOMMENDATION).intermediate,
       })),
     ]);
 
@@ -362,7 +362,7 @@ export function COPSOQReportEditor({
                             'border-l-green-500 bg-green-50'
                           }`}
                         >
-                          <div className="font-medium">{COPSOQ_CATEGORY_LABELS[d.category]}</div>
+                          <div className="font-medium">{(VLABELS[d.category] || d.category)}</div>
                           <div className="text-sm text-muted-foreground">
                             Média: {d.average.toFixed(2)} - {RISK_LEVEL_LABELS[d.level]}
                           </div>

@@ -3,17 +3,9 @@ import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
 import fundoPsico from '@/assets/fundo-psico-v2.jpg.asset.json';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
 import {
-  COPSOQ_QUESTIONS,
-  COPSOQ_CATEGORY_LABELS,
-  COPSOQCategory,
-  ALL_CATEGORIES,
-  CATEGORY_GROUPS,
-  calculateCategoryAverage,
-  calculateOverallAverage,
-  getRiskLevel,
-  normalizeScore,
   RISK_LEVEL_LABELS,
 } from '@/data/copsoqQuestions';
+import { getCOPSOQVersionData } from '@/lib/copsoqVersion';
 
 interface Answer { questionNumber: number; value: number; }
 interface Response {
@@ -40,6 +32,8 @@ export interface COPSOQReportInput {
   companyInfo?: { cnpj?: string; address?: string; cnae?: string; riskGrade?: string };
   responsibleInfo?: { name?: string; cpf?: string; registration?: string };
   orgResponsible?: { name?: string; cpf?: string; role?: string };
+  /** Versão do questionário da avaliação ('short' | 'medium'). Padrão: 'short'. */
+  version?: string | null;
 }
 
 const COLORS = {
@@ -180,6 +174,49 @@ export const COPSOQ_RECOMMENDATIONS: Record<COPSOQCategory, Record<CopsoqRiskLev
     intermediate: 'Reforçar política antiassédio, capacitação e canais de denúncia.',
     favorable: 'Manter ambiente respeitoso.',
   },
+  // Dimensões exclusivas da versão média (Silva et al., 2011)
+  rewards: {
+    risk: 'Implantar programa de reconhecimento (formal e informal), revisar critérios de recompensa e dar visibilidade às contribuições dos colaboradores.',
+    intermediate: 'Reforçar práticas de reconhecimento e feedback positivo periódico.',
+    favorable: 'Manter práticas de reconhecimento e recompensa.',
+  },
+  socialSupportColleagues: {
+    risk: 'Estimular cooperação entre pares, trabalho em equipe e momentos estruturados de troca; mediar conflitos entre colegas.',
+    intermediate: 'Promover atividades colaborativas e fortalecer o apoio mútuo entre colegas.',
+    favorable: 'Manter clima de apoio entre colegas.',
+  },
+  trustHorizontal: {
+    risk: 'Trabalhar a confiança entre colegas com atividades de integração, normas claras de colaboração e mediação de conflitos.',
+    intermediate: 'Fortalecer a confiança mútua com rotinas de alinhamento entre pares.',
+    favorable: 'Manter ambiente de confiança entre colegas.',
+  },
+  trustVertical: {
+    risk: 'Reconstruir a confiança na chefia imediata com comunicação transparente, coerência entre discurso e prática e escuta ativa.',
+    intermediate: 'Aumentar transparência e previsibilidade das decisões da chefia.',
+    favorable: 'Manter relação de confiança com a liderança.',
+  },
+  selfEfficacy: {
+    risk: 'Oferecer treinamento, mentorias e feedback construtivo para fortalecer a percepção de competência dos colaboradores.',
+    intermediate: 'Incentivar autonomia progressiva e reconhecimento de conquistas.',
+    favorable: 'Manter estímulo à autoconfiança e ao desenvolvimento.',
+  },
+  sleepProblems: {
+    risk: 'Investigar vínculo com carga e jornada de trabalho, revisar escalas e oferecer apoio em saúde (bem-estar e encaminhamento clínico).',
+    intermediate: 'Monitorar sinais de fadiga e promover educação em higiene do sono.',
+    favorable: 'Manter ações preventivas de descanso e bem-estar.',
+  },
+  depressiveSymptoms: {
+    risk: 'Ação prioritária: garantir canal de apoio psicológico, reduzir fatores de pressão, capacitar lideranças para acolhimento e encaminhar para avaliação profissional.',
+    intermediate: 'Promover ações de saúde mental, rodas de conversa e monitoramento periódico.',
+    favorable: 'Manter cuidados preventivos de saúde mental.',
+  },
+};
+
+// Fallback para dimensões sem recomendação específica cadastrada
+export const GENERIC_COPSOQ_RECOMMENDATION: Record<CopsoqRiskLevel, string> = {
+  risk: 'Realizar diagnóstico aprofundado da dimensão com escuta dos trabalhadores e elaborar plano de ação específico com prazos e responsáveis.',
+  intermediate: 'Monitorar a dimensão com indicadores periódicos e implementar melhorias incrementais.',
+  favorable: 'Manter as práticas atuais e o monitoramento preventivo.',
 };
 
 export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<void> {
@@ -330,7 +367,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   pdf.text('Riscos Psicossociais — COPSOQ II', pw / 2, y, { align: 'center' });
   y += 20;
   setText(11, false, COLORS.muted);
-  pdf.text('Copenhagen Psychosocial Questionnaire (versão curta)', pw / 2, y, { align: 'center' });
+  pdf.text(vd.instrumentLabel, pw / 2, y, { align: 'center' });
   y += 30;
 
   // Company card
@@ -485,7 +522,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     `Este relatório apresenta os resultados da avaliação de riscos psicossociais aplicada aos colaboradores da ${input.companyName} utilizando o instrumento COPSOQ II (Copenhagen Psychosocial Questionnaire), validado internacionalmente para identificação e mensuração de fatores psicossociais no ambiente de trabalho.`
   );
   drawParagraph(
-    `A avaliação contou com ${filtered.length} respostas válidas, distribuídas em ${input.departments.length || 1} setor(es). A pontuação média geral foi de ${overallAverage.toFixed(2)} em escala normalizada de 1 a 5, classificada como "${RISK_LEVEL_LABELS[overallRisk]}". Das 23 dimensões avaliadas, ${criticalCount} estão em Risco, ${intermediateCount} em nível Intermediário e ${favorableCount} em condição Favorável no consolidado geral da empresa.`
+    `A avaliação contou com ${filtered.length} respostas válidas, distribuídas em ${input.departments.length || 1} setor(es). A pontuação média geral foi de ${overallAverage.toFixed(2)} em escala normalizada de 1 a 5, classificada como "${RISK_LEVEL_LABELS[overallRisk]}". Das ${CATS.length} dimensões avaliadas, ${criticalCount} estão em Risco, ${intermediateCount} em nível Intermediário e ${favorableCount} em condição Favorável no consolidado geral da empresa.`
   );
   if (isConsolidated) {
     drawParagraph(
@@ -534,7 +571,9 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   // ══════════════════════════════════════════
   drawSectionTitle('2. Metodologia');
   drawParagraph(
-    'O COPSOQ II (Copenhagen Psychosocial Questionnaire) é um instrumento internacionalmente validado, desenvolvido pelo National Research Centre for the Working Environment (Dinamarca). A versão curta utilizada compreende 41 questões distribuídas em 23 dimensões psicossociais, agrupadas em seis domínios principais.'
+    `O COPSOQ II (Copenhagen Psychosocial Questionnaire) é um instrumento internacionalmente validado, desenvolvido pelo National Research Centre for the Working Environment (Dinamarca). ${vd.version === 'medium'
+      ? 'A versão média utilizada (Silva et al., 2011) compreende 76 questões distribuídas em 29 dimensões psicossociais, agrupadas em cinco domínios principais.'
+      : 'A versão curta utilizada compreende 41 questões distribuídas em 23 dimensões psicossociais, agrupadas em seis domínios principais.'}`
   );
   drawParagraph(
     'A pontuação varia de 1 a 5 em escala Likert. Para dimensões que representam riscos (ex.: exigências quantitativas, conflitos, burnout, estresse), a pontuação é invertida — de forma que valores mais altos após normalização sempre representam condições mais favoráveis, e valores mais baixos indicam maior risco psicossocial.'
@@ -582,7 +621,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     newPage();
     drawSectionTitle('4. Resultados por Setor');
     drawParagraph(
-      'Detalhamento das 23 dimensões avaliadas em cada setor. Colaboradores que atuam em mais de um setor (avaliação multisetorial) são contabilizados em cada setor selecionado.'
+      `Detalhamento das ${CATS.length} dimensões avaliadas em cada setor. Colaboradores que atuam em mais de um setor (avaliação multisetorial) são contabilizados em cada setor selecionado.`
     );
 
     input.departments.forEach(dept => {
@@ -795,7 +834,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       setText(10, true, COLORS.risk);
       pdf.text(`${i + 1}. ${COPSOQ_CATEGORY_LABELS[cat]}`, margin, y);
       y += 5;
-      const rec = COPSOQ_RECOMMENDATIONS[cat].risk;
+      const rec = (COPSOQ_RECOMMENDATIONS[cat] || GENERIC_COPSOQ_RECOMMENDATION).risk;
       setText(9.5, false, COLORS.text);
       const lines = pdf.splitTextToSize(rec, pw - 2 * margin - 5);
       lines.forEach((line: string) => { ensure(5); pdf.text(line, margin + 5, y); y += 4.5; });
@@ -811,7 +850,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       setText(10, true, COLORS.intermediate);
       pdf.text(`${i + 1}. ${COPSOQ_CATEGORY_LABELS[cat]}`, margin, y);
       y += 5;
-      const rec = COPSOQ_RECOMMENDATIONS[cat].intermediate;
+      const rec = (COPSOQ_RECOMMENDATIONS[cat] || GENERIC_COPSOQ_RECOMMENDATION).intermediate;
       setText(9.5, false, COLORS.text);
       const lines = pdf.splitTextToSize(rec, pw - 2 * margin - 5);
       lines.forEach((line: string) => { ensure(5); pdf.text(line, margin + 5, y); y += 4.5; });

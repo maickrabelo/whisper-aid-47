@@ -58,7 +58,7 @@ const riskColor = (level: CellRisk) =>
   : COLORS.neutral;
 
 // Recomendações por dimensão (23) — 3 níveis de intervenção
-export const COPSOQ_RECOMMENDATIONS: Record<COPSOQCategory, Record<CopsoqRiskLevel, string>> = {
+export const COPSOQ_RECOMMENDATIONS: Record<string, Record<CopsoqRiskLevel, string>> = {
   quantitativeDemands: {
     risk: 'Redistribuir carga, revisar prazos, dimensionar equipe adequadamente e monitorar horas extras.',
     intermediate: 'Monitorar volume de trabalho e ajustar cronogramas quando necessário.',
@@ -306,11 +306,11 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
 
     header();
 
-    COPSOQ_QUESTIONS.forEach((q, index) => {
+    QUESTIONS.forEach((q, index) => {
       const vals = answers.filter(a => a.questionNumber === q.number)
-        .map(a => normalizeScore(a.value, q.isInverted));
+        .map(a => normScore(a.value, q.isInverted));
       const avg = vals.length > 0 ? vals.reduce((s, v) => s + v, 0) / vals.length : NaN;
-      const level: CellRisk = vals.length > 0 ? getRiskLevel(avg) : 'na';
+      const level: CellRisk = vals.length > 0 ? riskOf(avg) : 'na';
 
       setText(8, false, COLORS.text);
       const lines: string[] = pdf.splitTextToSize(q.text, colText - 2);
@@ -399,26 +399,26 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     ? input.responses
     : input.responses.filter(r => r.departments.includes(input.selectedDepartment));
   const allAnswers = filtered.flatMap(r => r.answers);
-  const overallAverage = calculateOverallAverage(allAnswers);
-  const overallRisk = getRiskLevel(overallAverage);
+  const overallAverage = calcOverallAvg(allAnswers);
+  const overallRisk = riskOf(overallAverage);
 
   // Per-category averages (with hasData flag)
   const catData: Record<string, { avg: number; hasData: boolean; level: CellRisk }> = {};
-  ALL_CATEGORIES.forEach(cat => {
-    const catQuestions = COPSOQ_QUESTIONS.filter(q => q.category === cat).map(q => q.number);
+  CATS.forEach(cat => {
+    const catQuestions = QUESTIONS.filter(q => q.category === cat).map(q => q.number);
     const catAnswers = allAnswers.filter(a => catQuestions.includes(a.questionNumber));
-    const avg = calculateCategoryAverage(allAnswers, cat);
+    const avg = calcCatAvg(allAnswers, cat);
     const hasData = catAnswers.length > 0;
-    catData[cat] = { avg, hasData, level: hasData ? getRiskLevel(avg) : 'na' };
+    catData[cat] = { avg, hasData, level: hasData ? riskOf(avg) : 'na' };
   });
 
-  const criticalCount = ALL_CATEGORIES.filter(c => catData[c].level === 'risk').length;
-  const intermediateCount = ALL_CATEGORIES.filter(c => catData[c].level === 'intermediate').length;
-  const favorableCount = ALL_CATEGORIES.filter(c => catData[c].level === 'favorable').length;
+  const criticalCount = CATS.filter(c => catData[c].level === 'risk').length;
+  const intermediateCount = CATS.filter(c => catData[c].level === 'intermediate').length;
+  const favorableCount = CATS.filter(c => catData[c].level === 'favorable').length;
 
   // ─── Agregação setorizada (para consolidar riscos por setor no resumo) ───
   const isConsolidated = input.selectedDepartment === 'all' && input.departments.length > 0;
-  const dimensionsAtRiskInAnySector = new Set<COPSOQCategory>();
+  const dimensionsAtRiskInAnySector = new Set<string>();
   let sectorRiskOccurrences = 0;
   let sectorAttentionOccurrences = 0;
   let sectorsWithRisk = 0;
@@ -431,11 +431,11 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
         .flatMap(r => r.answers);
       let deptHasRisk = false;
       let deptHasAttention = false;
-      ALL_CATEGORIES.forEach(cat => {
-        const catQs = COPSOQ_QUESTIONS.filter(q => q.category === cat).map(q => q.number);
+      CATS.forEach(cat => {
+        const catQs = QUESTIONS.filter(q => q.category === cat).map(q => q.number);
         const catAns = deptAnswers.filter(a => catQs.includes(a.questionNumber));
         if (catAns.length === 0) return;
-        const lvl = getRiskLevel(calculateCategoryAverage(deptAnswers, cat));
+        const lvl = riskOf(calcCatAvg(deptAnswers, cat));
         if (lvl === 'risk') {
           sectorRiskOccurrences++;
           deptHasRisk = true;
@@ -449,7 +449,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       if (deptHasAttention) sectorsWithAttention++;
     });
     // União com riscos observados no consolidado geral
-    ALL_CATEGORIES.forEach(c => {
+    CATS.forEach(c => {
       if (catData[c].level === 'risk') dimensionsAtRiskInAnySector.add(c);
     });
   }
@@ -588,13 +588,13 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   // ══════════════════════════════════════════
   drawSectionTitle('3. Resultados por Dimensão');
 
-  Object.entries(CATEGORY_GROUPS).forEach(([groupName, cats]) => {
+  Object.entries(GROUPS).forEach(([groupName, cats]) => {
     ensure(14);
     setText(11, true, COLORS.primary);
     pdf.text(groupName, margin, y);
     y += 5;
 
-    (cats as COPSOQCategory[]).forEach(cat => {
+    (cats as string[]).forEach(cat => {
       const d = catData[cat];
       const rc = riskColor(d.level);
       ensure(9);
@@ -603,7 +603,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       pdf.setFillColor(rc[0], rc[1], rc[2]);
       pdf.rect(margin, y - 4, 1.5, 8, 'F');
       setText(9.5, false, COLORS.text);
-      pdf.text(COPSOQ_CATEGORY_LABELS[cat], margin + 4, y + 1);
+      pdf.text(LABELS[cat], margin + 4, y + 1);
       setText(9, true, rc);
       const label = d.hasData
         ? `${d.avg.toFixed(2)} — ${RISK_LEVEL_LABELS[d.level as CopsoqRiskLevel]}`
@@ -639,17 +639,17 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
       y += 13;
 
       // Sector-level per-category
-      const rows: Array<{ cat: COPSOQCategory; avg: number; level: CellRisk; hasData: boolean }> = ALL_CATEGORIES.map(cat => {
-        const catQs = COPSOQ_QUESTIONS.filter(q => q.category === cat).map(q => q.number);
+      const rows: Array<{ cat: string; avg: number; level: CellRisk; hasData: boolean }> = CATS.map(cat => {
+        const catQs = QUESTIONS.filter(q => q.category === cat).map(q => q.number);
         const catAns = deptAnswers.filter(a => catQs.includes(a.questionNumber));
-        const avg = calculateCategoryAverage(deptAnswers, cat);
+        const avg = calcCatAvg(deptAnswers, cat);
         const hasData = catAns.length > 0;
-        return { cat, avg, hasData, level: hasData ? getRiskLevel(avg) : 'na' };
+        return { cat, avg, hasData, level: hasData ? riskOf(avg) : 'na' };
       });
 
       // Sector overall
-      const sectorOverall = calculateOverallAverage(deptAnswers);
-      const sectorLevel: CellRisk = deptAnswers.length > 0 ? getRiskLevel(sectorOverall) : 'na';
+      const sectorOverall = calcOverallAvg(deptAnswers);
+      const sectorLevel: CellRisk = deptAnswers.length > 0 ? riskOf(sectorOverall) : 'na';
       const sectorRc = riskColor(sectorLevel);
       const sCritical = rows.filter(r => r.level === 'risk').length;
       const sInter = rows.filter(r => r.level === 'intermediate').length;
@@ -690,7 +690,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
         pdf.setFillColor(rc[0], rc[1], rc[2]);
         pdf.circle(x + 1.5, yy - 1.4, 1.4, 'F');
         setText(8.5, false, COLORS.text);
-        const label = COPSOQ_CATEGORY_LABELS[r.cat];
+        const label = LABELS[r.cat];
         const val = r.hasData
           ? `${r.avg.toFixed(2)} · ${RISK_LEVEL_LABELS[r.level as CopsoqRiskLevel]}`
           : 'sem dados';
@@ -730,16 +730,16 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   // ══════════════════════════════════════════
   newPage();
 
-  const questionAverages = COPSOQ_QUESTIONS.map(q => {
+  const questionAverages = QUESTIONS.map(q => {
     const values = allAnswers.filter(a => a.questionNumber === q.number)
-      .map(a => normalizeScore(a.value, q.isInverted));
+      .map(a => normScore(a.value, q.isInverted));
     const avg = values.length > 0 ? values.reduce((s, v) => s + v, 0) / values.length : NaN;
     return {
       number: q.number,
       text: q.text,
-      category: COPSOQ_CATEGORY_LABELS[q.category],
+      category: LABELS[q.category],
       average: avg,
-      level: !isNaN(avg) ? getRiskLevel(avg) : null,
+      level: !isNaN(avg) ? riskOf(avg) : null,
       responseCount: values.length,
     };
   })
@@ -790,8 +790,8 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     };
     customActions.forEach((item, i) => {
       ensure(20);
-      const catLabel = item.category && (COPSOQ_CATEGORY_LABELS as any)[item.category]
-        ? (COPSOQ_CATEGORY_LABELS as any)[item.category]
+      const catLabel = item.category && (LABELS as any)[item.category]
+        ? (LABELS as any)[item.category]
         : (item.category || '');
       setText(10, true, COLORS.primary);
       pdf.text(`${i + 1}. ${catLabel}${item.priority ? ` — ${PRIORITY_LABELS[item.priority] || item.priority}` : ''}`, margin, y);
@@ -824,15 +824,15 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     return;
   }
 
-  const criticalCats = ALL_CATEGORIES.filter(c => catData[c].level === 'risk');
-  const intermediateCats = ALL_CATEGORIES.filter(c => catData[c].level === 'intermediate');
+  const criticalCats = CATS.filter(c => catData[c].level === 'risk');
+  const intermediateCats = CATS.filter(c => catData[c].level === 'intermediate');
 
   if (criticalCats.length > 0) {
     drawSubTitle('Ações Imediatas — Dimensões em Risco');
     criticalCats.forEach((cat, i) => {
       ensure(14);
       setText(10, true, COLORS.risk);
-      pdf.text(`${i + 1}. ${COPSOQ_CATEGORY_LABELS[cat]}`, margin, y);
+      pdf.text(`${i + 1}. ${LABELS[cat]}`, margin, y);
       y += 5;
       const rec = (COPSOQ_RECOMMENDATIONS[cat] || GENERIC_COPSOQ_RECOMMENDATION).risk;
       setText(9.5, false, COLORS.text);
@@ -848,7 +848,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
     intermediateCats.forEach((cat, i) => {
       ensure(14);
       setText(10, true, COLORS.intermediate);
-      pdf.text(`${i + 1}. ${COPSOQ_CATEGORY_LABELS[cat]}`, margin, y);
+      pdf.text(`${i + 1}. ${LABELS[cat]}`, margin, y);
       y += 5;
       const rec = (COPSOQ_RECOMMENDATIONS[cat] || GENERIC_COPSOQ_RECOMMENDATION).intermediate;
       setText(9.5, false, COLORS.text);

@@ -1,5 +1,5 @@
 import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,9 +99,19 @@ interface Company {
 
 type SortOption = 'alphabetical' | 'newest' | 'last_activity';
 
+type ToolCard = {
+  id: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  highlights: string[];
+  path: string;
+  featured?: boolean;
+};
+
 const onlyDigits = (value: string | null | undefined) => String(value ?? '').replace(/\D/g, '');
 
-const tools = [
+const tools: ToolCard[] = [
   {
     id: 'tool-hseit',
     icon: Brain,
@@ -176,6 +186,104 @@ const SSTDashboard = () => {
   const { isSmartOnly } = useSmartOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
   const { isSmsPlan } = useSmsPlan();
+
+  const displayedTools = useMemo<ToolCard[]>(() => {
+    const hasBetaCompany = isSmartOnly || companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id) || smartOuvidoriaIds.has(c.id));
+    let base = tools;
+    if (isSmartOnly) {
+      base = tools.filter(t => ['tool-hseit', 'tool-climate', 'tool-pulse'].includes(t.id));
+    }
+    let result: ToolCard[] = hasBetaCompany
+      ? [...base, {
+          id: 'tool-ouvidoria-smart',
+          icon: ClipboardList,
+          title: 'Ouvidoria Smart',
+          description: 'Canal anônimo (formulário estático)',
+          highlights: ['Anônimo'],
+          path: '/ouvidoria-beta/painel',
+        }]
+      : base;
+    if (hasPgrShortcut || hasPGRAccess) {
+      result = [...result, {
+        id: 'tool-pgr',
+        icon: FileText,
+        title: 'PGR',
+        description: 'Programa de Gerenciamento de Riscos (NR-1/NR-17)',
+        highlights: ['Inventário', 'Plano de ação', 'e-Social'],
+        path: '/pgr',
+      }];
+    }
+    if (hasLtcatBeta) {
+      result = [...result, {
+        id: 'tool-ltcat',
+        icon: FileText,
+        title: 'LTCAT (BETA)',
+        description: 'Laudo Técnico das Condições Ambientais do Trabalho — previdenciário',
+        highlights: ['BETA', 'Anexo IV', 'S-2240'],
+        path: '/ltcat',
+      }];
+    } else {
+      result = [...result, {
+        id: 'tool-ltcat-locked',
+        icon: Lock,
+        title: 'LTCAT',
+        description: 'Laudo Técnico das Condições Ambientais do Trabalho — previdenciário',
+        highlights: ['Novidade', 'Anexo IV', 'S-2240'],
+        path: LTCAT_UNLOCK_URL,
+        featured: true,
+      }];
+    }
+    if (aepAllowed) {
+      result = [...result, {
+        id: 'tool-aep',
+        icon: ClipboardCheck,
+        title: 'AEP',
+        description: 'Avaliação Ergonômica Preliminar (NR-17)',
+        highlights: ['Avaliações', 'Importação', 'PGR'],
+        path: '/aep',
+      }];
+    }
+    return result;
+  }, [companies, smartOuvidoriaIds, isSmartOnly, hasPgrShortcut, hasPGRAccess, hasLtcatBeta, aepAllowed]);
+
+  const toolCards = displayedTools.map((tool, idx) => (
+    <Card
+      key={tool.id}
+      id={tool.id}
+      className={`group cursor-pointer border transition-all duration-500 animate-fade-in ${tool.featured ? 'border-2 border-green-500 bg-green-50/80 hover:border-green-600 hover:shadow-xl hover:shadow-green-500/15 hover:-translate-y-1' : tool.id === 'tool-ltcat-locked' ? 'border-dashed border-primary/40 bg-muted/30 hover:border-primary/60 hover:shadow-lg' : 'border-border hover:border-primary/30 hover:shadow-xl hover:-translate-y-1'}`}
+      style={{ animationDelay: `${idx * 100 + 200}ms` }}
+      onClick={() => tool.id === 'tool-ltcat-locked' ? window.open(tool.path, '_blank') : navigate(tool.path)}
+    >
+      <CardContent className="p-6">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${tool.featured ? 'bg-green-100 text-green-600 group-hover:bg-green-200' : 'bg-gradient-to-br from-primary/10 to-secondary/10 group-hover:from-primary/20 group-hover:to-secondary/20'}`}>
+          <tool.icon className={`h-6 w-6 ${tool.featured ? 'text-green-600' : 'text-primary'}`} />
+        </div>
+        <h3 className={`text-lg font-semibold mb-2 ${tool.featured ? 'text-green-700' : 'text-foreground'}`}>{tool.title}</h3>
+        <p className={`text-sm mb-4 ${tool.featured ? 'text-green-700/80' : 'text-muted-foreground'}`}>{tool.description}</p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {tool.highlights.map((h, hIdx) => (
+            <span key={hIdx} className={`px-2.5 py-1 text-xs font-medium rounded-full ${tool.featured ? 'bg-green-100 text-green-700' : 'bg-primary/10 text-primary'}`}>
+              {h}
+            </span>
+          ))}
+        </div>
+        {tool.id === 'tool-ltcat-locked' ? (
+          <div className={`rounded-lg border p-3 ${tool.featured ? 'bg-green-100 border-green-200' : 'bg-primary/10 border-primary/20'}`}>
+            <p className={`text-xs font-semibold flex items-center gap-1.5 ${tool.featured ? 'text-green-700' : 'text-primary'}`}>
+              <Lock className="h-3.5 w-3.5" /> "Novidade" Módulo LTCAT
+            </p>
+            <p className={`text-xs mt-1 ${tool.featured ? 'text-green-700/80' : 'text-muted-foreground'}`}>
+              Para desbloquear, clique aqui — <span className={`font-semibold ${tool.featured ? 'text-green-800' : 'text-foreground'}`}>R$ 49,90</span>
+            </p>
+          </div>
+        ) : (
+          <div className={`flex items-center text-sm font-medium group-hover:gap-2 transition-all ${tool.featured ? 'text-green-600' : 'text-primary'}`}>
+            Acessar <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  ));
 
   const fetchCompanies = async (highlightCompanyId?: string) => {
     try {
@@ -505,104 +613,7 @@ const SSTDashboard = () => {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {(() => {
-                const hasBetaCompany = isSmartOnly || companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id) || smartOuvidoriaIds.has(c.id));
-                let base = tools;
-                if (isSmartOnly) {
-                  // Smart plan: only HSE-IT/COPSOQ (Psicossocial), Clima, Pulse, Trainings opcional
-                  base = tools.filter(t => ['tool-hseit', 'tool-climate', 'tool-pulse'].includes(t.id));
-                }
-                let displayedTools = hasBetaCompany
-                  ? [...base, {
-                      id: 'tool-ouvidoria-smart',
-                      icon: ClipboardList,
-                      title: 'Ouvidoria Smart',
-                      description: 'Canal anônimo (formulário estático)',
-                      highlights: ['Anônimo'],
-                      path: '/ouvidoria-beta/painel',
-                    }]
-                  : base;
-                if (hasPgrShortcut || hasPGRAccess) {
-                  displayedTools = [...displayedTools, {
-                    id: 'tool-pgr',
-                    icon: FileText,
-                    title: 'PGR',
-                    description: 'Programa de Gerenciamento de Riscos (NR-1/NR-17)',
-                    highlights: ['Inventário', 'Plano de ação', 'e-Social'],
-                    path: '/pgr',
-                  }];
-                }
-                if (hasLtcatBeta) {
-                  displayedTools = [...displayedTools, {
-                    id: 'tool-ltcat',
-                    icon: FileText,
-                    title: 'LTCAT (BETA)',
-                    description: 'Laudo Técnico das Condições Ambientais do Trabalho — previdenciário',
-                    highlights: ['BETA', 'Anexo IV', 'S-2240'],
-                    path: '/ltcat',
-                  }];
-                } else {
-                  displayedTools = [...displayedTools, {
-                    id: 'tool-ltcat-locked',
-                    icon: Lock,
-                    title: 'LTCAT',
-                    description: 'Laudo Técnico das Condições Ambientais do Trabalho — previdenciário',
-                    highlights: ['Novidade', 'Anexo IV', 'S-2240'],
-                    path: LTCAT_UNLOCK_URL,
-                  }];
-                }
-                if (aepAllowed) {
-                  displayedTools = [...displayedTools, {
-                    id: 'tool-aep',
-                    icon: ClipboardCheck,
-                    title: 'AEP',
-                    description: 'Avaliação Ergonômica Preliminar (NR-17)',
-                    highlights: ['Avaliações', 'Importação', 'PGR'],
-                    path: '/aep',
-                  }];
-                }
-                return displayedTools;
-              })().map((tool, idx) => {
-                const isLocked = tool.id === 'tool-ltcat-locked';
-                return (
-                <Card
-                  key={tool.id}
-                  id={tool.id}
-                  className={`group cursor-pointer border transition-all duration-500 animate-fade-in ${isLocked ? 'border-dashed border-primary/40 bg-muted/30 hover:border-primary/60 hover:shadow-lg' : 'border-border hover:border-primary/30 hover:shadow-xl hover:-translate-y-1'}`}
-                  style={{ animationDelay: `${idx * 100 + 200}ms` }}
-                  onClick={() => isLocked ? window.open(tool.path, '_blank') : navigate(tool.path)}
-                >
-                  <CardContent className="p-6">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mb-4 group-hover:from-primary/20 group-hover:to-secondary/20 transition-colors">
-                      <tool.icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">{tool.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">{tool.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {tool.highlights.map((h, hIdx) => (
-                        <span key={hIdx} className="px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                          {h}
-                        </span>
-                      ))}
-                    </div>
-                    {isLocked ? (
-                      <div className="rounded-lg bg-primary/10 border border-primary/20 p-3">
-                        <p className="text-xs font-semibold text-primary flex items-center gap-1.5">
-                          <Lock className="h-3.5 w-3.5" /> "Novidade" Módulo LTCAT
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Para desbloquear, clique aqui — <span className="font-semibold text-foreground">R$ 49,90</span>
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-sm font-medium text-primary group-hover:gap-2 transition-all">
-                        Acessar <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                );
-              })}
+              {toolCards}
             </div>
           </div>
 

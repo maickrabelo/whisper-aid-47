@@ -541,6 +541,16 @@ const SSTDashboard = () => {
                     highlights: ['BETA', 'Anexo IV', 'S-2240'],
                     path: '/ltcat',
                   }];
+                } else {
+                  displayedTools = [...displayedTools, {
+                    id: 'tool-ltcat-locked',
+                    icon: Lock,
+                    title: 'LTCAT',
+                    description: 'Laudo Técnico das Condições Ambientais do Trabalho — previdenciário',
+                    highlights: ['Novidade', 'Anexo IV', 'S-2240'],
+                    path: LTCAT_UNLOCK_URL,
+                    locked: true,
+                  } as typeof displayedTools[number]];
                 }
                 if (aepAllowed) {
                   displayedTools = [...displayedTools, {

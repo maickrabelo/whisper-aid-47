@@ -562,17 +562,20 @@ const SSTDashboard = () => {
                   }];
                 }
                 return displayedTools;
-              })().map((tool, idx) => (
+              })().map((tool, idx) => {
+                const isLocked = tool.id === 'tool-ltcat-locked';
+                return (
                 <Card
                   key={tool.id}
                   id={tool.id}
-                  className="group cursor-pointer border border-border hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 animate-fade-in"
+                  className={`group cursor-pointer border transition-all duration-500 animate-fade-in ${isLocked ? 'border-dashed border-primary/40 bg-muted/30 hover:border-primary/60 hover:shadow-lg' : 'border-border hover:border-primary/30 hover:shadow-xl hover:-translate-y-1'}`}
                   style={{ animationDelay: `${idx * 100 + 200}ms` }}
-                  onClick={() => navigate(tool.path)}
+                  onClick={() => isLocked ? window.open(tool.path, '_blank') : navigate(tool.path)}
                 >
                   <CardContent className="p-6">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mb-4 group-hover:from-primary/20 group-hover:to-secondary/20 transition-colors">
                       <tool.icon className="h-6 w-6 text-primary" />
+                      {isLocked && <Lock className="h-3.5 w-3.5 text-primary absolute -mt-6 ml-8 bg-background rounded-full" />}
                     </div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">{tool.title}</h3>
                     <p className="text-sm text-muted-foreground mb-4">{tool.description}</p>
@@ -583,12 +586,24 @@ const SSTDashboard = () => {
                         </span>
                       ))}
                     </div>
-                    <div className="flex items-center text-sm font-medium text-primary group-hover:gap-2 transition-all">
-                      Acessar <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                    </div>
+                    {isLocked ? (
+                      <div className="rounded-lg bg-primary/10 border border-primary/20 p-3">
+                        <p className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                          <Lock className="h-3.5 w-3.5" /> "Novidade" Módulo LTCAT
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Para desbloquear, clique aqui — <span className="font-semibold text-foreground">R$ 49,90</span>
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-sm font-medium text-primary group-hover:gap-2 transition-all">
+                        Acessar <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           </div>
 

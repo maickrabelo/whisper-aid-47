@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck, Lock } from "lucide-react";
+
+const LTCAT_UNLOCK_URL = "https://wa.me/5527998443852?text=Estou%20usando%20o%20Software%20Sr.SMS%20e%20quero%20desbloquear%20o%20m%C3%B3dulo%20LTCAT";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
 import { usePGRModuleAccess } from "@/hooks/usePGRModuleAccess";
 import { useFeatureAccess, LTCAT_BETA } from "@/hooks/useFeatureAccess";
@@ -539,6 +541,15 @@ const SSTDashboard = () => {
                     highlights: ['BETA', 'Anexo IV', 'S-2240'],
                     path: '/ltcat',
                   }];
+                } else {
+                  displayedTools = [...displayedTools, {
+                    id: 'tool-ltcat-locked',
+                    icon: Lock,
+                    title: 'LTCAT',
+                    description: 'Laudo Técnico das Condições Ambientais do Trabalho — previdenciário',
+                    highlights: ['Novidade', 'Anexo IV', 'S-2240'],
+                    path: LTCAT_UNLOCK_URL,
+                  }];
                 }
                 if (aepAllowed) {
                   displayedTools = [...displayedTools, {
@@ -551,13 +562,15 @@ const SSTDashboard = () => {
                   }];
                 }
                 return displayedTools;
-              })().map((tool, idx) => (
+              })().map((tool, idx) => {
+                const isLocked = tool.id === 'tool-ltcat-locked';
+                return (
                 <Card
                   key={tool.id}
                   id={tool.id}
-                  className="group cursor-pointer border border-border hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 animate-fade-in"
+                  className={`group cursor-pointer border transition-all duration-500 animate-fade-in ${isLocked ? 'border-dashed border-primary/40 bg-muted/30 hover:border-primary/60 hover:shadow-lg' : 'border-border hover:border-primary/30 hover:shadow-xl hover:-translate-y-1'}`}
                   style={{ animationDelay: `${idx * 100 + 200}ms` }}
-                  onClick={() => navigate(tool.path)}
+                  onClick={() => isLocked ? window.open(tool.path, '_blank') : navigate(tool.path)}
                 >
                   <CardContent className="p-6">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mb-4 group-hover:from-primary/20 group-hover:to-secondary/20 transition-colors">
@@ -572,12 +585,24 @@ const SSTDashboard = () => {
                         </span>
                       ))}
                     </div>
-                    <div className="flex items-center text-sm font-medium text-primary group-hover:gap-2 transition-all">
-                      Acessar <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                    </div>
+                    {isLocked ? (
+                      <div className="rounded-lg bg-primary/10 border border-primary/20 p-3">
+                        <p className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                          <Lock className="h-3.5 w-3.5" /> "Novidade" Módulo LTCAT
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Para desbloquear, clique aqui — <span className="font-semibold text-foreground">R$ 49,90</span>
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-sm font-medium text-primary group-hover:gap-2 transition-all">
+                        Acessar <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           </div>
 

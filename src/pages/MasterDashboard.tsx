@@ -1979,6 +1979,29 @@ const MasterDashboard = () => {
                                     <Sparkles className="h-4 w-4 mr-1" />
                                     Plano
                                   </Button>
+                                  {(() => {
+                                    const email = manager.email?.toLowerCase() || '';
+                                    const on = !!ltcatStatus[email];
+                                    return (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className={on ? 'border-green-500 text-green-700 hover:bg-green-50' : ''}
+                                        disabled={ltcatBusy === manager.id}
+                                        onClick={() => handleToggleLtcat(manager)}
+                                        title={on ? 'Remover acesso ao LTCAT' : 'Liberar acesso ao LTCAT'}
+                                      >
+                                        {ltcatBusy === manager.id ? (
+                                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                        ) : on ? (
+                                          <Unlock className="h-4 w-4 mr-1" />
+                                        ) : (
+                                          <Lock className="h-4 w-4 mr-1" />
+                                        )}
+                                        LTCAT
+                                      </Button>
+                                    );
+                                  })()}
                                   <Button 
                                     variant="outline" 
                                     size="sm" 

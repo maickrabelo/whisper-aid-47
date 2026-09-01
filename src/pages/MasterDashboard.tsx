@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity, Download, Sparkles } from "lucide-react";
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity, Download, Sparkles, Lock, Unlock, Loader2 } from "lucide-react";
 import { downloadJsonAsExcel } from '@/lib/excelExport';
 import { PendingPartnersManager } from '@/components/admin/PendingPartnersManager';
 import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesManager';
@@ -94,6 +94,8 @@ const MasterDashboard = () => {
   const [testUsersResult, setTestUsersResult] = useState<any>(null);
   const [assignPlanSST, setAssignPlanSST] = useState<SSTManager | null>(null);
   const [manualPlans, setManualPlans] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [ltcatStatus, setLtcatStatus] = useState<Record<string, boolean>>({});
+  const [ltcatBusy, setLtcatBusy] = useState<string | null>(null);
 
   const { toast } = useToast();
   const { session, role, isLoading: authLoading } = useRealAuth();
@@ -494,6 +496,46 @@ const MasterDashboard = () => {
     setLogoPreview(company.logo_url);
     setIsEditCompanyOpen(true);
   };
+
+  const loadLtcatStatuses = async (managers: SSTManager[]) => {
+    const emails = managers.map((m) => m.email).filter(Boolean) as string[];
+    if (emails.length === 0) return;
+    const { data, error } = await supabase.functions.invoke('admin-toggle-feature-access', {
+      body: { action: 'list', feature_key: 'LTCAT_BETA', emails },
+    });
+    if (!error && data?.statuses) setLtcatStatus(data.statuses);
+  };
+
+  useEffect(() => {
+    if (activeTab === 'sst' && sstManagers.length > 0) {
+      loadLtcatStatuses(sstManagers);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, sstManagers]);
+
+  const handleToggleLtcat = async (manager: SSTManager) => {
+    if (!manager.email) {
+      toast({ title: 'Sem e-mail', description: 'Esta gestora não possui e-mail cadastrado.', variant: 'destructive' });
+      return;
+    }
+    const email = manager.email.toLowerCase();
+    const next = !ltcatStatus[email];
+    setLtcatBusy(manager.id);
+    const { data, error } = await supabase.functions.invoke('admin-toggle-feature-access', {
+      body: { action: 'toggle', feature_key: 'LTCAT_BETA', email, enabled: next },
+    });
+    setLtcatBusy(null);
+    if (error || data?.error) {
+      toast({ title: 'Erro', description: data?.error || error?.message || 'Falha ao atualizar o LTCAT.', variant: 'destructive' });
+      return;
+    }
+    setLtcatStatus((prev) => ({ ...prev, [email]: next }));
+    toast({
+      title: next ? 'LTCAT liberado' : 'LTCAT bloqueado',
+      description: `${manager.name} — ${next ? 'acesso habilitado' : 'acesso removido'}.`,
+    });
+  };
+
 
   const handleOpenEditSST = (sst: SSTManager) => {
     setEditingSST(sst);
@@ -1937,6 +1979,29 @@ const MasterDashboard = () => {
                                     <Sparkles className="h-4 w-4 mr-1" />
                                     Plano
                                   </Button>
+                                  {(() => {
+                                    const email = manager.email?.toLowerCase() || '';
+                                    const on = !!ltcatStatus[email];
+                                    return (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className={on ? 'border-green-500 text-green-700 hover:bg-green-50' : ''}
+                                        disabled={ltcatBusy === manager.id}
+                                        onClick={() => handleToggleLtcat(manager)}
+                                        title={on ? 'Remover acesso ao LTCAT' : 'Liberar acesso ao LTCAT'}
+                                      >
+                                        {ltcatBusy === manager.id ? (
+                                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                        ) : on ? (
+                                          <Unlock className="h-4 w-4 mr-1" />
+                                        ) : (
+                                          <Lock className="h-4 w-4 mr-1" />
+                                        )}
+                                        LTCAT
+                                      </Button>
+                                    );
+                                  })()}
                                   <Button 
                                     variant="outline" 
                                     size="sm" 

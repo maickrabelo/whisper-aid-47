@@ -44,3 +44,6 @@ verify_jwt = false
 verify_jwt = false
 
 
+
+[functions.admin-toggle-feature-access]
+verify_jwt = true

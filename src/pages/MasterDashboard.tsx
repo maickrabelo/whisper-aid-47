@@ -497,6 +497,46 @@ const MasterDashboard = () => {
     setIsEditCompanyOpen(true);
   };
 
+  const loadLtcatStatuses = async (managers: SSTManager[]) => {
+    const emails = managers.map((m) => m.email).filter(Boolean) as string[];
+    if (emails.length === 0) return;
+    const { data, error } = await supabase.functions.invoke('admin-toggle-feature-access', {
+      body: { action: 'list', feature_key: 'LTCAT_BETA', emails },
+    });
+    if (!error && data?.statuses) setLtcatStatus(data.statuses);
+  };
+
+  useEffect(() => {
+    if (activeTab === 'sst' && sstManagers.length > 0) {
+      loadLtcatStatuses(sstManagers);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, sstManagers]);
+
+  const handleToggleLtcat = async (manager: SSTManager) => {
+    if (!manager.email) {
+      toast({ title: 'Sem e-mail', description: 'Esta gestora não possui e-mail cadastrado.', variant: 'destructive' });
+      return;
+    }
+    const email = manager.email.toLowerCase();
+    const next = !ltcatStatus[email];
+    setLtcatBusy(manager.id);
+    const { data, error } = await supabase.functions.invoke('admin-toggle-feature-access', {
+      body: { action: 'toggle', feature_key: 'LTCAT_BETA', email, enabled: next },
+    });
+    setLtcatBusy(null);
+    if (error || data?.error) {
+      toast({ title: 'Erro', description: data?.error || error?.message || 'Falha ao atualizar o LTCAT.', variant: 'destructive' });
+      return;
+    }
+    setLtcatStatus((prev) => ({ ...prev, [email]: next }));
+    toast({
+      title: next ? 'LTCAT liberado' : 'LTCAT bloqueado',
+      description: `${manager.name} — ${next ? 'acesso habilitado' : 'acesso removido'}.`,
+    });
+  };
+
+
   const handleOpenEditSST = (sst: SSTManager) => {
     setEditingSST(sst);
     setSstLogoPreview(sst.logo_url);

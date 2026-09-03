@@ -134,6 +134,8 @@ export interface ScheduleItem {
 interface HSEITScheduleEditorProps {
   scheduleItems: ScheduleItem[];
   onUpdate: (items: ScheduleItem[]) => void;
+  actionItems?: ActionItem[];
+  onUpdateActionItems?: (items: ActionItem[]) => void;
 }
 
 const STATUS_LABELS = {

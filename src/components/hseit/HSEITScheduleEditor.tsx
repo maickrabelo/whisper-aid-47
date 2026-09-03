@@ -150,7 +150,7 @@ const STATUS_COLORS = {
   completed: 'bg-green-100 text-green-800'
 };
 
-export function HSEITScheduleEditor({ scheduleItems, onUpdate }: HSEITScheduleEditorProps) {
+export function HSEITScheduleEditor({ scheduleItems, onUpdate, actionItems, onUpdateActionItems }: HSEITScheduleEditorProps) {
   const addItem = () => {
     const newItem: ScheduleItem = {
       id: crypto.randomUUID(),

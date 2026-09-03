@@ -267,6 +267,12 @@ export function HSEITScheduleEditor({ scheduleItems, onUpdate, actionItems, onUp
       <p className="text-sm text-muted-foreground">
         Dica: Defina prazos realistas e atribua responsáveis claros para cada ação.
       </p>
+
+      {actionItems && onUpdateActionItems && (
+        <div className="pt-4 border-t">
+          <MonthlyPlanEditor actionItems={actionItems} onUpdate={onUpdateActionItems} />
+        </div>
+      )}
     </div>
   );
 }

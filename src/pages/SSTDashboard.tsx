@@ -157,9 +157,8 @@ const tools: ToolCard[] = [
     icon: Calculator,
     title: 'Calculadora de Multas NRs',
     description: 'Consulte valores de multas por Normas Regulamentadoras',
-    highlights: ['NOVIDADE'],
-    path: 'https://nrmultas-rdd99rsf.manus.space',
-    featured: true,
+    highlights: ['NRs', 'Valores atualizados', 'Consulta rápida'],
+    path: '/calculadora-multas',
   },
 ];
 

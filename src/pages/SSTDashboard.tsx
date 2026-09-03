@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck, Lock } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck, Lock, Calculator } from "lucide-react";
 
 const LTCAT_UNLOCK_URL = "https://wa.me/5527998443852?text=Estou%20usando%20o%20Software%20Sr.SMS%20e%20quero%20desbloquear%20o%20m%C3%B3dulo%20LTCAT";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
@@ -152,6 +152,15 @@ const tools: ToolCard[] = [
     highlights: ['Vídeos', 'PDFs', 'Artigos'],
     path: '/sst/treinamentos',
   },
+  {
+    id: 'tool-nr-multas',
+    icon: Calculator,
+    title: 'Calculadora de Multas NRs',
+    description: 'Consulte valores de multas por Normas Regulamentadoras',
+    highlights: ['NOVIDADE'],
+    path: 'https://nrmultas-rdd99rsf.manus.space',
+    featured: true,
+  },
 ];
 
 const SSTDashboard = () => {
@@ -252,7 +261,7 @@ const SSTDashboard = () => {
       id={tool.id}
       className={`group cursor-pointer border transition-all duration-500 animate-fade-in ${tool.featured ? 'border-2 border-green-500 bg-green-50/80 hover:border-green-600 hover:shadow-xl hover:shadow-green-500/15 hover:-translate-y-1' : tool.id === 'tool-ltcat-locked' ? 'border-dashed border-primary/40 bg-muted/30 hover:border-primary/60 hover:shadow-lg' : 'border-border hover:border-primary/30 hover:shadow-xl hover:-translate-y-1'}`}
       style={{ animationDelay: `${idx * 100 + 200}ms` }}
-      onClick={() => tool.id === 'tool-ltcat-locked' ? window.open(tool.path, '_blank') : navigate(tool.path)}
+      onClick={() => tool.path.startsWith('http') ? window.open(tool.path, '_blank') : navigate(tool.path)}
     >
       <CardContent className="p-6">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${tool.featured ? 'bg-green-100 text-green-600 group-hover:bg-green-200' : 'bg-gradient-to-br from-primary/10 to-secondary/10 group-hover:from-primary/20 group-hover:to-secondary/20'}`}>

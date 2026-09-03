@@ -152,6 +152,15 @@ const tools: ToolCard[] = [
     highlights: ['Vídeos', 'PDFs', 'Artigos'],
     path: '/sst/treinamentos',
   },
+  {
+    id: 'tool-nr-multas',
+    icon: Calculator,
+    title: 'Calculadora de Multas NRs',
+    description: 'Consulte valores de multas por Normas Regulamentadoras',
+    highlights: ['NOVIDADE'],
+    path: 'https://nrmultas-rdd99rsf.manus.space',
+    featured: true,
+  },
 ];
 
 const SSTDashboard = () => {

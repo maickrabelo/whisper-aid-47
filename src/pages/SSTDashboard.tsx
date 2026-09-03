@@ -261,7 +261,7 @@ const SSTDashboard = () => {
       id={tool.id}
       className={`group cursor-pointer border transition-all duration-500 animate-fade-in ${tool.featured ? 'border-2 border-green-500 bg-green-50/80 hover:border-green-600 hover:shadow-xl hover:shadow-green-500/15 hover:-translate-y-1' : tool.id === 'tool-ltcat-locked' ? 'border-dashed border-primary/40 bg-muted/30 hover:border-primary/60 hover:shadow-lg' : 'border-border hover:border-primary/30 hover:shadow-xl hover:-translate-y-1'}`}
       style={{ animationDelay: `${idx * 100 + 200}ms` }}
-      onClick={() => tool.id === 'tool-ltcat-locked' ? window.open(tool.path, '_blank') : navigate(tool.path)}
+      onClick={() => tool.path.startsWith('http') ? window.open(tool.path, '_blank') : navigate(tool.path)}
     >
       <CardContent className="p-6">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${tool.featured ? 'bg-green-100 text-green-600 group-hover:bg-green-200' : 'bg-gradient-to-br from-primary/10 to-secondary/10 group-hover:from-primary/20 group-hover:to-secondary/20'}`}>

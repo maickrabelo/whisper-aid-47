@@ -14,7 +14,7 @@ import {
   RISK_LEVEL_LABELS
 } from '@/data/hseitQuestions';
 import { ActionItem } from './HSEITActionPlanEditor';
-import { ScheduleItem } from './HSEITScheduleEditor';
+import { ScheduleItem, getMonthlyPlan } from './HSEITScheduleEditor';
 
 interface Answer { questionNumber: number; value: number; }
 interface Response { id: string; department: string | null; completedAt: string | null; answers: Answer[]; }

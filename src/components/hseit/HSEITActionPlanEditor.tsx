@@ -12,6 +12,12 @@ export interface ActionItem {
   priority: 'immediate' | 'short_term' | 'medium_term';
   description: string;
   recommendation: string;
+  /** Responsável exibido no cronograma mensal do PDF (padrão: RH/SST) */
+  responsible?: string;
+  /** Mês inicial (0 = JAN) no cronograma mensal */
+  startMonth?: number;
+  /** Duração em meses no cronograma mensal */
+  durationMonths?: number;
 }
 
 interface HSEITActionPlanEditorProps {

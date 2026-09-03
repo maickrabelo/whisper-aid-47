@@ -14,7 +14,7 @@ import {
   RISK_LEVEL_LABELS
 } from '@/data/hseitQuestions';
 import { ActionItem } from './HSEITActionPlanEditor';
-import { ScheduleItem } from './HSEITScheduleEditor';
+import { ScheduleItem, getMonthlyPlan } from './HSEITScheduleEditor';
 
 interface Answer { questionNumber: number; value: number; }
 interface Response { id: string; department: string | null; completedAt: string | null; answers: Answer[]; }
@@ -807,11 +807,16 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       wrappedLines.forEach((line: string, li: number) => {
         pdf.text(line, m + 2, y + 3 + li * 4);
       });
-      pdf.text('RH/SST', m + descColW + 2, y + 3);
+      const plan = getMonthlyPlan(item as any);
+      const respLines = pdf.splitTextToSize(plan.responsible, respColW - 3);
+      respLines.slice(0, 3).forEach((line: string, li: number) => {
+        pdf.text(line, m + descColW + 2, y + 3 + li * 3.5);
+      });
 
-      // Mark months based on priority
-      const startMonth = item.priority === 'immediate' ? 0 : item.priority === 'short_term' ? 1 : 3;
-      const endMonth = item.priority === 'immediate' ? 2 : item.priority === 'short_term' ? 5 : 8;
+      // Marcação mensal conforme cronograma editado
+      const startMonth = plan.startMonth;
+      const endMonth = plan.startMonth + plan.durationMonths - 1;
+      
       
       MONTHS.forEach((_, i) => {
         const cx = monthsStartX + i * gridColW + 2;

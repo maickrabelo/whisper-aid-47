@@ -527,6 +527,8 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
                 <HSEITScheduleEditor
                   scheduleItems={scheduleItems}
                   onUpdate={setScheduleItems}
+                  actionItems={actionItems}
+                  onUpdateActionItems={setActionItems}
                 />
                 <div className="space-y-2 rounded-lg border p-4">
                   <label className="text-sm font-semibold">Periodicidade Recomendada</label>

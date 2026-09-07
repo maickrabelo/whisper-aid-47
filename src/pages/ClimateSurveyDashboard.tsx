@@ -1,5 +1,5 @@
 import { PUBLIC_BASE_URL } from "@/lib/publicUrl";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AssessmentExportButton } from '@/components/assessments/AssessmentExportButton';
 import { supabase } from "@/integrations/supabase/client";
@@ -43,7 +43,10 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowLeft,
-  Trash2
+  Trash2,
+  Search,
+  Layers,
+  Building2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +60,15 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import SoniaChat from "@/components/SoniaChat";
 import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 import PrintQuestionnaireButton from "@/components/PrintQuestionnaireButton";
+import {
+  computeClimateStats,
+  averageLikert,
+  fetchAllRows,
+  NO_DEPARTMENT_LABEL,
+  type ClimateResponse,
+  type ClimateStats,
+} from "@/lib/climateSurveyStats";
+import { useCompanyEmployeeCount } from "@/hooks/useCompanyEmployeeCount";
 
 const climateSteps: TourStep[] = [
   {
@@ -89,28 +101,8 @@ interface Survey {
   companies?: { name: string; slug?: string };
 }
 
-interface SurveyStats {
-  totalResponses: number;
-  npsScore: number;
-  avgScore: number;
-  categoryScores: { category: string; score: number; fullMark: number }[];
-  npsDistribution: { name: string; value: number; color: string }[];
-  departmentDistribution: { name: string; value: number }[];
-}
-
-interface FullResponse {
-  id: string;
-  department: string | null;
-  completed_at: string | null;
-  demographics: any;
-  answers: {
-    question_text: string;
-    question_type: string;
-    category: string | null;
-    answer_value: string | null;
-    answer_text: string | null;
-  }[];
-}
+type SurveyStats = ClimateStats;
+type FullResponse = ClimateResponse;
 
 const COLORS = ['#ef4444', '#f59e0b', '#22c55e'];
 
@@ -124,11 +116,16 @@ export default function ClimateSurveyDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [selectedSurvey, setSelectedSurvey] = useState<string>('');
-  const [stats, setStats] = useState<SurveyStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
-  const [fullResponses, setFullResponses] = useState<FullResponse[]>([]);
+  const [allResponses, setAllResponses] = useState<FullResponse[]>([]);
   const [showResponses, setShowResponses] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  const [responseSearch, setResponseSearch] = useState('');
+  const [responseSort, setResponseSort] = useState<'date_desc' | 'date_asc' | 'department'>('date_desc');
+  const [groupByDepartment, setGroupByDepartment] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -142,6 +139,8 @@ export default function ClimateSurveyDashboard() {
 
   useEffect(() => {
     if (selectedSurvey) {
+      setSelectedDepartment('all');
+      setExpandedItems([]);
       fetchSurveyStats(selectedSurvey);
     }
   }, [selectedSurvey]);

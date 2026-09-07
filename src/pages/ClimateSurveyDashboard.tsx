@@ -52,7 +52,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 import { ClimateSurveyExportButton } from "@/components/climate-survey/ClimateSurveyExportButton";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Accordion } from "@/components/ui/accordion";
+import ClimateResponseItem from "@/components/climate-survey/ClimateResponseItem";
 import { AIInsightsCard } from "@/components/climate-survey/AIInsightsCard";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
@@ -790,6 +791,7 @@ export default function ClimateSurveyDashboard() {
                     </CardTitle>
                     <CardDescription>
                       Visualize cada resposta individual na íntegra
+                      {departmentLabel ? ` — setor ${departmentLabel}` : ''}
                     </CardDescription>
                   </div>
                   <Button
@@ -804,7 +806,7 @@ export default function ClimateSurveyDashboard() {
                     ) : (
                       <>
                         <ChevronDown className="mr-2 h-4 w-4" />
-                        Ver {fullResponses.length} respostas
+                        Ver {listedResponses.length} respostas
                       </>
                     )}
                   </Button>
@@ -812,130 +814,75 @@ export default function ClimateSurveyDashboard() {
               </CardHeader>
               {showResponses && (
                 <CardContent>
-                  {fullResponses.length === 0 ? (
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <div className="relative flex-1 min-w-[220px]">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        value={responseSearch}
+                        onChange={(e) => setResponseSearch(e.target.value)}
+                        placeholder="Buscar por setor, cargo, faixa etária..."
+                        className="pl-9"
+                      />
+                    </div>
+                    <Select value={responseSort} onValueChange={(v) => setResponseSort(v as any)}>
+                      <SelectTrigger className="w-[190px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="date_desc">Mais recentes</SelectItem>
+                        <SelectItem value="date_asc">Mais antigas</SelectItem>
+                        <SelectItem value="department">Por setor (A-Z)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant={groupByDepartment ? 'default' : 'outline'}
+                      onClick={() => setGroupByDepartment(!groupByDepartment)}
+                      className="gap-2"
+                    >
+                      <Layers className="h-4 w-4" /> Agrupar por setor
+                    </Button>
+                    <Button variant="outline" onClick={toggleExpandAll}>
+                      {expandedItems.length > 0 ? 'Recolher tudo' : 'Expandir tudo'}
+                    </Button>
+                  </div>
+
+                  {listedResponses.length === 0 ? (
                     <p className="text-muted-foreground text-center py-8">
-                      Nenhuma resposta ainda.
+                      Nenhuma resposta encontrada com os filtros atuais.
                     </p>
+                  ) : groupByDepartment ? (
+                    <div className="space-y-6">
+                      {groupedResponses.map((group) => (
+                        <div key={group.department}>
+                          <div className="flex flex-wrap items-center gap-3 mb-2 border-b pb-2">
+                            <h3 className="font-semibold text-foreground">{group.department}</h3>
+                            <Badge variant="secondary">{group.items.length} resposta(s)</Badge>
+                            {group.average > 0 && (
+                              <Badge variant="outline">Média {group.average.toFixed(2)} / 5</Badge>
+                            )}
+                          </div>
+                          <Accordion
+                            type="multiple"
+                            value={expandedItems}
+                            onValueChange={setExpandedItems}
+                            className="w-full"
+                          >
+                            {group.items.map((resp, index) => (
+                              <ClimateResponseItem key={resp.id} resp={resp} index={index} />
+                            ))}
+                          </Accordion>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <Accordion type="single" collapsible className="w-full">
-                      {fullResponses.map((resp, index) => (
-                        <AccordionItem key={resp.id} value={resp.id}>
-                          <AccordionTrigger className="hover:no-underline">
-                            <div className="flex items-center gap-3 text-left">
-                              <Badge variant="secondary" className="shrink-0">
-                                #{index + 1}
-                              </Badge>
-                              <span className="text-sm">
-                                {resp.department || 'Setor não informado'}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {resp.completed_at 
-                                  ? new Date(resp.completed_at).toLocaleDateString('pt-BR', {
-                                      day: '2-digit',
-                                      month: '2-digit',
-                                      year: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })
-                                  : 'Data não informada'}
-                              </span>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <div className="space-y-4 pt-2">
-                              {/* Demographics */}
-                              {resp.demographics && Object.keys(resp.demographics).length > 0 && (
-                                <div className="bg-muted/50 rounded-lg p-4">
-                                  <h4 className="font-medium text-sm mb-2">Dados Demográficos</h4>
-                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-                                    {resp.demographics.gender && (
-                                      <div>
-                                        <span className="text-muted-foreground">Gênero: </span>
-                                        {resp.demographics.gender}
-                                      </div>
-                                    )}
-                                    {resp.demographics.ageRange && (
-                                      <div>
-                                        <span className="text-muted-foreground">Idade: </span>
-                                        {resp.demographics.ageRange}
-                                      </div>
-                                    )}
-                                    {resp.demographics.tenure && (
-                                      <div>
-                                        <span className="text-muted-foreground">Tempo: </span>
-                                        {resp.demographics.tenure}
-                                      </div>
-                                    )}
-                                    {resp.demographics.education && (
-                                      <div>
-                                        <span className="text-muted-foreground">Escolaridade: </span>
-                                        {resp.demographics.education}
-                                      </div>
-                                    )}
-                                    {resp.demographics.role && (
-                                      <div>
-                                        <span className="text-muted-foreground">Cargo: </span>
-                                        {resp.demographics.role}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {/* Answers */}
-                              <div className="space-y-3">
-                                {resp.answers.map((answer, ansIndex) => (
-                                  <div 
-                                    key={ansIndex} 
-                                    className="border-l-2 border-primary/30 pl-4"
-                                  >
-                                    <p className="text-sm font-medium text-foreground mb-1">
-                                      {answer.question_text}
-                                    </p>
-                                    <div className="flex items-center gap-2">
-                                      {answer.question_type === 'likert' && answer.answer_value && (
-                                        <Badge 
-                                          variant={
-                                            parseInt(answer.answer_value) >= 4 
-                                              ? 'default' 
-                                              : parseInt(answer.answer_value) >= 3 
-                                                ? 'secondary' 
-                                                : 'destructive'
-                                          }
-                                        >
-                                          {answer.answer_value}/5
-                                        </Badge>
-                                      )}
-                                      {answer.question_type === 'scale_0_10' && answer.answer_value && (
-                                        <Badge 
-                                          variant={
-                                            parseInt(answer.answer_value) >= 9 
-                                              ? 'default' 
-                                              : parseInt(answer.answer_value) >= 7 
-                                                ? 'secondary' 
-                                                : 'destructive'
-                                          }
-                                        >
-                                          NPS: {answer.answer_value}
-                                        </Badge>
-                                      )}
-                                      {answer.question_type === 'open_text' && answer.answer_text && (
-                                        <p className="text-sm text-muted-foreground italic">
-                                          "{answer.answer_text}"
-                                        </p>
-                                      )}
-                                      {!answer.answer_value && !answer.answer_text && (
-                                        <span className="text-xs text-muted-foreground">
-                                          Não respondido
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
+                    <Accordion
+                      type="multiple"
+                      value={expandedItems}
+                      onValueChange={setExpandedItems}
+                      className="w-full"
+                    >
+                      {listedResponses.map((resp, index) => (
+                        <ClimateResponseItem key={resp.id} resp={resp} index={index} />
                       ))}
                     </Accordion>
                   )}
@@ -963,6 +910,9 @@ export default function ClimateSurveyDashboard() {
                 surveyTitle={getSelectedSurvey()?.title || 'Pesquisa de Clima'}
                 companyName={getSelectedSurvey()?.companies?.name}
                 stats={stats}
+                departmentLabel={departmentLabel}
+                participationRate={participationRate}
+                perDepartmentStats={perDepartmentStats}
               />
             </div>
           </>

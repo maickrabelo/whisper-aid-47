@@ -12,6 +12,7 @@ Updated: 23/08/2026
 ## Memories
 - [SOnIA AI Assistant](mem://features/sonia-ai-assistant) — Identity, sidebar UI integration, and conversational assessment collection mode
 - [Trial Accounts](mem://features/trial-accounts) — 7-day trial, automatic provisioning with 30 simulated responses, expiration overlay
+- [Clima — filtro por setor](mem://features/climate-survey-sector-filter) — Filtro global por setor, agrupamento da lista, Excel por setor e paginação obrigatória (limite de 1.000 linhas)
 - [Climate Survey](mem://features/climate-survey-module) — GPTW/SOIA templates, anonymous, segmented by dept
 - [HSE-IT Assessment](mem://features/hseit-assessment-module) — 35 questions, 7 dimensions, risk thresholds and semaphores
 - [COPSOQ Assessment](mem://features/copsoq-assessment-module) — COPSOQ II short version, 40 questions, 0-100 scale normalization

@@ -25,6 +25,7 @@ export interface LTCATExposureForValidation {
   agent_name: string;
   exposure_type?: string | null;
   conclusion_status: string;
+  exposure_present?: boolean | null;
   conclusion_text?: string | null;
   engine_output?: any;
 }
@@ -91,11 +92,12 @@ export function validateLtcatForPublication(
       `${inReview.length} exposição(ões) marcada(s) para revisão humana serão publicadas com essa indicação.`,
     );
   }
-  const noEngine = exposures.filter((e) => !e.engine_output);
+  const noEngine = exposures.filter((e) => !e.engine_output && e.exposure_present !== false);
   if (noEngine.length) {
     warnings.push(`${noEngine.length} exposição(ões) sem consulta ao motor jurídico registrada.`);
   }
   exposures.forEach((e) => {
+    if (e.exposure_present === false) return;
     if (!e.exposure_type) warnings.push(`Exposição "${e.agent_name}" sem tipo de exposição informado.`);
   });
 

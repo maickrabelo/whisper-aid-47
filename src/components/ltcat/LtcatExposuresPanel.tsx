@@ -13,11 +13,12 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { CheckCircle2, Loader2, Plus, Scale, Trash2 } from 'lucide-react';
+import { Ban, CheckCircle2, Loader2, Plus, Scale, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { LtcatExposure, LtcatGhe } from '@/pages/LTCATDetail';
 import {
   consultLegalEngine, loadEngineCatalog, OUTCOME_LABELS,
+  AGENT_CATEGORY_LABELS, AGENT_CATEGORY_ORDER, AGENT_CATEGORY_HINTS,
   type LegalRuleOption, type OccupationalAgent,
 } from '@/lib/ltcatEngine';
 
@@ -42,6 +43,17 @@ const CONCLUSION_LABELS: Record<string, string> = {
   REVISAO_HUMANA: 'Revisão humana',
 };
 
+export const ABSENCE_TEXT_CHEMICAL =
+  'No local não há agentes químicos pertencentes ao Anexo IV do Decreto 3.048 de 06 de maio de 1.999, '
+  + 'regulamentada pela Instrução Normativa 77/2015 alterada em 26/04/2016.';
+
+export const ABSENCE_TEXT_BIOLOGICAL =
+  'No local não há agentes biológicos pertencentes ao Anexo IV do Decreto 3.048 de 06 de maio de 1.999, '
+  + 'regulamentada pela Instrução Normativa 77/2015 alterada em 26/04/2016.';
+
+const absenceTextFor = (category: string) =>
+  category === 'BIOLOGICAL' ? ABSENCE_TEXT_BIOLOGICAL : ABSENCE_TEXT_CHEMICAL;
+
 const isConcluded = (s: string) => s === 'RECONHECIDO' || s === 'NAO_RECONHECIDO';
 
 const triState = (v: string) => (v === '' ? undefined : v);
@@ -54,9 +66,14 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    ghe_id: '', agent_id: '', exposure_type: 'habitual_permanente',
-    measured_value: '', unit: '', notes: '',
+    ghe_id: '', category: 'PHYSICAL', agent_id: '', exposure_present: 'yes',
+    exposure_type: 'habitual_permanente',
+    measured_value: '', unit: '', notes: '', absence_text: ABSENCE_TEXT_CHEMICAL,
   });
+
+  const [noExpOpen, setNoExpOpen] = useState(false);
+  const [noExpGhe, setNoExpGhe] = useState('');
+  const [noExpBusy, setNoExpBusy] = useState(false);
 
   const [engineExp, setEngineExp] = useState<LtcatExposure | null>(null);
   const [engineRule, setEngineRule] = useState('');
@@ -88,14 +105,74 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
 
   const openNew = () => {
     if (ghes.length === 0) { toast.error('Cadastre um GHE antes de adicionar exposições.'); return; }
-    setForm({ ghe_id: ghes[0].id, agent_id: '', exposure_type: 'habitual_permanente', measured_value: '', unit: '', notes: '' });
+    setForm({
+      ghe_id: ghes[0].id, category: 'PHYSICAL', agent_id: '', exposure_present: 'yes',
+      exposure_type: 'habitual_permanente', measured_value: '', unit: '', notes: '',
+      absence_text: ABSENCE_TEXT_CHEMICAL,
+    });
     setDialogOpen(true);
+  };
+
+  const availableCategories = useMemo(() => {
+    const present = new Set(agents.map((a) => a.category));
+    return AGENT_CATEGORY_ORDER.filter((c) => present.has(c));
+  }, [agents]);
+
+  const categoryAgents = useMemo(
+    () => agents.filter((a) => a.category === form.category),
+    [agents, form.category],
+  );
+
+  const openNoExposure = () => {
+    if (ghes.length === 0) { toast.error('Cadastre um GHE antes de adicionar exposições.'); return; }
+    setNoExpGhe(ghes[0].id);
+    setNoExpOpen(true);
+  };
+
+  const saveNoExposure = async () => {
+    const chem = agents.find((a) => a.internal_code === 'QUIM_AUSENCIA_ANEXO_IV');
+    const bio = agents.find((a) => a.internal_code === 'BIO_AUSENCIA_ANEXO_IV');
+    if (!chem || !bio) { toast.error('Itens de catálogo de ausência não encontrados.'); return; }
+    if (!noExpGhe) { toast.error('Selecione o GHE.'); return; }
+    setNoExpBusy(true);
+    try {
+      const now = new Date().toISOString();
+      const rows = [
+        { agent: chem, text: ABSENCE_TEXT_CHEMICAL },
+        { agent: bio, text: ABSENCE_TEXT_BIOLOGICAL },
+      ].map(({ agent, text }) => ({
+        ltcat_id: ltcatId,
+        ghe_id: noExpGhe,
+        agent_code: agent.internal_code,
+        agent_name: agent.name,
+        source: 'MANUAL',
+        exposure_present: false,
+        exposure_type: null,
+        conclusion_status: 'NAO_RECONHECIDO',
+        conclusion_text: text,
+        concluded_at: now,
+      }));
+      const { error } = await supabase.from('ltcat_exposures' as any).insert(rows as any);
+      if (error) throw error;
+      toast.success('Registros de ausência (químico e biológico) criados.');
+      setNoExpOpen(false);
+      onChanged();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || 'Falha ao registrar ausência de agentes.');
+    } finally {
+      setNoExpBusy(false);
+    }
   };
 
   const save = async () => {
     const agent = agentById.get(form.agent_id);
     if (!form.ghe_id) { toast.error('Selecione o GHE.'); return; }
     if (!agent) { toast.error('Selecione o agente do catálogo interno.'); return; }
+    const hasExposure = form.exposure_present === 'yes';
+    if (!hasExposure && !form.absence_text.trim()) {
+      toast.error('Informe a fundamentação da ausência de exposição.'); return;
+    }
     setSaving(true);
     try {
       const { error } = await supabase.from('ltcat_exposures' as any).insert({
@@ -104,10 +181,16 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
         agent_code: agent.internal_code,
         agent_name: agent.name,
         source: 'MANUAL',
-        exposure_type: form.exposure_type || null,
-        measured_value: form.measured_value !== '' ? Number(form.measured_value) : null,
-        unit: form.unit.trim() || null,
+        exposure_present: hasExposure,
+        exposure_type: hasExposure ? (form.exposure_type || null) : null,
+        measured_value: hasExposure && form.measured_value !== '' ? Number(form.measured_value) : null,
+        unit: hasExposure ? (form.unit.trim() || null) : null,
         notes: form.notes.trim() || null,
+        ...(hasExposure ? {} : {
+          conclusion_status: 'NAO_RECONHECIDO',
+          conclusion_text: form.absence_text.trim(),
+          concluded_at: new Date().toISOString(),
+        }),
       } as any);
       if (error) throw error;
       toast.success('Exposição cadastrada.');
@@ -217,7 +300,12 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
   return (
     <div className="space-y-4">
       {!readOnly && (
-        <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" /> Nova exposição</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" /> Nova exposição</Button>
+          <Button variant="outline" onClick={openNoExposure}>
+            <Ban className="h-4 w-4 mr-2" /> Sem exposição (Químico e Biológico)
+          </Button>
+        </div>
       )}
 
       {exposures.length === 0 ? (
@@ -238,6 +326,7 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
                       <p className="font-semibold">{e.agent_name}</p>
                       <Badge variant="outline">{e.agent_code}</Badge>
                       <Badge variant="secondary">{gheName(e.ghe_id)}</Badge>
+                      {e.exposure_present === false && <Badge variant="outline">Sem exposição</Badge>}
                       {e.exposure_type && (
                         <Badge variant="outline">
                           {EXPOSURE_TYPES.find((t) => t.value === e.exposure_type)?.label || e.exposure_type}
@@ -324,18 +413,62 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Agente (catálogo interno) *</Label>
-                <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o agente" /></SelectTrigger>
+                <Label>Tipo de agente *</Label>
+                <Select
+                  value={form.category}
+                  onValueChange={(v) => setForm({
+                    ...form, category: v, agent_id: '', absence_text: absenceTextFor(v),
+                  })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {agents.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>{a.internal_code} — {a.name}</SelectItem>
+                    {availableCategories.map((c) => (
+                      <SelectItem key={c} value={c}>{AGENT_CATEGORY_LABELS[c] || c}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <div className="grid md:grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label>Agente (catálogo interno) *</Label>
+              <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione o agente" /></SelectTrigger>
+                <SelectContent>
+                  {categoryAgents.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.internal_code} — {a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {AGENT_CATEGORY_HINTS[form.category]}
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Houve exposição? *</Label>
+              <Select
+                value={form.exposure_present}
+                onValueChange={(v) => setForm({ ...form, exposure_present: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Sim</SelectItem>
+                  <SelectItem value="no">Não</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {form.exposure_present === 'no' && (
+              <div className="space-y-1.5">
+                <Label>Fundamentação (ausência de agentes do Anexo IV) *</Label>
+                <Textarea
+                  rows={3} value={form.absence_text}
+                  onChange={(e) => setForm({ ...form, absence_text: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Será registrada como conclusão “Não reconhecido”, sem necessidade de consulta ao motor jurídico.
+                </p>
+              </div>
+            )}
+            <div className={`grid md:grid-cols-3 gap-3 ${form.exposure_present === 'no' ? 'hidden' : ''}`}>
               <div className="space-y-1.5">
                 <Label>Tipo de exposição</Label>
                 <Select value={form.exposure_type} onValueChange={(v) => setForm({ ...form, exposure_type: v })}>
@@ -366,6 +499,38 @@ const LtcatExposuresPanel = ({ ltcatId, ghes, exposures, readOnly, onChanged }: 
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={save} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Salvar exposição
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Ausência de agentes químicos/biológicos */}
+      <Dialog open={noExpOpen} onOpenChange={setNoExpOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Registrar ausência de agentes (Anexo IV)</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>GHE *</Label>
+              <Select value={noExpGhe} onValueChange={setNoExpGhe}>
+                <SelectTrigger><SelectValue placeholder="Selecione o GHE" /></SelectTrigger>
+                <SelectContent>
+                  {ghes.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="rounded-md border bg-muted/40 p-3 text-sm space-y-2">
+              <p>{ABSENCE_TEXT_CHEMICAL}</p>
+              <p>{ABSENCE_TEXT_BIOLOGICAL}</p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Serão criados dois registros sem exposição (químico e biológico) já concluídos como
+              “Não reconhecido”. O texto pode ser editado depois em cada registro.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNoExpOpen(false)}>Cancelar</Button>
+            <Button onClick={saveNoExposure} disabled={noExpBusy}>
+              {noExpBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Registrar ausência
             </Button>
           </DialogFooter>
         </DialogContent>

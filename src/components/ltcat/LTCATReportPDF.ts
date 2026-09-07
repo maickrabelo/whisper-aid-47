@@ -243,8 +243,14 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
       setText(11, true, TEXT);
       doc.text(sanitizePdfText(`${e.agent_name} (${e.agent_code})`), MARGIN + 3, y);
       y += 6;
-      kvRow('Tipo de exposição', EXPOSURE_TYPE_LABELS[e.exposure_type || ''] || placeholder(e.exposure_type));
-      if (e.measured_value != null) kvRow('Valor medido', `${e.measured_value} ${e.unit || ''}`);
+      const hasExposure = (e as any).exposure_present !== false;
+      kvRow('Exposição', hasExposure ? 'Sim' : 'Não');
+      if (hasExposure) {
+        kvRow('Tipo de exposição', EXPOSURE_TYPE_LABELS[e.exposure_type || ''] || placeholder(e.exposure_type));
+        if (e.measured_value != null) kvRow('Valor medido', `${e.measured_value} ${e.unit || ''}`);
+      } else if (e.conclusion_text) {
+        paragraph(e.conclusion_text, 3);
+      }
       if (e.notes) kvRow('Observações', e.notes);
 
       const meds = input.epiEpcs.filter(

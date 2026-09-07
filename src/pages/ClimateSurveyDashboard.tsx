@@ -364,6 +364,14 @@ export default function ClimateSurveyDashboard() {
     setExpandedItems(prev => (prev.length > 0 ? [] : listedResponses.map(r => r.id)));
   };
 
+  const selectedSurveyCompanyId = surveys.find(s => s.id === selectedSurvey)?.company_id || null;
+  const { employeeCount } = useCompanyEmployeeCount(selectedSurveyCompanyId);
+  const participationRate = employeeCount > 0
+    ? Math.min(100, Math.round(((stats?.totalResponses || 0) / employeeCount) * 100))
+    : null;
+
+  const departmentLabel = selectedDepartment === 'all' ? null : selectedDepartment;
+
   const handleCreateSurvey = () => {
     navigate('/climate-survey/new');
   };
@@ -508,6 +516,22 @@ export default function ClimateSurveyDashboard() {
               </Select>
             )}
             
+            {departments.length > 0 && (
+              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <SelectTrigger className="w-[260px]">
+                  <SelectValue placeholder="Todos os setores" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os setores ({allResponses.length})</SelectItem>
+                  {overallStats.departmentDistribution.map(d => (
+                    <SelectItem key={d.name} value={d.name}>
+                      {d.name} ({d.value})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
             {surveys.length > 0 && (
               <div id="climate-survey-selector">
                 <Select value={selectedSurvey} onValueChange={setSelectedSurvey}>
@@ -578,6 +602,19 @@ export default function ClimateSurveyDashboard() {
               </Card>
             )}
 
+            {departmentLabel && (
+              <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-4 py-3">
+                <Building2 className="h-4 w-4 text-primary" />
+                <span className="text-sm">
+                  Indicadores filtrados pelo setor <strong>{departmentLabel}</strong> —{' '}
+                  {stats.totalResponses} de {allResponses.length} respostas.
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedDepartment('all')}>
+                  Limpar filtro
+                </Button>
+              </div>
+            )}
+
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <Card>
@@ -628,11 +665,16 @@ export default function ClimateSurveyDashboard() {
                     <div>
                       <p className="text-sm text-muted-foreground">Taxa Participação</p>
                       <p className="text-3xl font-bold text-foreground">
-                        {Math.min(100, Math.round(stats.totalResponses / 2))}%
+                        {participationRate !== null ? `${participationRate}%` : stats.totalResponses}
                       </p>
                     </div>
                     <Calendar className="h-10 w-10 text-primary/20" />
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {participationRate !== null
+                      ? `de ${employeeCount} colaboradores`
+                      : 'informe o nº de colaboradores da empresa'}
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -705,17 +747,31 @@ export default function ClimateSurveyDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>Participação por Departamento</CardTitle>
-                  <CardDescription>Número de respostas por área</CardDescription>
+                  <CardDescription>
+                    Número de respostas por área (todos os setores{departmentLabel ? `, destaque: ${departmentLabel}` : ''})
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={stats.departmentDistribution}>
+                      <BarChart data={overallStats.departmentDistribution}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          {overallStats.departmentDistribution.map((entry) => (
+                            <Cell
+                              key={entry.name}
+                              fill={
+                                departmentLabel && entry.name !== departmentLabel
+                                  ? 'hsl(var(--muted-foreground))'
+                                  : 'hsl(var(--primary))'
+                              }
+                              opacity={departmentLabel && entry.name !== departmentLabel ? 0.35 : 1}
+                            />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>

@@ -60,6 +60,7 @@ export interface LtcatExposure {
   agent_code: string;
   agent_name: string;
   source: string;
+  exposure_present?: boolean | null;
   exposure_type: string | null;
   measured_value: number | null;
   unit: string | null;

@@ -87,6 +87,26 @@ export async function loadEngineCatalog(): Promise<{ rules: LegalRuleOption[]; a
   };
 }
 
+export const AGENT_CATEGORY_LABELS: Record<string, string> = {
+  PHYSICAL: 'Físico',
+  CHEMICAL: 'Químico',
+  BIOLOGICAL: 'Biológico',
+  ASSOCIATION: 'Associação de agentes',
+  OTHER: 'Outros',
+};
+
+/** Ordem de exibição das categorias no seletor de agentes. */
+export const AGENT_CATEGORY_ORDER = ['PHYSICAL', 'CHEMICAL', 'BIOLOGICAL', 'ASSOCIATION', 'OTHER'];
+
+/** Exemplos dos agentes mais utilizados em cada categoria (texto de apoio). */
+export const AGENT_CATEGORY_HINTS: Record<string, string> = {
+  PHYSICAL: 'Mais usados: Ruído e Temperatura (calor/frio).',
+  CHEMICAL: 'Descreva o agente químico avaliado nas observações.',
+  BIOLOGICAL: 'Descreva o agente biológico avaliado nas observações.',
+  ASSOCIATION: 'Associação de fatores de risco (Anexo IV).',
+  OTHER: 'Demais agentes do catálogo interno.',
+};
+
 export const OUTCOME_LABELS: Record<string, string> = {
   RULE_MATCHED: 'Regra aplicada',
   THRESHOLD_EXCEEDED: 'Limite excedido',

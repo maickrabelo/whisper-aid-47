@@ -2783,6 +2783,7 @@ export type Database = {
           engine_input: Json | null
           engine_output: Json | null
           engine_rule_key: string | null
+          exposure_present: boolean
           exposure_type: string | null
           ghe_id: string
           id: string
@@ -2804,6 +2805,7 @@ export type Database = {
           engine_input?: Json | null
           engine_output?: Json | null
           engine_rule_key?: string | null
+          exposure_present?: boolean
           exposure_type?: string | null
           ghe_id: string
           id?: string
@@ -2825,6 +2827,7 @@ export type Database = {
           engine_input?: Json | null
           engine_output?: Json | null
           engine_rule_key?: string | null
+          exposure_present?: boolean
           exposure_type?: string | null
           ghe_id?: string
           id?: string

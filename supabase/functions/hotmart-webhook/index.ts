@@ -741,6 +741,30 @@ Deno.serve(async (req) => {
         });
       }
 
+      // ===== Venda avulsa do módulo LTCAT =====
+      // Se a conta já existe, NÃO altera o plano dela: apenas libera o LTCAT.
+      // Se não existe, segue o fluxo normal (o plano "LTCAT Avulso" está mapeado
+      // ao código 1376605) e o módulo é liberado ao final do provisionamento.
+      const isLtcatPurchase = !!planId && LTCAT_HOTMART_PLAN_IDS.has(planId);
+      if (isLtcatPurchase) {
+        const ltcatUser = await findAuthUserByEmail(supabase, buyerEmail);
+        if (ltcatUser) {
+          const granted = await setLtcatAccess(
+            supabase,
+            ltcatUser.id,
+            true,
+            `Liberado via compra Hotmart (plano LTCAT ${planId}, tx ${transactionId})`,
+          );
+          return await logAndRespond(
+            200,
+            { ok: true, ltcat_granted: granted, existing_account: true, user_id: ltcatUser.id },
+            'ltcat_granted_existing_account',
+          );
+        }
+      }
+
+
+
       // Map plan -> subscription plan. Hotmart pode ter múltiplas ofertas (offer.code) sob o
       // mesmo product_id com preços/condições diferentes (ex.: R$ 9,90 trial vs R$ 97,90 mensal).
       // Por isso o mapeamento prioriza (product_id + offer_code), depois product_id sem offer,

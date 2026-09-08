@@ -577,6 +577,40 @@ async function upgradeExistingAccount(supabase: any, ctx: {
 }
 
 
+// Códigos de plano Hotmart que correspondem à venda avulsa do módulo LTCAT.
+const LTCAT_HOTMART_PLAN_IDS = new Set(['1376605']);
+const LTCAT_FEATURE_KEY = 'LTCAT_BETA';
+
+async function setLtcatAccess(supabase: any, userId: string, enabled: boolean, note: string) {
+  try {
+    const { data: existing } = await supabase
+      .from('feature_access')
+      .select('id')
+      .eq('feature_key', LTCAT_FEATURE_KEY)
+      .eq('user_id', userId);
+
+    if (existing && existing.length > 0) {
+      await supabase
+        .from('feature_access')
+        .update({ enabled, valid_to: null, note, updated_at: new Date().toISOString() })
+        .eq('feature_key', LTCAT_FEATURE_KEY)
+        .eq('user_id', userId);
+    } else if (enabled) {
+      await supabase.from('feature_access').insert({
+        feature_key: LTCAT_FEATURE_KEY,
+        user_id: userId,
+        enabled: true,
+        note,
+      });
+    }
+    console.log('LTCAT access set', { userId, enabled });
+    return true;
+  } catch (e) {
+    console.error('Failed to set LTCAT access', e);
+    return false;
+  }
+}
+
 const APPROVED_EVENTS = new Set(['PURCHASE_APPROVED', 'PURCHASE_COMPLETE']);
 const CANCEL_EVENTS = new Set([
   'PURCHASE_REFUNDED',
@@ -585,6 +619,7 @@ const CANCEL_EVENTS = new Set([
   'PURCHASE_CANCELLED',
   'SUBSCRIPTION_CANCELLATION',
 ]);
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -705,6 +740,30 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
+      // ===== Venda avulsa do módulo LTCAT =====
+      // Se a conta já existe, NÃO altera o plano dela: apenas libera o LTCAT.
+      // Se não existe, segue o fluxo normal (o plano "LTCAT Avulso" está mapeado
+      // ao código 1376605) e o módulo é liberado ao final do provisionamento.
+      const isLtcatPurchase = !!planId && LTCAT_HOTMART_PLAN_IDS.has(planId);
+      if (isLtcatPurchase) {
+        const ltcatUser = await findAuthUserByEmail(supabase, buyerEmail);
+        if (ltcatUser) {
+          const granted = await setLtcatAccess(
+            supabase,
+            ltcatUser.id,
+            true,
+            `Liberado via compra Hotmart (plano LTCAT ${planId}, tx ${transactionId})`,
+          );
+          return await logAndRespond(
+            200,
+            { ok: true, ltcat_granted: granted, existing_account: true, user_id: ltcatUser.id },
+            'ltcat_granted_existing_account',
+          );
+        }
+      }
+
+
 
       // Map plan -> subscription plan. Hotmart pode ter múltiplas ofertas (offer.code) sob o
       // mesmo product_id com preços/condições diferentes (ex.: R$ 9,90 trial vs R$ 97,90 mensal).
@@ -1003,13 +1062,36 @@ Deno.serve(async (req) => {
           .eq('id', subId);
       }
 
-      return new Response(JSON.stringify({ ok: true, provisioned: true, userId, subscriptionId: subId }), {
+      if (isLtcatPurchase && userId) {
+        await setLtcatAccess(
+          supabase,
+          userId,
+          true,
+          `Liberado via compra Hotmart (plano LTCAT ${planId}, tx ${transactionId})`,
+        );
+      }
+
+      return new Response(JSON.stringify({ ok: true, provisioned: true, userId, subscriptionId: subId, ltcat_granted: isLtcatPurchase }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+
     }
 
     // ===== CANCEL =====
     if (CANCEL_EVENTS.has(eventType)) {
+      // Cancelamento/reembolso da venda avulsa do LTCAT: bloqueia o módulo.
+      if (planId && LTCAT_HOTMART_PLAN_IDS.has(planId) && buyerEmail) {
+        const ltcatUser = await findAuthUserByEmail(supabase, buyerEmail);
+        if (ltcatUser) {
+          await setLtcatAccess(
+            supabase,
+            ltcatUser.id,
+            false,
+            `Bloqueado por ${eventType} da compra LTCAT (tx ${transactionId ?? '-'})`,
+          );
+        }
+      }
+
       let target: any = null;
       if (transactionId) {
         const r = await supabase

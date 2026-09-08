@@ -64,3 +64,4 @@ Updated: 23/08/2026
 - [PGR Kanban Board](mem://features/pgr-kanban-board) — Rota `/pgr/:companyId/kanban` com drag-and-drop (@dnd-kit), confirmação ao concluir/cancelar, reusa usePGRDashboardData
 - [Conciliação de Assinaturas](mem://features/subscription-reconciliation) — Aba Conciliação no Master: upload planilha Hotmart (9,90 = teste 7d / 97,90 = mensal), prévia, edge function `reconcile-subscriptions`, histórico
 - [LTCAT Beta Privado](mem://features/ltcat-beta-module) — Gate LTCAT_BETA (só teste.sst@srsms.app); Fase 1 + 2B.1 prontas; seed das 29 regras BLOQUEADO até aprovação nominal; nunca iniciar fases seguintes sem autorização
+- [LTCAT avulso Hotmart](mem://features/ltcat-hotmart-standalone) — Plano Hotmart 1376605 libera LTCAT_BETA no webhook (conta existente só ganha o módulo; conta nova é criada com ele)

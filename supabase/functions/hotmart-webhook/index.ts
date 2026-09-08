@@ -1079,6 +1079,19 @@ Deno.serve(async (req) => {
 
     // ===== CANCEL =====
     if (CANCEL_EVENTS.has(eventType)) {
+      // Cancelamento/reembolso da venda avulsa do LTCAT: bloqueia o módulo.
+      if (planId && LTCAT_HOTMART_PLAN_IDS.has(planId) && buyerEmail) {
+        const ltcatUser = await findAuthUserByEmail(supabase, buyerEmail);
+        if (ltcatUser) {
+          await setLtcatAccess(
+            supabase,
+            ltcatUser.id,
+            false,
+            `Bloqueado por ${eventType} da compra LTCAT (tx ${transactionId ?? '-'})`,
+          );
+        }
+      }
+
       let target: any = null;
       if (transactionId) {
         const r = await supabase

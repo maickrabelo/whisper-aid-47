@@ -1062,9 +1062,19 @@ Deno.serve(async (req) => {
           .eq('id', subId);
       }
 
-      return new Response(JSON.stringify({ ok: true, provisioned: true, userId, subscriptionId: subId }), {
+      if (isLtcatPurchase && userId) {
+        await setLtcatAccess(
+          supabase,
+          userId,
+          true,
+          `Liberado via compra Hotmart (plano LTCAT ${planId}, tx ${transactionId})`,
+        );
+      }
+
+      return new Response(JSON.stringify({ ok: true, provisioned: true, userId, subscriptionId: subId, ltcat_granted: isLtcatPurchase }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+
     }
 
     // ===== CANCEL =====

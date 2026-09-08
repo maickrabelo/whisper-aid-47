@@ -577,6 +577,40 @@ async function upgradeExistingAccount(supabase: any, ctx: {
 }
 
 
+// Códigos de plano Hotmart que correspondem à venda avulsa do módulo LTCAT.
+const LTCAT_HOTMART_PLAN_IDS = new Set(['1376605']);
+const LTCAT_FEATURE_KEY = 'LTCAT_BETA';
+
+async function setLtcatAccess(supabase: any, userId: string, enabled: boolean, note: string) {
+  try {
+    const { data: existing } = await supabase
+      .from('feature_access')
+      .select('id')
+      .eq('feature_key', LTCAT_FEATURE_KEY)
+      .eq('user_id', userId);
+
+    if (existing && existing.length > 0) {
+      await supabase
+        .from('feature_access')
+        .update({ enabled, valid_to: null, note, updated_at: new Date().toISOString() })
+        .eq('feature_key', LTCAT_FEATURE_KEY)
+        .eq('user_id', userId);
+    } else if (enabled) {
+      await supabase.from('feature_access').insert({
+        feature_key: LTCAT_FEATURE_KEY,
+        user_id: userId,
+        enabled: true,
+        note,
+      });
+    }
+    console.log('LTCAT access set', { userId, enabled });
+    return true;
+  } catch (e) {
+    console.error('Failed to set LTCAT access', e);
+    return false;
+  }
+}
+
 const APPROVED_EVENTS = new Set(['PURCHASE_APPROVED', 'PURCHASE_COMPLETE']);
 const CANCEL_EVENTS = new Set([
   'PURCHASE_REFUNDED',
@@ -585,6 +619,7 @@ const CANCEL_EVENTS = new Set([
   'PURCHASE_CANCELLED',
   'SUBSCRIPTION_CANCELLATION',
 ]);
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });

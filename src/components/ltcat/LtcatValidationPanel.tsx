@@ -174,8 +174,9 @@ const LtcatValidationPanel = ({ doc, company, ghes, exposures, epiEpcs, evaluati
           )}
           <Button variant="outline" onClick={generatePdf} disabled={busy !== null}>
             {busy === 'pdf' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
-            Gerar PDF (Beta)
+            {readOnly ? 'Gerar PDF do LTCAT' : 'Gerar PDF (Beta)'}
           </Button>
+
           {readOnly && (
             <Button variant="outline" onClick={newRevision} disabled={busy !== null}>
               {busy === 'revision' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <GitBranch className="h-4 w-4 mr-2" />}
@@ -205,9 +206,10 @@ const LtcatValidationPanel = ({ doc, company, ghes, exposures, epiEpcs, evaluati
             <AlertDialogDescription>
               Ao publicar, o documento v{doc.version_number} fica congelado em somente leitura.
               Qualquer alteração posterior exigirá a criação de uma nova revisão, preservando
-              integralmente o histórico. O PDF continuará marcado como
-              “BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA”.
+              integralmente o histórico. O PDF do documento publicado sai sem a marcação
+              “BETA” — ela continua apenas nos rascunhos.
             </AlertDialogDescription>
+
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>

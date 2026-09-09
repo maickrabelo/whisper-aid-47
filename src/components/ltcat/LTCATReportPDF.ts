@@ -50,6 +50,9 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
 
   let y = MARGIN;
   const state = { skipChrome: false };
+  // Marcação BETA apenas em rascunhos; documentos publicados saem limpos.
+  const isBeta = (input.doc as any).status !== 'published';
+
 
   const setText = (size: number, bold: boolean, color: [number, number, number]) => {
     doc.setFont('helvetica', bold ? 'bold' : 'normal');
@@ -156,13 +159,16 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
   );
 
   // Faixa BETA na capa
-  doc.setFillColor(RED[0], RED[1], RED[2]);
-  doc.rect(MARGIN, 205, CONTENT_W, 12, 'F');
-  setText(11, true, [255, 255, 255]);
-  doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', PAGE_W / 2, 212.5, { align: 'center' });
+  if (isBeta) {
+    doc.setFillColor(RED[0], RED[1], RED[2]);
+    doc.rect(MARGIN, 205, CONTENT_W, 12, 'F');
+    setText(11, true, [255, 255, 255]);
+    doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', PAGE_W / 2, 212.5, { align: 'center' });
 
-  setText(8, false, MUTED);
-  doc.text('Sem valor oficial para fins de transmissão ao eSocial ou ao INSS nesta fase de validação', PAGE_W / 2, PAGE_H - 19, { align: 'center' });
+    setText(8, false, MUTED);
+    doc.text('Sem valor oficial para fins de transmissão ao eSocial ou ao INSS nesta fase de validação', PAGE_W / 2, PAGE_H - 19, { align: 'center' });
+  }
+
 
   // ─── INTERIOR ──────────────────────────────────────────────
   newPage();
@@ -316,11 +322,16 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
   // 5. Encerramento
   sectionTitle('5. Encerramento');
   paragraph(
-    `Este documento foi gerado pelo módulo LTCAT (beta privado) da plataforma Sr.SMS em ${todayBR()}. `
-    + 'Trata-se de documento para validação interna, sem valor oficial para fins de transmissão ao '
-    + 'eSocial ou de comprovação junto ao INSS nesta fase. As conclusões previdenciárias aqui '
-    + 'registradas são de responsabilidade do profissional técnico habilitado identificado no item 2.',
+    isBeta
+      ? `Este documento foi gerado pelo módulo LTCAT (beta privado) da plataforma Sr.SMS em ${todayBR()}. `
+        + 'Trata-se de documento para validação interna, sem valor oficial para fins de transmissão ao '
+        + 'eSocial ou de comprovação junto ao INSS nesta fase. As conclusões previdenciárias aqui '
+        + 'registradas são de responsabilidade do profissional técnico habilitado identificado no item 2.'
+      : `Este documento foi gerado pelo módulo LTCAT da plataforma Sr.SMS em ${todayBR()}. `
+        + 'As conclusões previdenciárias aqui registradas são de responsabilidade do profissional '
+        + 'técnico habilitado identificado no item 2.',
   );
+
   if (input.doc.validated_at) {
     paragraph(`Validação de publicação executada em ${new Date(input.doc.validated_at).toLocaleString('pt-BR')} sem erros bloqueantes.`);
   }
@@ -340,27 +351,31 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
     PAGE_W / 2, y, { align: 'center' },
   );
 
-  // ─── Marca d'água BETA + rodapé em todas as páginas ───────
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    try {
-      doc.saveGraphicsState();
-      const GState = (doc as any).GState;
-      if (GState) doc.setGState(new GState({ opacity: 0.07 }));
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(42);
-      doc.setTextColor(RED[0], RED[1], RED[2]);
-      doc.text('BETA — VALIDAÇÃO INTERNA', PAGE_W / 2, PAGE_H / 2, { align: 'center', angle: 45 });
-      doc.restoreGraphicsState();
-    } catch { /* marca d'água é melhor esforço */ }
+  // ─── Marca d'água BETA + rodapé (somente rascunhos) ───────
+  if (isBeta) {
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      try {
+        doc.saveGraphicsState();
+        const GState = (doc as any).GState;
+        if (GState) doc.setGState(new GState({ opacity: 0.07 }));
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(42);
+        doc.setTextColor(RED[0], RED[1], RED[2]);
+        doc.text('BETA — VALIDAÇÃO INTERNA', PAGE_W / 2, PAGE_H / 2, { align: 'center', angle: 45 });
+        doc.restoreGraphicsState();
+      } catch { /* marca d'água é melhor esforço */ }
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(RED[0], RED[1], RED[2]);
-    doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', MARGIN, PAGE_H - 10);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(RED[0], RED[1], RED[2]);
+      doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', MARGIN, PAGE_H - 10);
+    }
   }
 
   const safeName = sanitizePdfText(input.company.name || 'empresa').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_');
-  doc.save(`LTCAT_${safeName}_v${String(input.doc.version_number).padStart(2, '0')}_BETA.pdf`);
+  const versionTag = `v${String(input.doc.version_number).padStart(2, '0')}`;
+  doc.save(`LTCAT_${safeName}_${versionTag}${isBeta ? '_BETA' : ''}.pdf`);
 }
+

@@ -174,8 +174,9 @@ const LtcatValidationPanel = ({ doc, company, ghes, exposures, epiEpcs, evaluati
           )}
           <Button variant="outline" onClick={generatePdf} disabled={busy !== null}>
             {busy === 'pdf' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
-            Gerar PDF (Beta)
+            {readOnly ? 'Gerar PDF do LTCAT' : 'Gerar PDF (Beta)'}
           </Button>
+
           {readOnly && (
             <Button variant="outline" onClick={newRevision} disabled={busy !== null}>
               {busy === 'revision' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <GitBranch className="h-4 w-4 mr-2" />}

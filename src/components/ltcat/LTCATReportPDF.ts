@@ -159,13 +159,16 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
   );
 
   // Faixa BETA na capa
-  doc.setFillColor(RED[0], RED[1], RED[2]);
-  doc.rect(MARGIN, 205, CONTENT_W, 12, 'F');
-  setText(11, true, [255, 255, 255]);
-  doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', PAGE_W / 2, 212.5, { align: 'center' });
+  if (isBeta) {
+    doc.setFillColor(RED[0], RED[1], RED[2]);
+    doc.rect(MARGIN, 205, CONTENT_W, 12, 'F');
+    setText(11, true, [255, 255, 255]);
+    doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', PAGE_W / 2, 212.5, { align: 'center' });
 
-  setText(8, false, MUTED);
-  doc.text('Sem valor oficial para fins de transmissão ao eSocial ou ao INSS nesta fase de validação', PAGE_W / 2, PAGE_H - 19, { align: 'center' });
+    setText(8, false, MUTED);
+    doc.text('Sem valor oficial para fins de transmissão ao eSocial ou ao INSS nesta fase de validação', PAGE_W / 2, PAGE_H - 19, { align: 'center' });
+  }
+
 
   // ─── INTERIOR ──────────────────────────────────────────────
   newPage();

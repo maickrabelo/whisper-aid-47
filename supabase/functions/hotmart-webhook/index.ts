@@ -724,9 +724,7 @@ Deno.serve(async (req) => {
     if (APPROVED_EVENTS.has(eventType)) {
       if (!buyerEmail || !productId || !transactionId) {
         console.warn('Missing required fields for approval');
-        return new Response(JSON.stringify({ ok: true, ignored: 'missing fields' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return await logAndRespond(200, { ok: true, ignored: 'missing fields' });
       }
 
       // Idempotency
@@ -736,9 +734,7 @@ Deno.serve(async (req) => {
         .eq('hotmart_transaction_id', transactionId)
         .maybeSingle();
       if (existingSub) {
-        return new Response(JSON.stringify({ ok: true, alreadyProvisioned: true }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return await logAndRespond(200, { ok: true, alreadyProvisioned: true });
       }
 
       // ===== Venda avulsa do módulo LTCAT =====
@@ -808,9 +804,7 @@ Deno.serve(async (req) => {
 
       if (!mapping || !mapping.is_active) {
         console.warn(`Hotmart plan ${planId} / product ${productId} not mapped or inactive`);
-        return new Response(JSON.stringify({ ok: true, ignored: 'plan not mapped', planId, productId }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return await logAndRespond(200, { ok: true, ignored: 'plan not mapped', planId, productId });
       }
 
       const plan: any = mapping.subscription_plans;
@@ -1071,9 +1065,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      return new Response(JSON.stringify({ ok: true, provisioned: true, userId, subscriptionId: subId, ltcat_granted: isLtcatPurchase }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return await logAndRespond(200, { ok: true, provisioned: true, userId, subscriptionId: subId, ltcat_granted: isLtcatPurchase });
 
     }
 
@@ -1112,9 +1104,7 @@ Deno.serve(async (req) => {
 
       if (!target) {
         console.warn('Cancel event but no matching subscription');
-        return new Response(JSON.stringify({ ok: true, notFound: true }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return await logAndRespond(200, { ok: true, notFound: true });
       }
 
       await supabase.from('subscriptions').update({ status: 'canceled' }).eq('id', target.id);
@@ -1139,9 +1129,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify({ ok: true, suspended: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return await logAndRespond(200, { ok: true, suspended: true });
     }
 
     return await logAndRespond(200, { ok: true, ignored: eventType });

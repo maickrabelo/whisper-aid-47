@@ -308,7 +308,34 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Mesma busca centralizada usada pela salvaguarda de trial
       const sub = await findActiveSubscription(userId, companyId, sstManagerId);
 
-      if (!sub || !(sub as any).current_period_end) {
+      if (!sub) {
+        // Sem assinatura ativa: se a última assinatura do usuário está
+        // cancelada/expirada/inadimplente, o acesso deve ser bloqueado.
+        if (userId) {
+          const { data: last } = await supabase
+            .from('subscriptions')
+            .select('status, current_period_end')
+            .eq('owner_user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const lastStatus = (last as any)?.status as string | undefined;
+          if (lastStatus && ['canceled', 'expired', 'past_due'].includes(lastStatus)) {
+            const end = (last as any)?.current_period_end
+              ? new Date((last as any).current_period_end).getTime()
+              : null;
+            const diff = end ? Math.floor((Date.now() - end) / 86400000) : 0;
+            setDaysOverdue(diff > 0 ? diff : 0);
+            setPaymentStatus('blocked');
+            return;
+          }
+        }
+        setPaymentStatus('ok');
+        setDaysOverdue(0);
+        return;
+      }
+
+      if (!(sub as any).current_period_end) {
         setPaymentStatus('ok');
         setDaysOverdue(0);
         return;

@@ -351,27 +351,31 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
     PAGE_W / 2, y, { align: 'center' },
   );
 
-  // ─── Marca d'água BETA + rodapé em todas as páginas ───────
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    try {
-      doc.saveGraphicsState();
-      const GState = (doc as any).GState;
-      if (GState) doc.setGState(new GState({ opacity: 0.07 }));
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(42);
-      doc.setTextColor(RED[0], RED[1], RED[2]);
-      doc.text('BETA — VALIDAÇÃO INTERNA', PAGE_W / 2, PAGE_H / 2, { align: 'center', angle: 45 });
-      doc.restoreGraphicsState();
-    } catch { /* marca d'água é melhor esforço */ }
+  // ─── Marca d'água BETA + rodapé (somente rascunhos) ───────
+  if (isBeta) {
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      try {
+        doc.saveGraphicsState();
+        const GState = (doc as any).GState;
+        if (GState) doc.setGState(new GState({ opacity: 0.07 }));
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(42);
+        doc.setTextColor(RED[0], RED[1], RED[2]);
+        doc.text('BETA — VALIDAÇÃO INTERNA', PAGE_W / 2, PAGE_H / 2, { align: 'center', angle: 45 });
+        doc.restoreGraphicsState();
+      } catch { /* marca d'água é melhor esforço */ }
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(RED[0], RED[1], RED[2]);
-    doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', MARGIN, PAGE_H - 10);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(RED[0], RED[1], RED[2]);
+      doc.text('BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA', MARGIN, PAGE_H - 10);
+    }
   }
 
   const safeName = sanitizePdfText(input.company.name || 'empresa').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_');
-  doc.save(`LTCAT_${safeName}_v${String(input.doc.version_number).padStart(2, '0')}_BETA.pdf`);
+  const versionTag = `v${String(input.doc.version_number).padStart(2, '0')}`;
+  doc.save(`LTCAT_${safeName}_${versionTag}${isBeta ? '_BETA' : ''}.pdf`);
 }
+

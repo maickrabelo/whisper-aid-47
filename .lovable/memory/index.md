@@ -65,3 +65,4 @@ Updated: 23/08/2026
 - [Conciliação de Assinaturas](mem://features/subscription-reconciliation) — Aba Conciliação no Master: upload planilha Hotmart (9,90 = teste 7d / 97,90 = mensal), prévia, edge function `reconcile-subscriptions`, histórico
 - [LTCAT Beta Privado](mem://features/ltcat-beta-module) — Gate LTCAT_BETA (só teste.sst@srsms.app); Fase 1 + 2B.1 prontas; seed das 29 regras BLOQUEADO até aprovação nominal; nunca iniciar fases seguintes sem autorização
 - [LTCAT avulso Hotmart](mem://features/ltcat-hotmart-standalone) — Plano Hotmart 1376605 libera LTCAT_BETA no webhook (conta existente só ganha o módulo; conta nova é criada com ele)
+- [LTCAT suporte notify](mem://features/ltcat-support-notify) — Aviso Hotmart + botão Notificar suporte no card LTCAT bloqueado; e-mail via Resend

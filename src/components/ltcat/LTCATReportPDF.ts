@@ -50,6 +50,9 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
 
   let y = MARGIN;
   const state = { skipChrome: false };
+  // Marcação BETA apenas em rascunhos; documentos publicados saem limpos.
+  const isBeta = (input.doc as any).status !== 'published';
+
 
   const setText = (size: number, bold: boolean, color: [number, number, number]) => {
     doc.setFont('helvetica', bold ? 'bold' : 'normal');

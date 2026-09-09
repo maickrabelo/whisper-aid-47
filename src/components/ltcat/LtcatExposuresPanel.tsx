@@ -44,12 +44,10 @@ const CONCLUSION_LABELS: Record<string, string> = {
 };
 
 export const ABSENCE_TEXT_CHEMICAL =
-  'No local não há agentes químicos pertencentes ao Anexo IV do Decreto 3.048 de 06 de maio de 1.999, '
-  + 'regulamentada pela Instrução Normativa 77/2015 alterada em 26/04/2016.';
+  'Não existe agente nocivo ou de atividades previstas no Anexo IV do Decreto 3.048/1999.';
 
 export const ABSENCE_TEXT_BIOLOGICAL =
-  'No local não há agentes biológicos pertencentes ao Anexo IV do Decreto 3.048 de 06 de maio de 1.999, '
-  + 'regulamentada pela Instrução Normativa 77/2015 alterada em 26/04/2016.';
+  'Não existe agente nocivo ou de atividades previstas no Anexo IV do Decreto 3.048/1999.';
 
 const absenceTextFor = (category: string) =>
   category === 'BIOLOGICAL' ? ABSENCE_TEXT_BIOLOGICAL : ABSENCE_TEXT_CHEMICAL;

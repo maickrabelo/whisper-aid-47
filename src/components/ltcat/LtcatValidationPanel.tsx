@@ -206,9 +206,10 @@ const LtcatValidationPanel = ({ doc, company, ghes, exposures, epiEpcs, evaluati
             <AlertDialogDescription>
               Ao publicar, o documento v{doc.version_number} fica congelado em somente leitura.
               Qualquer alteração posterior exigirá a criação de uma nova revisão, preservando
-              integralmente o histórico. O PDF continuará marcado como
-              “BETA — DOCUMENTO PARA VALIDAÇÃO INTERNA”.
+              integralmente o histórico. O PDF do documento publicado sai sem a marcação
+              “BETA” — ela continua apenas nos rascunhos.
             </AlertDialogDescription>
+
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>

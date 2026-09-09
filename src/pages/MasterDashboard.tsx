@@ -21,6 +21,7 @@ import FormLeadsTab from '@/components/admin/FormLeadsTab';
 import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { WebhooksTab } from '@/components/admin/WebhooksTab';
+import { HotmartPaymentsTab } from '@/components/admin/HotmartPaymentsTab';
 import { SubscriptionReconciliationTab } from '@/components/admin/SubscriptionReconciliationTab';
 import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
 import { ImportUserDataDialog } from '@/components/admin/ImportUserDataDialog';
@@ -1311,6 +1312,7 @@ const MasterDashboard = () => {
                 <TabsTrigger value="trials">Contas em Teste</TabsTrigger>
                 <TabsTrigger value="stats">Estatísticas</TabsTrigger>
                 <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+                <TabsTrigger value="payments">Pagamentos</TabsTrigger>
                 <TabsTrigger value="reconciliation">Conciliação</TabsTrigger>
               </TabsList>
               
@@ -2100,6 +2102,12 @@ const MasterDashboard = () => {
             <TabsContent value="webhooks" className="space-y-6">
               <WebhooksTab />
             </TabsContent>
+
+            <TabsContent value="payments" className="space-y-6">
+              <HotmartPaymentsTab />
+            </TabsContent>
+
+
 
             <TabsContent value="reconciliation" className="space-y-6">
               <SubscriptionReconciliationTab />

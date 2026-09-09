@@ -322,11 +322,16 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
   // 5. Encerramento
   sectionTitle('5. Encerramento');
   paragraph(
-    `Este documento foi gerado pelo módulo LTCAT (beta privado) da plataforma Sr.SMS em ${todayBR()}. `
-    + 'Trata-se de documento para validação interna, sem valor oficial para fins de transmissão ao '
-    + 'eSocial ou de comprovação junto ao INSS nesta fase. As conclusões previdenciárias aqui '
-    + 'registradas são de responsabilidade do profissional técnico habilitado identificado no item 2.',
+    isBeta
+      ? `Este documento foi gerado pelo módulo LTCAT (beta privado) da plataforma Sr.SMS em ${todayBR()}. `
+        + 'Trata-se de documento para validação interna, sem valor oficial para fins de transmissão ao '
+        + 'eSocial ou de comprovação junto ao INSS nesta fase. As conclusões previdenciárias aqui '
+        + 'registradas são de responsabilidade do profissional técnico habilitado identificado no item 2.'
+      : `Este documento foi gerado pelo módulo LTCAT da plataforma Sr.SMS em ${todayBR()}. `
+        + 'As conclusões previdenciárias aqui registradas são de responsabilidade do profissional '
+        + 'técnico habilitado identificado no item 2.',
   );
+
   if (input.doc.validated_at) {
     paragraph(`Validação de publicação executada em ${new Date(input.doc.validated_at).toLocaleString('pt-BR')} sem erros bloqueantes.`);
   }

@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.admin-toggle-feature-access]
 verify_jwt = true
+
+[functions.notify-ltcat-support]
+verify_jwt = false

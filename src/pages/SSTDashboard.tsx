@@ -283,6 +283,30 @@ const SSTDashboard = () => {
             <p className={`text-xs mt-1 ${tool.featured ? 'text-green-700/80' : 'text-muted-foreground'}`}>
               Para desbloquear, clique aqui — <span className={`font-semibold ${tool.featured ? 'text-green-800' : 'text-foreground'}`}>R$ 49,90</span>
             </p>
+            <div className={`mt-3 pt-3 border-t ${tool.featured ? 'border-green-200' : 'border-primary/20'}`}>
+              <p className={`text-[11px] leading-snug ${tool.featured ? 'text-green-700/80' : 'text-muted-foreground'}`}>
+                Fez upgrade de plano mas ainda não foi liberado? A transmissão de dados da Hotmart pode levar alguns minutos. Caso ainda não esteja liberado nos informe clicando no botão abaixo.
+              </p>
+              {ltcatSupportNotified ? (
+                <p className={`mt-2 text-[11px] font-semibold flex items-center gap-1 ${tool.featured ? 'text-green-700' : 'text-primary'}`}>
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Suporte informado
+                </p>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 h-7 text-[11px] px-2"
+                  disabled={ltcatSupportSending}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNotifyLtcatSupport();
+                  }}
+                >
+                  {ltcatSupportSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <BellRing className="h-3 w-3 mr-1" />}
+                  Notificar suporte
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
           <div className={`flex items-center text-sm font-medium group-hover:gap-2 transition-all ${tool.featured ? 'text-green-600' : 'text-primary'}`}>

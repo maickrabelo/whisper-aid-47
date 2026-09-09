@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck, Lock, Calculator } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck, Lock, Calculator, CheckCircle2, BellRing } from "lucide-react";
 
 const LTCAT_UNLOCK_URL = "https://wa.me/5527998443852?text=Estou%20usando%20o%20Software%20Sr.SMS%20e%20quero%20desbloquear%20o%20m%C3%B3dulo%20LTCAT";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
@@ -194,6 +194,23 @@ const SSTDashboard = () => {
   const { isSmartOnly } = useSmartOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
   const { isSmsPlan } = useSmsPlan();
+  const [ltcatSupportSending, setLtcatSupportSending] = useState(false);
+  const [ltcatSupportNotified, setLtcatSupportNotified] = useState(false);
+
+  const handleNotifyLtcatSupport = async () => {
+    setLtcatSupportSending(true);
+    try {
+      const { error } = await supabase.functions.invoke('notify-ltcat-support', { body: {} });
+      if (error) throw error;
+      setLtcatSupportNotified(true);
+      toast({ title: 'Suporte informado', description: 'Recebemos seu aviso e vamos verificar a liberação do LTCAT.' });
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Não foi possível notificar', description: 'Tente novamente em alguns instantes.', variant: 'destructive' });
+    } finally {
+      setLtcatSupportSending(false);
+    }
+  };
 
   const displayedTools = useMemo<ToolCard[]>(() => {
     const hasBetaCompany = isSmartOnly || companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id) || smartOuvidoriaIds.has(c.id));

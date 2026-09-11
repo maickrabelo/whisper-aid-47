@@ -7,7 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck, Lock, Calculator, CheckCircle2, BellRing } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText, Activity, ClipboardCheck, Lock, Calculator } from "lucide-react";
 
 const LTCAT_UNLOCK_URL = "https://wa.me/5527998443852?text=Estou%20usando%20o%20Software%20Sr.SMS%20e%20quero%20desbloquear%20o%20m%C3%B3dulo%20LTCAT";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';

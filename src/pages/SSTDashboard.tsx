@@ -197,23 +197,7 @@ const SSTDashboard = () => {
   const { isSmartOnly } = useSmartOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
   const { isSmsPlan } = useSmsPlan();
-  const [ltcatSupportSending, setLtcatSupportSending] = useState(false);
-  const [ltcatSupportNotified, setLtcatSupportNotified] = useState(false);
-
-  const handleNotifyLtcatSupport = async () => {
-    setLtcatSupportSending(true);
-    try {
-      const { error } = await supabase.functions.invoke('notify-ltcat-support', { body: {} });
-      if (error) throw error;
-      setLtcatSupportNotified(true);
-      toast({ title: 'Suporte informado', description: 'Recebemos seu aviso e vamos verificar a liberação do LTCAT.' });
-    } catch (err) {
-      console.error(err);
-      toast({ title: 'Não foi possível notificar', description: 'Tente novamente em alguns instantes.', variant: 'destructive' });
-    } finally {
-      setLtcatSupportSending(false);
-    }
-  };
+  const [ltcatInfoOpen, setLtcatInfoOpen] = useState(false);
 
   const displayedTools = useMemo<ToolCard[]>(() => {
     const hasBetaCompany = isSmartOnly || companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id) || smartOuvidoriaIds.has(c.id));

@@ -280,64 +280,66 @@ const SSTDashboard = () => {
           ))}
         </div>
         {tool.id === 'tool-ltcat-locked' ? (
-          <div className={`rounded-lg border p-3 ${tool.featured ? 'bg-green-100 border-green-200' : 'bg-primary/10 border-primary/20'}`}>
-            <p className={`text-xs font-semibold flex items-center gap-1.5 ${tool.featured ? 'text-green-700' : 'text-primary'}`}>
-              <Lock className="h-3.5 w-3.5" /> "Novidade" Módulo LTCAT
-            </p>
-            <p className={`text-xs mt-1 ${tool.featured ? 'text-green-700/80' : 'text-muted-foreground'}`}>
-              Para desbloquear, clique aqui — <span className={`font-semibold ${tool.featured ? 'text-green-800' : 'text-foreground'}`}>R$ 49,90</span>
-            </p>
-            <div className={`mt-3 pt-3 border-t ${tool.featured ? 'border-green-200' : 'border-primary/20'}`}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-[11px] px-2 w-full"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLtcatInfoOpen(true);
-                }}
-              >
-                Como liberar?
-              </Button>
-            </div>
-          </div>
-          <Dialog open={ltcatInfoOpen} onOpenChange={setLtcatInfoOpen}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Como liberar o módulo LTCAT?</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 text-sm text-foreground">
-                <p>Para liberar o <strong>LTCAT</strong> no seu software, é necessário fazer a migração para o plano que inclui esse módulo.</p>
-                <p>O processo é simples:</p>
-                <ol className="list-decimal pl-5 space-y-3">
-                  <li>
-                    <strong>Acesse sua conta da Hotmart</strong> pelo link:{' '}
-                    <a href="https://consumer.hotmart.com/payments/" target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">https://consumer.hotmart.com/payments/</a>
-                  </li>
-                  <li>
-                    <strong>Entre utilizando o mesmo e-mail que você usou para realizar a compra do Sr. SMS.</strong>
-                    <p className="text-muted-foreground mt-1">É importante utilizar o e-mail correto da compra para que a sua assinatura apareça na área de pagamentos.</p>
-                  </li>
-                  <li>Após entrar na sua conta, clique em <strong>“Minhas compras”</strong>.</li>
-                  <li>Localize o <strong>Sr. SMS — Software PGR</strong>.</li>
-                  <li>Clique nos <strong>3 pontos</strong> ao lado da sua assinatura.</li>
-                  <li>Selecione a opção <strong>“Gestão de Pagamentos”</strong>.</li>
-                  <li>
-                    Vá em detalhes do Plano, clique em trocar de plano e escolha:
-                    <p className="font-semibold mt-1">PREMIUM: PGR + AEP + Inclusão do Módulo LTCAT — até 2 mil vidas ou 20 empresas</p>
-                  </li>
-                </ol>
-                <p>💰 <strong>Você pagará somente a diferença proporcional neste mês.</strong></p>
-                <p>A partir do próximo mês, a cobrança passará a ser de <strong>R$ 147,90/mês</strong>.</p>
-                <p>Após concluir a troca, o <strong>módulo LTCAT será liberado no seu software</strong>.</p>
-                <h4 className="font-semibold mt-4">Precisa de ajuda?</h4>
-                <p>Se tiver qualquer dificuldade para realizar a troca, podemos enviar o <strong>convite de troca de plano diretamente pelo WhatsApp</strong>.</p>
-                <p>É só solicitar a troca pelo nosso WhatsApp:</p>
-                <p>👉 <a href="https://wa.me/5527998443852" target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">https://wa.me/5527998443852</a></p>
-                <p className="text-muted-foreground">Nossa equipe poderá orientar você no processo.</p>
+          <>
+            <div className={`rounded-lg border p-3 ${tool.featured ? 'bg-green-100 border-green-200' : 'bg-primary/10 border-primary/20'}`}>
+              <p className={`text-xs font-semibold flex items-center gap-1.5 ${tool.featured ? 'text-green-700' : 'text-primary'}`}>
+                <Lock className="h-3.5 w-3.5" /> "Novidade" Módulo LTCAT
+              </p>
+              <p className={`text-xs mt-1 ${tool.featured ? 'text-green-700/80' : 'text-muted-foreground'}`}>
+                Para desbloquear, clique aqui — <span className={`font-semibold ${tool.featured ? 'text-green-800' : 'text-foreground'}`}>R$ 49,90</span>
+              </p>
+              <div className={`mt-3 pt-3 border-t ${tool.featured ? 'border-green-200' : 'border-primary/20'}`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-[11px] px-2 w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLtcatInfoOpen(true);
+                  }}
+                >
+                  Como liberar?
+                </Button>
               </div>
-            </DialogContent>
-          </Dialog>
+            </div>
+            <Dialog open={ltcatInfoOpen} onOpenChange={setLtcatInfoOpen}>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Como liberar o módulo LTCAT?</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 text-sm text-foreground">
+                  <p>Para liberar o <strong>LTCAT</strong> no seu software, é necessário fazer a migração para o plano que inclui esse módulo.</p>
+                  <p>O processo é simples:</p>
+                  <ol className="list-decimal pl-5 space-y-3">
+                    <li>
+                      <strong>Acesse sua conta da Hotmart</strong> pelo link:{' '}
+                      <a href="https://consumer.hotmart.com/payments/" target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">https://consumer.hotmart.com/payments/</a>
+                    </li>
+                    <li>
+                      <strong>Entre utilizando o mesmo e-mail que você usou para realizar a compra do Sr. SMS.</strong>
+                      <p className="text-muted-foreground mt-1">É importante utilizar o e-mail correto da compra para que a sua assinatura apareça na área de pagamentos.</p>
+                    </li>
+                    <li>Após entrar na sua conta, clique em <strong>“Minhas compras”</strong>.</li>
+                    <li>Localize o <strong>Sr. SMS — Software PGR</strong>.</li>
+                    <li>Clique nos <strong>3 pontos</strong> ao lado da sua assinatura.</li>
+                    <li>Selecione a opção <strong>“Gestão de Pagamentos”</strong>.</li>
+                    <li>
+                      Vá em detalhes do Plano, clique em trocar de plano e escolha:
+                      <p className="font-semibold mt-1">PREMIUM: PGR + AEP + Inclusão do Módulo LTCAT — até 2 mil vidas ou 20 empresas</p>
+                    </li>
+                  </ol>
+                  <p>💰 <strong>Você pagará somente a diferença proporcional neste mês.</strong></p>
+                  <p>A partir do próximo mês, a cobrança passará a ser de <strong>R$ 147,90/mês</strong>.</p>
+                  <p>Após concluir a troca, o <strong>módulo LTCAT será liberado no seu software</strong>.</p>
+                  <h4 className="font-semibold mt-4">Precisa de ajuda?</h4>
+                  <p>Se tiver qualquer dificuldade para realizar a troca, podemos enviar o <strong>convite de troca de plano diretamente pelo WhatsApp</strong>.</p>
+                  <p>É só solicitar a troca pelo nosso WhatsApp:</p>
+                  <p>👉 <a href="https://wa.me/5527998443852" target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">https://wa.me/5527998443852</a></p>
+                  <p className="text-muted-foreground">Nossa equipe poderá orientar você no processo.</p>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </>
         ) : (
           <div className={`flex items-center text-sm font-medium group-hover:gap-2 transition-all ${tool.featured ? 'text-green-600' : 'text-primary'}`}>
             Acessar <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />

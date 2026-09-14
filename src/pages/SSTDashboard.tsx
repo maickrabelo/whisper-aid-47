@@ -303,7 +303,10 @@ const SSTDashboard = () => {
               </div>
             </div>
             <Dialog open={ltcatInfoOpen} onOpenChange={setLtcatInfoOpen}>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent
+                className="max-w-2xl max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <DialogHeader>
                   <DialogTitle>Como liberar o módulo LTCAT?</DialogTitle>
                 </DialogHeader>
@@ -313,7 +316,13 @@ const SSTDashboard = () => {
                   <ol className="list-decimal pl-5 space-y-3">
                     <li>
                       <strong>Acesse sua conta da Hotmart</strong> pelo link:{' '}
-                      <a href="https://consumer.hotmart.com/payments/" target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">https://consumer.hotmart.com/payments/</a>
+                      <a
+                        href="https://consumer.hotmart.com/payments/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline break-all"
+                        onClick={(e) => e.stopPropagation()}
+                      >https://consumer.hotmart.com/payments/</a>
                     </li>
                     <li>
                       <strong>Entre utilizando o mesmo e-mail que você usou para realizar a compra do Sr. SMS.</strong>
@@ -334,7 +343,13 @@ const SSTDashboard = () => {
                   <h4 className="font-semibold mt-4">Precisa de ajuda?</h4>
                   <p>Se tiver qualquer dificuldade para realizar a troca, podemos enviar o <strong>convite de troca de plano diretamente pelo WhatsApp</strong>.</p>
                   <p>É só solicitar a troca pelo nosso WhatsApp:</p>
-                  <p>👉 <a href="https://wa.me/5527998443852" target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">https://wa.me/5527998443852</a></p>
+                  <p>👉 <a
+                    href="https://wa.me/5527998443852"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline break-all"
+                    onClick={(e) => e.stopPropagation()}
+                  >https://wa.me/5527998443852</a></p>
                   <p className="text-muted-foreground">Nossa equipe poderá orientar você no processo.</p>
                 </div>
               </DialogContent>

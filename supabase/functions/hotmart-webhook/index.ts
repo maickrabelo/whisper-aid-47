@@ -809,6 +809,26 @@ Deno.serve(async (req) => {
         });
       }
 
+      // ===== Trava de segurança: compra de TESTE nunca vira plano pago =====
+      // A oferta de teste (R$ 9,90) compartilha o mesmo product_id do plano mensal,
+      // então o mapeamento por product_id pode resolver para o plano cheio.
+      // Se o código da oferta / plano Hotmart é de teste, força o plano de trial.
+      const isTrialPurchase = (!!offerCode && TRIAL_OFFER_CODES.has(offerCode))
+        || (!!planId && TRIAL_HOTMART_PLAN_IDS.has(planId));
+      if (isTrialPurchase) {
+        const { data: trialPlan } = await supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('slug', TRIAL_PLAN_SLUG)
+          .maybeSingle();
+        if (trialPlan) {
+          console.log('hotmart trial purchase detected, forcing trial plan', { offerCode, planId });
+          mapping = { plan_id: trialPlan.id, is_active: true, subscription_plans: trialPlan };
+        } else {
+          console.warn('trial purchase detected but trial plan not found', TRIAL_PLAN_SLUG);
+        }
+      }
+
       if (!mapping || !mapping.is_active) {
         console.warn(`Hotmart plan ${planId} / product ${productId} not mapped or inactive`);
         return await logAndRespond(200, { ok: true, ignored: 'plan not mapped', planId, productId });

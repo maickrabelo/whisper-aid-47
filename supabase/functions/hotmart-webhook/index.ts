@@ -579,6 +579,13 @@ async function upgradeExistingAccount(supabase: any, ctx: {
 
 // Códigos de plano Hotmart que correspondem à venda avulsa do módulo LTCAT.
 const LTCAT_HOTMART_PLAN_IDS = new Set(['1376605']);
+
+// Ofertas / planos Hotmart do teste de 7 dias (R$ 9,90).
+// Compras vindas destes códigos SEMPRE viram trial, nunca plano mensal pago,
+// mesmo que o mapeamento de product_id resolva para outro plano.
+const TRIAL_OFFER_CODES = new Set(['zwf07kdh']);
+const TRIAL_HOTMART_PLAN_IDS = new Set(['1336498']);
+const TRIAL_PLAN_SLUG = 'teste-sms';
 const LTCAT_FEATURE_KEY = 'LTCAT_BETA';
 
 async function setLtcatAccess(supabase: any, userId: string, enabled: boolean, note: string) {

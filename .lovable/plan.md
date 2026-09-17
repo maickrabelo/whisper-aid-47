@@ -37,7 +37,7 @@ Verifiquei cada ponto no sistema. Abaixo o que procede, o que já existe e o que
 
 ## Detalhes técnicos
 
-- `pgr_risks_compute_level()`: retirar `bump`/`prob_adj`; `magnitude` e `exposed_workers` passam a alimentar apenas ordenação de prioridade. `magnitudeBump` removido de `RiskInventory.tsx` (avisos e prévia de nível).
+- `pgr_risks_compute_level()`: mantido sem alteração (regra de `bump`/`prob_adj` preservada).
 - `SendToInventoryDialog.tsx` e `BulkSendToPGRDialog.tsx`: resolver `ghe_id` por `escopo_ref`/`setor_nome`+`funcao_nome` de cada fator; corrigir mapeamento `fonte_causa` → `source` e `grupos_expostos` → `exposure_description`; novas colunas de classificação de origem em `pgr_risks` (`origin_status`).
 - `ActionPlanEditor.tsx` + migração em `pgr_action_items`: `priority`, `monitoring_method`, `expected_evidence`, `effectiveness_indicator`, `verification_date`, `verification_result`, `residual_risk`.
 - `pgr_risks`: `measurement_type`, `measurement_conclusive`, `calibration_certificate`, `sampling_strategy`, `implemented_controls`, `recommended_controls`, `possible_injuries`, `decision_criteria`.

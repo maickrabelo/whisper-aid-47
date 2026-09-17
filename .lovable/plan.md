@@ -15,7 +15,7 @@ Verifiquei cada ponto no sistema. Abaixo o que procede, o que já existe e o que
 
 ## Etapa 1 — correções (recomendo priorizar)
 
-1. **Probabilidade**: remover o acréscimo automático por magnitude. A probabilidade passa a ser exatamente a escolhida pelo técnico. O número de trabalhadores expostos continua registrado e passa a compor a **prioridade** da medida (ordem de tratamento no plano de ação e no PDF), sem alterar a classificação. Riscos já cadastrados são reclassificados sem o acréscimo, e o texto do PDF sobre a metodologia é ajustado.
+1. **Probabilidade**: mantida como está, por decisão sua. O acréscimo automático por número de trabalhadores atingidos continua funcionando.
 2. **Prazo do plano de ação**: reproduzir o caso, corrigir a persistência e garantir que o prazo apareça no PDF; incluir aviso quando a ação for salva sem prazo.
 3. **Importação da AEP**: cada fator passa a ser vinculado ao grupo/função/atividade de origem (não ao GHE único da tela), com fonte e grupos expostos nos campos corretos. Na tela de envio, o técnico vê e confirma o destino de cada fator, e pode marcar itens como duplicidade já coberta, pendente de AET ou achado psicossocial dependente de consulta.
 4. **Vigência**: padronizar a formatação das datas para painel e PDF usarem a mesma leitura, eliminando a diferença de um dia.
@@ -37,7 +37,7 @@ Verifiquei cada ponto no sistema. Abaixo o que procede, o que já existe e o que
 
 ## Detalhes técnicos
 
-- `pgr_risks_compute_level()`: retirar `bump`/`prob_adj`; `magnitude` e `exposed_workers` passam a alimentar apenas ordenação de prioridade. `magnitudeBump` removido de `RiskInventory.tsx` (avisos e prévia de nível).
+- `pgr_risks_compute_level()`: mantido sem alteração (regra de `bump`/`prob_adj` preservada).
 - `SendToInventoryDialog.tsx` e `BulkSendToPGRDialog.tsx`: resolver `ghe_id` por `escopo_ref`/`setor_nome`+`funcao_nome` de cada fator; corrigir mapeamento `fonte_causa` → `source` e `grupos_expostos` → `exposure_description`; novas colunas de classificação de origem em `pgr_risks` (`origin_status`).
 - `ActionPlanEditor.tsx` + migração em `pgr_action_items`: `priority`, `monitoring_method`, `expected_evidence`, `effectiveness_indicator`, `verification_date`, `verification_result`, `residual_risk`.
 - `pgr_risks`: `measurement_type`, `measurement_conclusive`, `calibration_certificate`, `sampling_strategy`, `implemented_controls`, `recommended_controls`, `possible_injuries`, `decision_criteria`.

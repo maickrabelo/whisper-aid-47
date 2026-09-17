@@ -15,7 +15,7 @@ Verifiquei cada ponto no sistema. Abaixo o que procede, o que já existe e o que
 
 ## Etapa 1 — correções (recomendo priorizar)
 
-1. **Probabilidade**: remover o acréscimo automático por magnitude. A probabilidade passa a ser exatamente a escolhida pelo técnico. O número de trabalhadores expostos continua registrado e passa a compor a **prioridade** da medida (ordem de tratamento no plano de ação e no PDF), sem alterar a classificação. Riscos já cadastrados são reclassificados sem o acréscimo, e o texto do PDF sobre a metodologia é ajustado.
+1. **Probabilidade**: mantida como está, por decisão sua. O acréscimo automático por número de trabalhadores atingidos continua funcionando.
 2. **Prazo do plano de ação**: reproduzir o caso, corrigir a persistência e garantir que o prazo apareça no PDF; incluir aviso quando a ação for salva sem prazo.
 3. **Importação da AEP**: cada fator passa a ser vinculado ao grupo/função/atividade de origem (não ao GHE único da tela), com fonte e grupos expostos nos campos corretos. Na tela de envio, o técnico vê e confirma o destino de cada fator, e pode marcar itens como duplicidade já coberta, pendente de AET ou achado psicossocial dependente de consulta.
 4. **Vigência**: padronizar a formatação das datas para painel e PDF usarem a mesma leitura, eliminando a diferença de um dia.

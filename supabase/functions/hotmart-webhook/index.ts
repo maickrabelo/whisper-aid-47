@@ -1101,16 +1101,16 @@ Deno.serve(async (req) => {
           .eq('id', subId);
       }
 
-      if (isLtcatPurchase && userId) {
+      if ((isLtcatPurchase || ltcatIncludedInPlan) && userId) {
         await setLtcatAccess(
           supabase,
           userId,
           true,
-          `Liberado via compra Hotmart (plano LTCAT ${planId}, tx ${transactionId})`,
+          `Liberado via compra Hotmart (plano LTCAT ${planId ?? productId}, tx ${transactionId})`,
         );
       }
 
-      return await logAndRespond(200, { ok: true, provisioned: true, userId, subscriptionId: subId, ltcat_granted: isLtcatPurchase });
+      return await logAndRespond(200, { ok: true, provisioned: true, userId, subscriptionId: subId, ltcat_granted: isLtcatPurchase || ltcatIncludedInPlan });
 
     }
 

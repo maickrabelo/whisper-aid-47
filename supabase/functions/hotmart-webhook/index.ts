@@ -580,6 +580,11 @@ async function upgradeExistingAccount(supabase: any, ctx: {
 // Códigos de plano Hotmart que correspondem à venda avulsa do módulo LTCAT.
 const LTCAT_HOTMART_PLAN_IDS = new Set(['1376605']);
 
+// Planos Hotmart que JÁ INCLUEM o módulo LTCAT no pacote (não são venda avulsa).
+// Aqui o provisionamento/upgrade segue normal (limites do plano) e o LTCAT é
+// liberado imediatamente ao final do fluxo.
+const LTCAT_INCLUDED_HOTMART_PLAN_IDS = new Set(['1395028']);
+
 // Ofertas / planos Hotmart do teste de 7 dias (R$ 9,90).
 // Compras vindas destes códigos SEMPRE viram trial, nunca plano mensal pago,
 // mesmo que o mapeamento de product_id resolva para outro plano.

@@ -900,6 +900,14 @@ Deno.serve(async (req) => {
         eventType,
       });
       if (upgradeResult) {
+        if (ltcatIncludedInPlan && (upgradeResult as any).user_id) {
+          await setLtcatAccess(
+            supabase,
+            (upgradeResult as any).user_id as string,
+            true,
+            `LTCAT incluso no plano Hotmart ${planId ?? productId} (tx ${transactionId})`,
+          );
+        }
         return await logAndRespond(200, {
           ...upgradeResult,
           merged_duplicate_sst_manager_ids: mergeInfo.mergedIds,

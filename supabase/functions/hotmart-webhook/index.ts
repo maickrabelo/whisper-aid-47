@@ -754,6 +754,11 @@ Deno.serve(async (req) => {
       // Se não existe, segue o fluxo normal (o plano "LTCAT Avulso" está mapeado
       // ao código 1376605) e o módulo é liberado ao final do provisionamento.
       const isLtcatPurchase = !!planId && LTCAT_HOTMART_PLAN_IDS.has(planId);
+      // Plano de pacote com LTCAT incluso (ex.: 1395028 - 20 empresas / 15 mil vidas).
+      // O código pode chegar como plan.id ou como product.id, então checa os dois.
+      const ltcatIncludedInPlan = [planId, productId].some(
+        (id) => !!id && LTCAT_INCLUDED_HOTMART_PLAN_IDS.has(id),
+      );
       if (isLtcatPurchase) {
         const ltcatUser = await findAuthUserByEmail(supabase, buyerEmail);
         if (ltcatUser) {

@@ -580,6 +580,11 @@ async function upgradeExistingAccount(supabase: any, ctx: {
 // Códigos de plano Hotmart que correspondem à venda avulsa do módulo LTCAT.
 const LTCAT_HOTMART_PLAN_IDS = new Set(['1376605']);
 
+// Planos Hotmart que JÁ INCLUEM o módulo LTCAT no pacote (não são venda avulsa).
+// Aqui o provisionamento/upgrade segue normal (limites do plano) e o LTCAT é
+// liberado imediatamente ao final do fluxo.
+const LTCAT_INCLUDED_HOTMART_PLAN_IDS = new Set(['1395028']);
+
 // Ofertas / planos Hotmart do teste de 7 dias (R$ 9,90).
 // Compras vindas destes códigos SEMPRE viram trial, nunca plano mensal pago,
 // mesmo que o mapeamento de product_id resolva para outro plano.
@@ -749,6 +754,11 @@ Deno.serve(async (req) => {
       // Se não existe, segue o fluxo normal (o plano "LTCAT Avulso" está mapeado
       // ao código 1376605) e o módulo é liberado ao final do provisionamento.
       const isLtcatPurchase = !!planId && LTCAT_HOTMART_PLAN_IDS.has(planId);
+      // Plano de pacote com LTCAT incluso (ex.: 1395028 - 20 empresas / 15 mil vidas).
+      // O código pode chegar como plan.id ou como product.id, então checa os dois.
+      const ltcatIncludedInPlan = [planId, productId].some(
+        (id) => !!id && LTCAT_INCLUDED_HOTMART_PLAN_IDS.has(id),
+      );
       if (isLtcatPurchase) {
         const ltcatUser = await findAuthUserByEmail(supabase, buyerEmail);
         if (ltcatUser) {
@@ -890,6 +900,14 @@ Deno.serve(async (req) => {
         eventType,
       });
       if (upgradeResult) {
+        if (ltcatIncludedInPlan && (upgradeResult as any).user_id) {
+          await setLtcatAccess(
+            supabase,
+            (upgradeResult as any).user_id as string,
+            true,
+            `LTCAT incluso no plano Hotmart ${planId ?? productId} (tx ${transactionId})`,
+          );
+        }
         return await logAndRespond(200, {
           ...upgradeResult,
           merged_duplicate_sst_manager_ids: mergeInfo.mergedIds,
@@ -1083,23 +1101,26 @@ Deno.serve(async (req) => {
           .eq('id', subId);
       }
 
-      if (isLtcatPurchase && userId) {
+      if ((isLtcatPurchase || ltcatIncludedInPlan) && userId) {
         await setLtcatAccess(
           supabase,
           userId,
           true,
-          `Liberado via compra Hotmart (plano LTCAT ${planId}, tx ${transactionId})`,
+          `Liberado via compra Hotmart (plano LTCAT ${planId ?? productId}, tx ${transactionId})`,
         );
       }
 
-      return await logAndRespond(200, { ok: true, provisioned: true, userId, subscriptionId: subId, ltcat_granted: isLtcatPurchase });
+      return await logAndRespond(200, { ok: true, provisioned: true, userId, subscriptionId: subId, ltcat_granted: isLtcatPurchase || ltcatIncludedInPlan });
 
     }
 
     // ===== CANCEL =====
     if (CANCEL_EVENTS.has(eventType)) {
-      // Cancelamento/reembolso da venda avulsa do LTCAT: bloqueia o módulo.
-      if (planId && LTCAT_HOTMART_PLAN_IDS.has(planId) && buyerEmail) {
+      // Cancelamento/reembolso de compra com LTCAT (avulso ou incluso no plano): bloqueia o módulo.
+      const cancelAffectsLtcat = [planId, productId].some(
+        (id) => !!id && (LTCAT_HOTMART_PLAN_IDS.has(id) || LTCAT_INCLUDED_HOTMART_PLAN_IDS.has(id)),
+      );
+      if (cancelAffectsLtcat && buyerEmail) {
         const ltcatUser = await findAuthUserByEmail(supabase, buyerEmail);
         if (ltcatUser) {
           await setLtcatAccess(

@@ -761,7 +761,22 @@ Deno.serve(async (req) => {
       );
       if (isLtcatPurchase) {
         const ltcatUser = await findAuthUserByEmail(supabase, buyerEmail);
+        // Só usa o atalho se a conta já tiver assinatura ativa (não-trial).
+        // Conta com teste expirado/cancelado precisa ganhar uma assinatura ativa,
+        // senão fica bloqueada mesmo com LTCAT liberado.
+        let hasActivePaid = false;
         if (ltcatUser) {
+          const { data: lastSub } = await supabase
+            .from('subscriptions')
+            .select('status, subscription_plans(slug)')
+            .eq('owner_user_id', ltcatUser.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const slug = (lastSub as any)?.subscription_plans?.slug;
+          hasActivePaid = (lastSub as any)?.status === 'active' && slug !== 'teste-sms';
+        }
+        if (ltcatUser && hasActivePaid) {
           const granted = await setLtcatAccess(
             supabase,
             ltcatUser.id,
@@ -900,7 +915,7 @@ Deno.serve(async (req) => {
         eventType,
       });
       if (upgradeResult) {
-        if (ltcatIncludedInPlan && (upgradeResult as any).user_id) {
+        if ((ltcatIncludedInPlan || isLtcatPurchase) && (upgradeResult as any).user_id) {
           await setLtcatAccess(
             supabase,
             (upgradeResult as any).user_id as string,

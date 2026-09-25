@@ -915,7 +915,7 @@ Deno.serve(async (req) => {
         eventType,
       });
       if (upgradeResult) {
-        if (ltcatIncludedInPlan && (upgradeResult as any).user_id) {
+        if ((ltcatIncludedInPlan || isLtcatPurchase) && (upgradeResult as any).user_id) {
           await setLtcatAccess(
             supabase,
             (upgradeResult as any).user_id as string,

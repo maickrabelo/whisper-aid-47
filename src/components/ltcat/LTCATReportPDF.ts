@@ -3,6 +3,7 @@ import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
 import { sanitizePdfText, installPdfTextSafety } from '@/lib/pdfTextSafety';
 import { OUTCOME_LABELS } from '@/lib/ltcatEngine';
 import fundoPgr from '@/assets/fundo-pgr.jpg.asset.json';
+import { formatPdfAddress, formatPdfSector } from '@/lib/pdfDisplayFormat';
 import type {
   LtcatDoc, LtcatGhe, LtcatExposure, LtcatEpiEpc, LtcatEvaluation,
 } from '@/pages/LTCATDetail';
@@ -183,7 +184,7 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
   const extras = (input.doc.additional_addresses || []).filter((a) => a && String(a).trim());
   if (extras.length) {
     subTitle('Unidades / endereços adicionais (mesmo CNPJ)');
-    extras.forEach((addr, i) => paragraph(`Unidade ${i + 2}: ${addr}`));
+    extras.forEach((addr, i) => paragraph(`Unidade ${i + 2}: ${formatPdfAddress(addr)}`));
   }
   if (input.doc.notes) {
     subTitle('Observações gerais');
@@ -214,7 +215,7 @@ export async function generateLTCATReportPDF(input: LTCATReportInput): Promise<v
   for (const g of input.ghes) {
     ensureSpace(30);
     subTitle(g.name);
-    if (g.sector) kvRow('Setor', g.sector);
+    if (g.sector) kvRow('Setor', formatPdfSector(g.sector));
     kvRow('Trabalhadores', String(g.worker_count ?? 0));
     const roles = Array.isArray(g.roles_meta) ? g.roles_meta : [];
     for (const role of roles) {

@@ -902,7 +902,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   if (data.departments.length > 0) {
     data.departments.forEach(dept => {
       checkPage(40);
-      drawSubSection(`Setor: ${dept}`);
+      drawSubSection(`Setor: ${formatPdfSector(dept)}`);
 
       const deptResponses = data.responses.filter(r => r.department === dept);
       const deptAnswers = deptResponses.flatMap(r => r.answers);

@@ -4,6 +4,7 @@ import { classifyRisk, LEVEL_LABELS } from '@/lib/aepRiskLevel';
 import { AEP_CATEGORIAS } from '@/hooks/useAEPFatoresCatalog';
 import { renderEvidenceImages } from './aepPdfImage';
 import type { ReportSignatures } from '@/lib/reportSignatures';
+import { formatPdfSector } from '@/lib/pdfDisplayFormat';
 
 interface AEPBundle {
   aep: any;
@@ -79,7 +80,7 @@ async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participan
 
   // Header banda com altura dinâmica para setores longos
   doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-  const sectorHeader = `Setor: ${aep.setor_nome || '—'}`;
+  const sectorHeader = `Setor: ${formatPdfSector(aep.setor_nome) || '—'}`;
   const sectorHeaderLines = doc.splitTextToSize(sectorHeader, 125);
   const headerH = Math.max(12, sectorHeaderLines.length * 4 + 5);
   doc.setFillColor(30, 64, 175);
@@ -93,7 +94,7 @@ async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participan
   y = headerH + 8;
 
   doc.setFontSize(13); doc.setFont('helvetica', 'bold');
-  y = drawWrappedText(doc, y, `${aep.setor_nome || 'Setor'} — ${aep.funcao_nome || 'Função'}`, MARGIN, CONTENT_W, 5.2);
+  y = drawWrappedText(doc, y, `${formatPdfSector(aep.setor_nome) || 'Setor'} — ${aep.funcao_nome || 'Função'}`, MARGIN, CONTENT_W, 5.2);
   doc.setFontSize(8); doc.setFont('helvetica', 'italic'); doc.setTextColor(120);
   doc.text(`Versão ${aep.version || 1} · ${AEP_STATUS_LABELS[aep.status] || aep.status}`, MARGIN, y); y += 6;
   doc.setTextColor(0);
@@ -109,11 +110,11 @@ async function renderAEPSection(doc: jsPDF, aep: any, fatores: any[], participan
     doc.setFont('helvetica', 'bold'); doc.text('Escopo avaliado:', MARGIN, y); y += 5;
     doc.setFont('helvetica', 'normal');
     escopo.forEach((it: any, i: number) => {
-      const t = `${i + 1}. ${it.setor || '—'} — ${it.funcao || '—'}${it.cbo ? ` (CBO ${it.cbo})` : ''} · ${it.worker_count || 1} trab.`;
+      const t = `${i + 1}. ${formatPdfSector(it.setor) || '—'} — ${it.funcao || '—'}${it.cbo ? ` (CBO ${it.cbo})` : ''} · ${it.worker_count || 1} trab.`;
       y = drawWrappedText(doc, y, t, MARGIN + 3, CONTENT_W - 3, 4.2);
     });
   } else {
-    y = line(doc, y, 'Setor:', aep.setor_nome || '—');
+    y = line(doc, y, 'Setor:', formatPdfSector(aep.setor_nome) || '—');
     y = line(doc, y, 'Função/cargo:', aep.funcao_nome || '—');
   }
   y = line(doc, y, 'Data:', new Date(aep.assessment_date).toLocaleDateString('pt-BR'));
@@ -312,7 +313,12 @@ export async function generateAEPConsolidatedReportPDF(input: Input): Promise<vo
   doc.setFontSize(10); doc.setFont('helvetica', 'normal');
   const setores = new Set(bundles.map(b => b.aep.setor_nome).filter(Boolean));
   doc.text(`• AEPs incluídas: ${bundles.length}`, MARGIN, y); y += 5;
-  doc.text(`• Setores avaliados: ${setores.size}`, MARGIN, y); y += 5;
+  doc.setFont('helvetica', 'bold');
+  doc.text('• Setores avaliados:', MARGIN, y); y += 5;
+  doc.setFont('helvetica', 'normal');
+  (setores.size > 0 ? [...setores] : ['Todos']).forEach(setor => {
+    y = drawWrappedText(doc, y, `   • ${formatPdfSector(setor)}`, MARGIN + 4, CONTENT_W - 4, 4.5);
+  });
   doc.text(`• Fatores levantados: ${totalFatores}`, MARGIN, y); y += 5;
   doc.text(`   - Ergonômico físico: ${catCount.ergonomico_fisico}`, MARGIN + 4, y); y += 5;
   doc.text(`   - Ergonômico organizacional: ${catCount.ergonomico_organizacional}`, MARGIN + 4, y); y += 5;

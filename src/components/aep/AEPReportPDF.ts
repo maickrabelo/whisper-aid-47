@@ -3,6 +3,7 @@ import { renderReportLogos } from '@/lib/pdfLogos';
 import { classifyRisk, LEVEL_LABELS } from '@/lib/aepRiskLevel';
 import { AEP_CATEGORIAS } from '@/hooks/useAEPFatoresCatalog';
 import { renderEvidenceImages } from './aepPdfImage';
+import { formatPdfSector } from '@/lib/pdfDisplayFormat';
 import type { ReportSignatures } from '@/lib/reportSignatures';
 
 interface AEPPDFInput {
@@ -87,7 +88,7 @@ export async function generateAEPReportPDF(input: AEPPDFInput): Promise<void> {
     doc.text(`Total coberto: ${total} trabalhador(es)`, MARGIN, y); y += 5;
     doc.setFont('helvetica', 'normal');
   } else {
-    line('Setor:', aep.setor_nome || '—');
+    line('Setor:', formatPdfSector(aep.setor_nome) || '—');
     line('Função/cargo:', aep.funcao_nome || '—');
   }
   line('Data da avaliação:', new Date(aep.assessment_date).toLocaleDateString('pt-BR'));

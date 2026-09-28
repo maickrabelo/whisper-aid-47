@@ -500,17 +500,20 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   ];
 
   companyFields.forEach(([label, value]) => {
-    checkPage(10);
-    pdf.setFillColor(248, 249, 250);
-    pdf.rect(m, y - 3, pw - 2 * m, 9, 'F');
     pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    const valueLines = pdf.splitTextToSize(value, pw - m - (m + 55) - 3) as string[];
+    const rowHeight = Math.max(9, valueLines.length * 5 + 4);
+    checkPage(rowHeight + 1);
+    pdf.setFillColor(248, 249, 250);
+    pdf.rect(m, y - 3, pw - 2 * m, rowHeight, 'F');
     pdf.setFont('helvetica', 'bold');
     setColor(0, 51, 102);
     pdf.text(`${label}:`, m + 3, y + 3);
     pdf.setFont('helvetica', 'normal');
     setColor(0, 0, 0);
-    pdf.text(value, m + 55, y + 3);
-    y += 10;
+    pdf.text(valueLines, m + 55, y + 3);
+    y += rowHeight + 1;
   });
 
   checkPage(14);

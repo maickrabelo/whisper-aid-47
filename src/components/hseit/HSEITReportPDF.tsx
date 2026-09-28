@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
+import { formatPdfSector } from '@/lib/pdfDisplayFormat';
 import { renderCoverBackground } from '@/lib/pdfLogos';
 import fundoPsico from '@/assets/fundo-psico-v2.jpg.asset.json';
 import {
@@ -273,8 +274,10 @@ export function HSEITReportPDF({
       yPos += 20;
 
       // Resumo executivo na capa
+      const evaluatedDepartments = departments.length > 0 ? departments : ['Todos'];
+      const summaryHeight = Math.max(50, 48 + evaluatedDepartments.length * 5);
       pdf.setFillColor(245, 245, 245);
-      pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 50, 3, 3, 'F');
+      pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, summaryHeight, 3, 3, 'F');
       
       yPos += 12;
       pdf.setFontSize(12);
@@ -292,13 +295,18 @@ export function HSEITReportPDF({
       const favorableCount = Object.values(categoryAverages).filter(avg => getHealthImpact(avg) === 'favorable').length;
 
       pdf.text(`Total de Respostas: ${responses.length}`, margin + 10, yPos);
-      pdf.text(`Setores Avaliados: ${departments.length || 1}`, pageWidth / 2, yPos);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Setores Avaliados:', pageWidth / 2, yPos);
+      pdf.setFont('helvetica', 'normal');
+      evaluatedDepartments.forEach((department, index) => {
+        pdf.text(`• ${formatPdfSector(department)}`, pageWidth / 2 + 4, yPos + 5 + index * 5);
+      });
       yPos += 7;
       pdf.text(`Média Geral: ${overallAverage.toFixed(2)} (${HEALTH_IMPACT_LABELS[impactOverall]})`, margin + 10, yPos);
       yPos += 7;
       pdf.text(`Categorias Críticas: ${criticalCount} | Favoráveis: ${favorableCount}`, margin + 10, yPos);
 
-      yPos += 25;
+      yPos += 25 + Math.max(0, evaluatedDepartments.length - 1) * 5;
 
       // ========== PÁGINA 2: METODOLOGIA ==========
       pdf.addPage();

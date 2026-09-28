@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import { renderReportLogos } from '@/lib/pdfLogos';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
+import { formatPdfSector } from '@/lib/pdfDisplayFormat';
 import {
   BurnoutCategory,
   BurnoutRiskLevel,
@@ -186,8 +187,11 @@ export function BurnoutReportPDF({
       yPos += 20;
 
       // Resumo executivo na capa
+      const departments = [...new Set(responses.filter(r => r.department).map(r => r.department!))];
+      const evaluatedDepartments = departments.length > 0 ? departments : ['Todos'];
+      const summaryHeight = Math.max(60, 58 + evaluatedDepartments.length * 5);
       pdf.setFillColor(245, 245, 245);
-      pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 60, 3, 3, 'F');
+      pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, summaryHeight, 3, 3, 'F');
       
       yPos += 12;
       pdf.setFontSize(12);
@@ -200,7 +204,6 @@ export function BurnoutReportPDF({
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(60, 60, 60);
       
-      const departments = [...new Set(responses.filter(r => r.department).map(r => r.department!))];
       const criticalCount = riskDistribution.filter(r => 
         r.name === BURNOUT_RISK_LABELS.condicao_estabelecida || 
         r.name === BURNOUT_RISK_LABELS.estagio_avancado
@@ -210,7 +213,12 @@ export function BurnoutReportPDF({
       ).reduce((sum, r) => sum + r.value, 0);
 
       pdf.text(`Total de Respostas: ${responses.length}`, margin + 10, yPos);
-      pdf.text(`Setores Avaliados: ${departments.length || 1}`, pageWidth / 2, yPos);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Setores Avaliados:', pageWidth / 2, yPos);
+      pdf.setFont('helvetica', 'normal');
+      evaluatedDepartments.forEach((department, index) => {
+        pdf.text(`• ${formatPdfSector(department)}`, pageWidth / 2 + 4, yPos + 5 + index * 5);
+      });
       yPos += 7;
       pdf.text(`Pontuação Média: ${avgScore} pontos`, margin + 10, yPos);
       pdf.text(`Nível Geral: ${BURNOUT_RISK_LABELS[overallRiskLevel]}`, pageWidth / 2, yPos);
@@ -218,7 +226,7 @@ export function BurnoutReportPDF({
       pdf.text(`Casos Críticos: ${criticalCount} (${responses.length > 0 ? Math.round(criticalCount / responses.length * 100) : 0}%)`, margin + 10, yPos);
       pdf.text(`Sem Indício: ${healthyCount} (${responses.length > 0 ? Math.round(healthyCount / responses.length * 100) : 0}%)`, pageWidth / 2, yPos);
 
-      yPos += 35;
+      yPos += 35 + Math.max(0, evaluatedDepartments.length - 1) * 5;
       
 
       // ========== PÁGINA 2: METODOLOGIA ==========

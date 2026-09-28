@@ -667,11 +667,12 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
 
   // Per-department detailed analysis
   if (data.departments.length > 0) {
-    y += 10;
-    drawSubSection('5.2 Análise Detalhada por Setor/GHE');
-
-    for (const dept of data.departments) {
+    for (const [deptIndex, dept] of data.departments.entries()) {
       pdf.addPage(); y = m;
+
+      if (deptIndex === 0) {
+        drawSubSection('5.2 Análise Detalhada por Setor/GHE');
+      }
       
       pdf.setFillColor(0, 76, 153);
       pdf.rect(m, y, pw - 2 * m, 12, 'F');

@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
 import fundoPsico from '@/assets/fundo-psico-v2.jpg.asset.json';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
+import { formatPdfAddress, formatPdfSector } from '@/lib/pdfDisplayFormat';
 import {
   RISK_LEVEL_LABELS,
 } from '@/data/copsoqQuestions';
@@ -394,7 +395,7 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   cardY += 5; setText(11, false, COLORS.text);
   const scopeLabel = input.selectedDepartment === 'all'
     ? `Consolidado — ${input.departments.length || 1} setor(es)`
-    : `Setor: ${input.selectedDepartment}`;
+    : `Setor: ${formatPdfSector(input.selectedDepartment)}`;
   pdf.text(scopeLabel, cardX, cardY);
 
   y = ph - 25;
@@ -545,10 +546,18 @@ export async function generateCOPSOQReport(input: COPSOQReportInput): Promise<vo
   if (input.companyInfo && (input.companyInfo.cnpj || input.companyInfo.address || input.companyInfo.cnae || input.companyInfo.riskGrade)) {
     drawSubTitle('Identificação da Empresa');
     if (input.companyInfo.cnpj) drawParagraph(`CNPJ: ${input.companyInfo.cnpj}`);
-    if (input.companyInfo.address) drawParagraph(`Endereço: ${input.companyInfo.address}`);
+    if (input.companyInfo.address) drawParagraph(`Endereço: ${formatPdfAddress(input.companyInfo.address)}`);
     if (input.companyInfo.cnae) drawParagraph(`CNAE: ${input.companyInfo.cnae}`);
     if (input.companyInfo.riskGrade) drawParagraph(`Grau de risco: ${input.companyInfo.riskGrade}`);
   }
+
+  drawSubTitle('Setores Avaliados');
+  const evaluatedDepartments = input.selectedDepartment === 'all'
+    ? input.departments
+    : [input.selectedDepartment];
+  (evaluatedDepartments.length > 0 ? evaluatedDepartments : ['Todos']).forEach(department => {
+    drawParagraph(`• ${formatPdfSector(department)}`);
+  });
 
   // KPI cards
   ensure(30);

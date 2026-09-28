@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
 import fundoPgr from '@/assets/fundo-pgr-v2.jpg.asset.json';
+import { formatPdfAddress, formatPdfSector } from '@/lib/pdfDisplayFormat';
 
 // ─────────────────────────────────────────────────────────────
 // Tipos
@@ -529,7 +530,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   sectionTitle('Identificação da Empresa');
   const idRows: string[][] = [
     ['Razão Social', placeholder(input.company.name), 'CNPJ', placeholder(input.company.cnpj)],
-    ['Endereço', placeholder(input.pgr.address), 'CNAE', placeholder(input.pgr.cnae)],
+    ['Endereço', formatPdfAddress(input.pgr.address) || placeholder(input.pgr.address), 'CNAE', placeholder(input.pgr.cnae)],
     ['Ramo de Atividade', placeholder(input.pgr.activity_branch), 'Grau de Risco (NR-4)', placeholder(input.pgr.risk_grade)],
     ['Vigência', `${fmtDate(input.pgr.validity_start)} a ${fmtDate(input.pgr.validity_end)}`, 'Revisão', String(input.pgr.version).padStart(2, '0')],
   ];
@@ -539,7 +540,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
   if (extras.length > 0) {
     subTitle('Unidades / Endereços adicionais (mesmo CNPJ)');
     paragraph('Esta empresa possui mais de uma unidade sob o mesmo CNPJ. Os endereços abaixo integram o escopo deste PGR:');
-    extras.forEach((addr, i) => paragraph(`Unidade ${i + 2}: ${addr}`));
+    extras.forEach((addr, i) => paragraph(`Unidade ${i + 2}: ${formatPdfAddress(addr)}`));
   }
 
   subTitle('Regime de Trabalho');
@@ -737,7 +738,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     for (const ghe of input.ghes) {
       subTitle(`GHE: ${ghe.name}`);
       const meta = [
-        `Setor: ${ghe.sector || '—'}`,
+        `Setor: ${formatPdfSector(ghe.sector) || '—'}`,
         `Cargo/Função: ${ghe.role || '—'}`,
         `Trabalhadores: ${ghe.worker_count ?? 0}`,
         `Jornada: ${ghe.work_schedule || '—'}`,

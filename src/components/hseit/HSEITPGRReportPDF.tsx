@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { renderReportLogos, renderCoverBackground } from '@/lib/pdfLogos';
 import fundoPsico from '@/assets/fundo-psico-v2.jpg.asset.json';
 import { installPdfTextSafety } from '@/lib/pdfTextSafety';
+import { formatPdfAddress, formatPdfSector } from '@/lib/pdfDisplayFormat';
 import {
   HSEITCategory,
   HSEIT_CATEGORY_LABELS,
@@ -492,11 +493,10 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   const companyFields = [
     ['Razão Social / Nome', data.assessment.companyName],
     ['CNPJ', data.companyInfo.cnpj || 'Não informado'],
-    ['Endereço', data.companyInfo.address || 'Não informado'],
+    ['Endereço', formatPdfAddress(data.companyInfo.address) || 'Não informado'],
     ['CNAE', data.companyInfo.cnae || 'Não informado'],
     ['Grau de Risco', data.companyInfo.riskGrade || 'Não informado'],
     ['Nº Colaboradores', data.companyInfo.employeeCount?.toString() || `${data.responses.length} respondentes`],
-    ['Setores Avaliados', data.departments.join(', ') || 'Todos'],
   ];
 
   companyFields.forEach(([label, value]) => {
@@ -512,6 +512,15 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     pdf.text(value, m + 55, y + 3);
     y += 10;
   });
+
+  checkPage(14);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  setColor(0, 51, 102);
+  pdf.text('Setores Avaliados:', m + 3, y + 3);
+  y += 9;
+  const evaluatedDepartments = data.departments.length > 0 ? data.departments : ['Todos'];
+  evaluatedDepartments.forEach(department => drawText(`• ${formatPdfSector(department)}`, 8));
 
   // ═══════════════════════════════
   // SECTION 4: METODOLOGIA
@@ -893,7 +902,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   if (data.departments.length > 0) {
     data.departments.forEach(dept => {
       checkPage(40);
-      drawSubSection(`Setor: ${dept}`);
+      drawSubSection(`Setor: ${formatPdfSector(dept)}`);
 
       const deptResponses = data.responses.filter(r => r.department === dept);
       const deptAnswers = deptResponses.flatMap(r => r.answers);

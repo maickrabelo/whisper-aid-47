@@ -1,0 +1,1 @@
+PDF display data must use the shared proper-case formatter for sectors and addresses; this prevents all-caps output while preserving common acronyms.

@@ -219,14 +219,14 @@ export function BurnoutReportPDF({
       evaluatedDepartments.forEach((department, index) => {
         pdf.text(`• ${formatPdfSector(department)}`, pageWidth / 2 + 4, yPos + 5 + index * 5);
       });
-      yPos += 7;
+      yPos += Math.max(7, 7 + evaluatedDepartments.length * 5);
       pdf.text(`Pontuação Média: ${avgScore} pontos`, margin + 10, yPos);
       pdf.text(`Nível Geral: ${BURNOUT_RISK_LABELS[overallRiskLevel]}`, pageWidth / 2, yPos);
       yPos += 7;
       pdf.text(`Casos Críticos: ${criticalCount} (${responses.length > 0 ? Math.round(criticalCount / responses.length * 100) : 0}%)`, margin + 10, yPos);
       pdf.text(`Sem Indício: ${healthyCount} (${responses.length > 0 ? Math.round(healthyCount / responses.length * 100) : 0}%)`, pageWidth / 2, yPos);
 
-      yPos += 35 + Math.max(0, evaluatedDepartments.length - 1) * 5;
+      yPos += 35;
       
 
       // ========== PÁGINA 2: METODOLOGIA ==========

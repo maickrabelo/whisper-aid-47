@@ -301,12 +301,12 @@ export function HSEITReportPDF({
       evaluatedDepartments.forEach((department, index) => {
         pdf.text(`• ${formatPdfSector(department)}`, pageWidth / 2 + 4, yPos + 5 + index * 5);
       });
-      yPos += 7;
+      yPos += Math.max(7, 7 + evaluatedDepartments.length * 5);
       pdf.text(`Média Geral: ${overallAverage.toFixed(2)} (${HEALTH_IMPACT_LABELS[impactOverall]})`, margin + 10, yPos);
       yPos += 7;
       pdf.text(`Categorias Críticas: ${criticalCount} | Favoráveis: ${favorableCount}`, margin + 10, yPos);
 
-      yPos += 25 + Math.max(0, evaluatedDepartments.length - 1) * 5;
+      yPos += 25;
 
       // ========== PÁGINA 2: METODOLOGIA ==========
       pdf.addPage();

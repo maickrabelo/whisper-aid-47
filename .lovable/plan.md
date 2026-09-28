@@ -7,6 +7,6 @@
 
 ## Implementação
 - Criar uma função compartilhada de formatação para nomes de setores e endereços.
-- Aplicar a formatação nos relatórios psicossociais e nos documentos PGR/LTCAT onde esses dados aparecem.
+- Aplicar a formatação prioritariamente nos relatórios psicossociais HSE-IT e COPSOQ, além dos documentos PGR/LTCAT onde esses dados aparecem.
 - Ajustar o espaço do bloco de informações da empresa de acordo com a quantidade de setores.
 - Validar a compilação e gerar visualmente um PDF de demonstração para conferir que não há cortes.

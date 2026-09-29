@@ -765,18 +765,37 @@ Deno.serve(async (req) => {
         // Conta com teste expirado/cancelado precisa ganhar uma assinatura ativa,
         // senão fica bloqueada mesmo com LTCAT liberado.
         let hasActivePaid = false;
+        let lastSubId: string | null = null;
         if (ltcatUser) {
           const { data: lastSub } = await supabase
             .from('subscriptions')
-            .select('status, subscription_plans(slug)')
+            .select('id, status, subscription_plans(slug)')
             .eq('owner_user_id', ltcatUser.id)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
           const slug = (lastSub as any)?.subscription_plans?.slug;
           hasActivePaid = (lastSub as any)?.status === 'active' && slug !== 'teste-sms';
+          lastSubId = (lastSub as any)?.id ?? null;
         }
         if (ltcatUser && hasActivePaid) {
+          // Renovação/pagamento mensal: estende a vigência da assinatura ativa
+          // (sem isso a conta era bloqueada ao fim do período mesmo pagando).
+          if (lastSubId) {
+            const now = new Date();
+            const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+            const { data: ltcatPlan } = await supabase
+              .from('subscription_plans').select('id').eq('slug', 'ltcat-avulso').maybeSingle();
+            await supabase.from('subscriptions').update({
+              status: 'active',
+              ...(ltcatPlan?.id ? { plan_id: ltcatPlan.id } : {}),
+              current_period_start: now.toISOString(),
+              current_period_end: end.toISOString(),
+              next_charge_date: end.toISOString().slice(0, 10),
+              hotmart_transaction_id: transactionId,
+              updated_at: now.toISOString(),
+            }).eq('id', lastSubId);
+          }
           const granted = await setLtcatAccess(
             supabase,
             ltcatUser.id,

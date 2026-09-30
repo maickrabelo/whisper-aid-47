@@ -12,6 +12,7 @@ interface Collaborator {
   email: string | null;
   full_name: string | null;
   is_default: boolean;
+  is_self?: boolean;
   created_at: string;
 }
 
@@ -165,7 +166,7 @@ const TeamManagementCard: React.FC<Props> = ({ accountType, accountId, accountNa
                           <p className="text-xs text-muted-foreground truncate">{c.email}</p>
                         </div>
                       </div>
-                      {!c.is_default && (
+                      {!c.is_default && !c.is_self && (
                         <Button
                           variant="ghost"
                           size="sm"

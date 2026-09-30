@@ -97,24 +97,12 @@ const TeamManagementCard: React.FC<Props> = ({ accountType, accountId, accountNa
 
   const handleRemoveCollaborator = async (userId: string) => {
     if (!confirm("Remover este colaborador da conta?")) return;
-    let error: any = null;
-    if (accountType === "sst") {
-      const r = await supabase
-        .from("user_sst_managers")
-        .delete()
-        .eq("user_id", userId)
-        .eq("sst_manager_id", accountId);
-      error = r.error;
-    } else {
-      const r = await supabase
-        .from("user_companies")
-        .delete()
-        .eq("user_id", userId)
-        .eq("company_id", accountId);
-      error = r.error;
-    }
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    const { data, error } = await supabase.functions.invoke("remove-account-collaborator", {
+      body: { account_type: accountType, account_id: accountId, user_id: userId },
+    });
+    const msg = error?.message || (data as any)?.error;
+    if (msg) {
+      toast({ title: "Erro", description: msg, variant: "destructive" });
       return;
     }
     toast({ title: "Colaborador removido" });

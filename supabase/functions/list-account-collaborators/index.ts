@@ -115,11 +115,13 @@ Deno.serve(async (req) => {
       if (u.id && u.email) emailMap.set(u.id, u.email);
     });
 
+    const ownerId = [...links].sort((a, b) => a.created_at.localeCompare(b.created_at))[0]?.user_id;
     const collaborators = links.map((l) => ({
       user_id: l.user_id,
       email: emailMap.get(l.user_id) || null,
       full_name: profilesMap.get(l.user_id)?.full_name || null,
-      is_default: l.is_default,
+      is_default: l.user_id === ownerId,
+      is_self: l.user_id === callerId,
       created_at: l.created_at,
     }));
 

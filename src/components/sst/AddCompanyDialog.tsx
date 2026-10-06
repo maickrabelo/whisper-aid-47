@@ -187,7 +187,7 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
         (errMsg.includes('duplicate key') && errMsg.includes('cnpj')) ||
         (errCode === '23505' && errMsg.includes('cnpj'));
 
-      if (errMsg.includes('Limite de')) {
+      if (errMsg.includes('Limite de') || errMsg.includes('já está cadastrado') || errMsg.includes('obrigatório') || errMsg.includes('inválid') || errMsg.includes('permissão')) {
         message = errMsg;
       } else if (isCnpjDuplicate) {
         // Tentar recuperar empresa órfã (criada em tentativa anterior e não vinculada)

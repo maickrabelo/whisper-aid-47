@@ -585,7 +585,7 @@ const LTCAT_HOTMART_PLAN_IDS = new Set(['1376605']);
 const LTCAT_INCLUDED_HOTMART_PLAN_IDS = new Set(['1395028', '1404061', '1343825']);
 
 // Determina se a compra é anual. O payload Hotmart nem sempre traz
-// recurrency_period; quando falta, usa a data do próximo cobrança como
+// recurrency_period; quando falta, usa a data da próxima cobrança como
 // heurística (cobrança a mais de ~200 dias = ciclo anual).
 const isAnnualPurchase = (subscriptionInfo: any, purchase: any): boolean => {
   if (subscriptionInfo?.plan?.recurrency_period === 12) return true;

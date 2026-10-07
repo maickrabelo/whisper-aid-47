@@ -583,7 +583,20 @@ const LTCAT_HOTMART_PLAN_IDS = new Set(['1376605']);
 // Planos Hotmart que JÁ INCLUEM o módulo LTCAT no pacote (não são venda avulsa).
 // Aqui o provisionamento/upgrade segue normal (limites do plano) e o LTCAT é
 // liberado imediatamente ao final do fluxo.
-const LTCAT_INCLUDED_HOTMART_PLAN_IDS = new Set(['1395028', '1404061']);
+const LTCAT_INCLUDED_HOTMART_PLAN_IDS = new Set(['1395028', '1404061', '1343825']);
+
+// Determina se a compra é anual. O payload Hotmart nem sempre traz
+// recurrency_period; quando falta, usa a data do próximo cobrança como
+// heurística (cobrança a mais de ~200 dias = ciclo anual).
+const isAnnualPurchase = (subscriptionInfo: any, purchase: any): boolean => {
+  if (subscriptionInfo?.plan?.recurrency_period === 12) return true;
+  if (purchase?.recurrence_number === 12) return true;
+  const nextCharge = purchase?.date_next_charge;
+  if (typeof nextCharge === 'number') {
+    return nextCharge - Date.now() > 200 * 24 * 60 * 60 * 1000;
+  }
+  return false;
+};
 
 // Ofertas / planos Hotmart do teste de 7 dias (R$ 9,90).
 // Compras vindas destes códigos SEMPRE viram trial, nunca plano mensal pago,

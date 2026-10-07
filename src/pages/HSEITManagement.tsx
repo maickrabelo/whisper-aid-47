@@ -262,11 +262,15 @@ export default function HSEITManagement() {
       });
 
       navigate('/hseit-dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving assessment:', error);
+      const code = error?.code ? ` (código ${error.code})` : '';
+      const isAuth = error?.code === '42501' || /JWT|row-level security|permission/i.test(error?.message || '');
       toast({
         title: 'Erro ao salvar',
-        description: 'Não foi possível salvar a avaliação.',
+        description: isAuth
+          ? `Sua sessão expirou ou está sem permissão. Saia e entre de novo no sistema e tente outra vez${code}.`
+          : `Não foi possível salvar a avaliação: ${error?.message || 'erro desconhecido'}${code}.`,
         variant: 'destructive'
       });
     } finally {

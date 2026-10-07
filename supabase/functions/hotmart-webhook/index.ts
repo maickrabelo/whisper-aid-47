@@ -1008,7 +1008,7 @@ Deno.serve(async (req) => {
       await supabase.from('user_roles').upsert({ user_id: userId!, role }, { onConflict: 'user_id,role' });
 
       // Create subscription row first so we can link entities
-      const billingCycle = (subscriptionInfo?.plan?.recurrency_period === 12 || purchase?.recurrence_number === 12)
+      const billingCycle = isAnnualPurchase(subscriptionInfo, purchase)
         ? 'annual'
         : 'monthly';
       const planRecurringPrice = billingCycle === 'annual'

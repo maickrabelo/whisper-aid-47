@@ -400,8 +400,7 @@ async function upgradeExistingAccount(supabase: any, ctx: {
   }
 
   // 3) Cria nova assinatura
-  const billingCycle = (subscriptionInfo?.plan?.recurrency_period === 12 || purchase?.recurrence_number === 12)
-    ? 'annual' : 'monthly';
+  const billingCycle = isAnnualPurchase(subscriptionInfo, purchase) ? 'annual' : 'monthly';
   // Prefer the plan's configured recurring price so promo/first-charge values
   // (e.g. R$ 9,90) don't overwrite the real monthly/annual amount.
   const planRecurringPrice = billingCycle === 'annual'

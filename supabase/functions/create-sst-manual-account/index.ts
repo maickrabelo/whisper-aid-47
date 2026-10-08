@@ -122,9 +122,9 @@ Deno.serve(async (req) => {
       .eq("id", userId);
 
     // 4. Role sst
-    const { error: roleErr } = await supabaseAdmin
-      .from("user_roles").update({ role: "sst" }).eq("user_id", userId);
-    if (roleErr) {
+    const { data: updatedRoles } = await supabaseAdmin
+      .from("user_roles").update({ role: "sst" }).eq("user_id", userId).select("user_id");
+    if (!updatedRoles || updatedRoles.length === 0) {
       await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "sst" });
     }
 

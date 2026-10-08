@@ -62,6 +62,7 @@ Updated: 23/08/2026
 - [Extra Company Slots](mem://features/extra-company-slots) — Gestoras SST que atingem o limite de empresas podem comprar slots extras a R$19,90/mês via `purchase-extra-company-slot` (Asaas recurring); coluna `sst_managers.extra_company_slots` + tabela `sst_extra_slot_purchases`
 - [Planos SMS Hotmart](mem://features/planos-sms-hotmart) — 5 planos hotmart_only (técnico/gestora/empresa SMS) com IA bloqueada, Ouvidoria off, PGR habilitado (`pgr_enabled` em `subscription_plans`); upgrades via `plan_upgrade_pricing` + `purchase-extra-employee-slot`
 - [PGR Kanban Board](mem://features/pgr-kanban-board) — Rota `/pgr/:companyId/kanban` com drag-and-drop (@dnd-kit), confirmação ao concluir/cancelar, reusa usePGRDashboardData
+- [Ouvidoria Smart todos os planos](mem://features/smart-ouvidoria-all-plans) — Liberada para qualquer plano com assinatura ativa/trial
 - [Conciliação de Assinaturas](mem://features/subscription-reconciliation) — Aba Conciliação no Master: upload planilha Hotmart (9,90 = teste 7d / 97,90 = mensal), prévia, edge function `reconcile-subscriptions`, histórico
 - [LTCAT Beta Privado](mem://features/ltcat-beta-module) — Gate LTCAT_BETA (só teste.sst@srsms.app); Fase 1 + 2B.1 prontas; seed das 29 regras BLOQUEADO até aprovação nominal; nunca iniciar fases seguintes sem autorização
 - [LTCAT avulso Hotmart](mem://features/ltcat-hotmart-standalone) — Plano Hotmart 1376605 libera LTCAT_BETA no webhook (conta existente só ganha o módulo; conta nova é criada com ele)

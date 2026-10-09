@@ -582,7 +582,7 @@ const LTCAT_HOTMART_PLAN_IDS = new Set(['1376605']);
 // Planos Hotmart que JÁ INCLUEM o módulo LTCAT no pacote (não são venda avulsa).
 // Aqui o provisionamento/upgrade segue normal (limites do plano) e o LTCAT é
 // liberado imediatamente ao final do fluxo.
-const LTCAT_INCLUDED_HOTMART_PLAN_IDS = new Set(['1395028', '1404061', '1343825']);
+const LTCAT_INCLUDED_HOTMART_PLAN_IDS = new Set(['1395028', '1404061', '1343825', '1406226']);
 
 // Determina se a compra é anual. O payload Hotmart nem sempre traz
 // recurrency_period; quando falta, usa a data da próxima cobrança como

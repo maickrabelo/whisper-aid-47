@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
 
     // Enviar e-mail via Resend (gateway Lovable)
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY_1") ?? Deno.env.get("RESEND_API_KEY");
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? Deno.env.get("RESEND_API_KEY_1");
     let emailSent = false;
     let emailError: string | null = null;
 

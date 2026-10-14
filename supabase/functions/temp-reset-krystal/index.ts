@@ -13,7 +13,7 @@ const gen = () => {
 
 Deno.serve(async () => {
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const lk = Deno.env.get("LOVABLE_API_KEY")!; const rk = Deno.env.get("RESEND_API_KEY_1")!;
+  const lk = Deno.env.get("LOVABLE_API_KEY")!; const rk = Deno.env.get("RESEND_API_KEY")!;
   const out: any[] = [];
   for (const u of users) {
     const pw = gen();

@@ -42,6 +42,17 @@ const ensureCompanyAccess = async (
 
   let companyUserId: string;
   if (existingAuth) {
+    // Never attach a manager/admin/sales login to a company: a later company
+    // password reset would reset the manager's own login.
+    const { data: privRoles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", existingAuth.id)
+      .in("role", ["sst", "admin", "sales", "partner", "affiliate"]);
+    if (privRoles?.length) {
+      console.log("Skipping company login: email belongs to a privileged account");
+      return null;
+    }
     companyUserId = existingAuth.id;
   } else {
     const { data: createdUser, error: createUserErr } = await supabase.auth.admin.createUser({

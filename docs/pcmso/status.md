@@ -5,7 +5,7 @@ Atualizado: 14/10/2026
 | Fase | Descrição | Release | Status |
 |---|---|---|---|
 | 0 | Diagnóstico e plano | — | Concluída |
-| 1 | Acesso e estrutura | A | Pendente |
+| 1 | Acesso e estrutura | A | Concluída (flag desligada em produção) |
 | 2 | Cadastros e migração | A | Pendente |
 | 3 | Programa e inventário | A | Pendente |
 | 4 | Protocolos e revisão médica | A | Pendente |
@@ -25,3 +25,11 @@ Atualizado: 14/10/2026
 5. Planos comerciais que incluirão o PCMSO.
 6. Limiar de anonimato dos agregados (sugestão inicial: 5).
 7. Política de retenção e base legal (com responsável de privacidade).
+
+## Fase 1 — entregue
+- Flag `PCMSO_BETA` criada **desligada** (global). Liberar exige: ligar a flag e conceder `feature_access` ao usuário.
+- Política de flag desligada: todas as leituras e escritas do módulo retornam vazio/negado; dados preservados.
+- Tabelas: `pcmso_professional_assignments`, `pcmso_programs`, `pcmso_audit_events`.
+- Funções: `pcmso_can(company, permissão)`, `pcmso_accessible_companies()`, `pcmso_has_clinical_assignment`.
+- Admin gerencia atribuições, mas não ganha acesso clínico; SST prepara, não aprova.
+- Rotas: `/pcmso` (FeatureGuard) e `/pcmso/empresa/:companyId` (404 sem `program.view`). Atalho no painel SST só com flag liberada.

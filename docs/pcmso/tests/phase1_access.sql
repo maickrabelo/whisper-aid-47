@@ -6,6 +6,11 @@ BEGIN;
 CREATE TEMP TABLE t_results(test text, expected boolean, got boolean) ON COMMIT DROP;
 GRANT ALL ON t_results TO authenticated;
 
+INSERT INTO auth.users(id, email, aud, role) VALUES
+ ('11111111-0000-0000-0000-000000000001','rh-a@example.invalid','authenticated','authenticated'),
+ ('22222222-0000-0000-0000-000000000002','sst-a@example.invalid','authenticated','authenticated'),
+ ('33333333-0000-0000-0000-000000000003','med-a@example.invalid','authenticated','authenticated'),
+ ('44444444-0000-0000-0000-000000000004','none@example.invalid','authenticated','authenticated');
 INSERT INTO public.companies(id, name) VALUES
   ('aaaaaaaa-0000-0000-0000-00000000000a', 'TESTE PCMSO A'),
   ('bbbbbbbb-0000-0000-0000-00000000000b', 'TESTE PCMSO B');

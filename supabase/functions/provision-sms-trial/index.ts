@@ -18,7 +18,7 @@ function genPassword() {
 
 async function sendWelcome(toEmail: string, password: string) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY_1") ?? Deno.env.get("RESEND_API_KEY");
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? Deno.env.get("RESEND_API_KEY_1");
   if (!LOVABLE_API_KEY || !RESEND_API_KEY) return { ok: false, error: "missing keys" };
   const loginUrl = "https://srsms.com.br/sst-dashboard";
   const r = await fetch(`${GATEWAY_URL}/emails`, {

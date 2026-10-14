@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
     const acceptUrl = buildAppUrl(`/convite-setor/${token}`);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY_1") ?? Deno.env.get("RESEND_API_KEY");
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? Deno.env.get("RESEND_API_KEY_1");
     if (LOVABLE_API_KEY && RESEND_API_KEY) {
       try {
         const html = emailHtml({ inviterName, companyName, departments: department_names, assessmentType: assessment_type, acceptUrl });

@@ -3040,6 +3040,150 @@ export type Database = {
           },
         ]
       }
+      pcmso_audit_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          company_id: string | null
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          justification: string | null
+          result: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          justification?: string | null
+          result?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          justification?: string | null
+          result?: string
+        }
+        Relationships: []
+      }
+      pcmso_professional_assignments: {
+        Row: {
+          clinical_role: string
+          company_id: string
+          created_at: string
+          crm: string | null
+          crm_uf: string | null
+          granted_by: string | null
+          id: string
+          revoked_at: string | null
+          updated_at: string
+          user_id: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          clinical_role: string
+          company_id: string
+          created_at?: string
+          crm?: string | null
+          crm_uf?: string | null
+          granted_by?: string | null
+          id?: string
+          revoked_at?: string | null
+          updated_at?: string
+          user_id: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          clinical_role?: string
+          company_id?: string
+          created_at?: string
+          crm?: string | null
+          crm_uf?: string | null
+          granted_by?: string | null
+          id?: string
+          revoked_at?: string | null
+          updated_at?: string
+          user_id?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_professional_assignments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_professional_assignments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_programs: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_programs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_programs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pgr_action_checklist_items: {
         Row: {
           action_item_id: string
@@ -5521,6 +5665,23 @@ export type Database = {
         Returns: Json
       }
       ltcat_user_can_access: { Args: { _company_id: string }; Returns: boolean }
+      pcmso_accessible_companies: {
+        Args: never
+        Returns: {
+          can_prepare: boolean
+          clinical_role: string
+          company_id: string
+          company_name: string
+        }[]
+      }
+      pcmso_can: {
+        Args: { _company_id: string; _permission: string }
+        Returns: boolean
+      }
+      pcmso_has_clinical_assignment: {
+        Args: { _company_id: string; _role?: string; _user_id: string }
+        Returns: boolean
+      }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }
       resolve_legal_rule: {

@@ -96,7 +96,7 @@ serve(async (req) => {
     // Get company
     const { data: company, error: companyError } = await supabaseAdmin
       .from('companies')
-      .select('id, name, cnpj')
+      .select('id, name, cnpj, email')
       .eq('id', company_id)
       .single();
 
@@ -107,28 +107,33 @@ serve(async (req) => {
       );
     }
 
+    // Users with SST/admin/sales roles are never treated as the company login:
+    // resetting them would lock the SST manager (or a collaborator) out of their own account.
+    const isPrivileged = async (uid: string) => {
+      const { data } = await supabaseAdmin.from('user_roles').select('role').eq('user_id', uid);
+      return (data || []).some((r: any) => ['sst', 'admin', 'sales'].includes(r.role));
+    };
+
     // Find user linked: first via profiles.company_id, then via user_companies
     let userId: string | null = null;
     let email: string | null = null;
 
-    const { data: profileMatch } = await supabaseAdmin
+    const { data: profileMatches } = await supabaseAdmin
       .from('profiles')
-      .select('id, full_name')
-      .eq('company_id', company_id)
-      .limit(1)
-      .maybeSingle();
-
-    if (profileMatch?.id) {
-      userId = profileMatch.id;
-    } else {
-      const { data: ucMatch } = await supabaseAdmin
-        .from('user_companies')
-        .select('user_id')
-        .eq('company_id', company_id)
-        .limit(1)
-        .maybeSingle();
-      if (ucMatch?.user_id) userId = ucMatch.user_id;
+      .select('id')
+      .eq('company_id', company_id);
+    const { data: ucMatches } = await supabaseAdmin
+      .from('user_companies')
+      .select('user_id')
+      .eq('company_id', company_id);
+    const candidates = [
+      ...(profileMatches || []).map((p: any) => p.id),
+      ...(ucMatches || []).map((u: any) => u.user_id),
+    ];
+    for (const cid of candidates) {
+      if (!(await isPrivileged(cid))) { userId = cid; break; }
     }
+
 
     const tempPassword = generateTempPassword(company.name);
 

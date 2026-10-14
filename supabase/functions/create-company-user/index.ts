@@ -79,6 +79,17 @@ Deno.serve(async (req) => {
     const existingUser = existingUsers?.users.find(u => u.email === normalizedEmail);
 
     if (existingUser) {
+      const { data: privRoles } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", existingUser.id)
+        .in("role", ["sst", "admin", "sales", "partner", "affiliate"]);
+      if (privRoles?.length) {
+        return new Response(
+          JSON.stringify({ error: "Este e-mail já é o login de uma gestora/equipe. Use um e-mail diferente para o acesso da empresa." }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       // User exists — check which companies they already have access to
       const { data: existingCompanies } = await supabaseAdmin
         .from("user_companies")

@@ -13,7 +13,7 @@ const gen = () => {
 
 Deno.serve(async () => {
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const key = Deno.env.get("RESEND_API_KEY")!;
+  const lk = Deno.env.get("LOVABLE_API_KEY")!; const rk = Deno.env.get("RESEND_API_KEY_1")!;
   const out: any[] = [];
   for (const u of users) {
     const pw = gen();
@@ -27,9 +27,9 @@ Deno.serve(async () => {
       <p>No primeiro acesso o sistema vai pedir para você criar uma nova senha.</p>
       <p><a href="https://srsms.com.br/auth" style="display:inline-block;background:#16a34a;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none">Acessar a plataforma</a></p>
       <p>Dúvidas? WhatsApp: <a href="https://wa.me/5527998443852">https://wa.me/5527998443852</a></p></div>`;
-    const r = await fetch("https://api.resend.com/emails", {
+    const r = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${lk}`, "X-Connection-Api-Key": rk, "Content-Type": "application/json" },
       body: JSON.stringify({ from: "Sr.SMS <no-reply@srsmsapp.com.br>", to: [u.email], subject: "Seu acesso ao Sr. SMS foi restabelecido", html }),
     });
     out.push({ email: u.email, sent: r.ok, detail: r.ok ? undefined : await r.text() });

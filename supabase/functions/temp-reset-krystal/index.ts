@@ -30,7 +30,7 @@ Deno.serve(async () => {
     const r = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${lk}`, "X-Connection-Api-Key": rk, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: "Sr.SMS <no-reply@srsmsapp.com.br>", to: [u.email], subject: "Seu acesso ao Sr. SMS foi restabelecido", html }),
+      body: JSON.stringify({ from: "Sr. SMS <noreply@soia.app.br>", to: [u.email], subject: "Seu acesso ao Sr. SMS foi restabelecido", html }),
     });
     out.push({ email: u.email, sent: r.ok, detail: r.ok ? undefined : await r.text() });
   }

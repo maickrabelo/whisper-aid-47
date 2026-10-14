@@ -96,7 +96,7 @@ serve(async (req) => {
     // Get company
     const { data: company, error: companyError } = await supabaseAdmin
       .from('companies')
-      .select('id, name, cnpj')
+      .select('id, name, cnpj, email')
       .eq('id', company_id)
       .single();
 
@@ -107,28 +107,33 @@ serve(async (req) => {
       );
     }
 
+    // Users with SST/admin/sales roles are never treated as the company login:
+    // resetting them would lock the SST manager (or a collaborator) out of their own account.
+    const isPrivileged = async (uid: string) => {
+      const { data } = await supabaseAdmin.from('user_roles').select('role').eq('user_id', uid);
+      return (data || []).some((r: any) => ['sst', 'admin', 'sales'].includes(r.role));
+    };
+
     // Find user linked: first via profiles.company_id, then via user_companies
     let userId: string | null = null;
     let email: string | null = null;
 
-    const { data: profileMatch } = await supabaseAdmin
+    const { data: profileMatches } = await supabaseAdmin
       .from('profiles')
-      .select('id, full_name')
-      .eq('company_id', company_id)
-      .limit(1)
-      .maybeSingle();
-
-    if (profileMatch?.id) {
-      userId = profileMatch.id;
-    } else {
-      const { data: ucMatch } = await supabaseAdmin
-        .from('user_companies')
-        .select('user_id')
-        .eq('company_id', company_id)
-        .limit(1)
-        .maybeSingle();
-      if (ucMatch?.user_id) userId = ucMatch.user_id;
+      .select('id')
+      .eq('company_id', company_id);
+    const { data: ucMatches } = await supabaseAdmin
+      .from('user_companies')
+      .select('user_id')
+      .eq('company_id', company_id);
+    const candidates = [
+      ...(profileMatches || []).map((p: any) => p.id),
+      ...(ucMatches || []).map((u: any) => u.user_id),
+    ];
+    for (const cid of candidates) {
+      if (!(await isPrivileged(cid))) { userId = cid; break; }
     }
+
 
     const tempPassword = generateTempPassword(company.name);
 
@@ -145,6 +150,13 @@ serve(async (req) => {
       // Check if an auth user with this email already exists
       const { data: existingList } = await supabaseAdmin.auth.admin.listUsers();
       const existing = existingList?.users?.find((u: any) => u.email?.toLowerCase() === companyEmail);
+
+      if (existing && (await isPrivileged(existing.id))) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'O e-mail desta empresa já é usado como login de gestora SST ou colaborador. Edite a empresa e informe outro e-mail antes de gerar o acesso.' }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
 
       if (existing) {
         userId = existing.id;
@@ -217,9 +229,10 @@ serve(async (req) => {
     if (send_email && email) {
       try {
         const resendKey = Deno.env.get('RESEND_API_KEY');
-        if (resendKey) {
+        const lovableKey = Deno.env.get('LOVABLE_API_KEY');
+        if (resendKey && lovableKey) {
           const loginUrl = `${supabaseUrl.replace('.supabase.co', '')}`; // not used; we link to app
-          const appUrl = Deno.env.get('APP_PUBLIC_URL') || 'https://srsmsapp.com.br';
+          const appUrl = Deno.env.get('APP_PUBLIC_URL') || 'https://srsms.com.br';
           const html = `
             <div style="font-family: Arial, sans-serif; max-width: 560px; margin:0 auto; padding:24px; color:#111;">
               <h2 style="color:#16a34a;">Acesso ao seu painel — Ouvidoria Smart</h2>
@@ -231,11 +244,11 @@ serve(async (req) => {
               <p><a href="${appUrl}/auth" style="display:inline-block;background:#16a34a;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;">Entrar agora</a></p>
               <p style="font-size:12px;color:#666;margin-top:24px;">Se você não esperava este e-mail, ignore.</p>
             </div>`;
-          const r = await fetch('https://api.resend.com/emails', {
+          const r = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+            headers: { 'Authorization': `Bearer ${lovableKey}`, 'X-Connection-Api-Key': resendKey, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              from: 'Sr.SMS <no-reply@srsmsapp.com.br>',
+              from: 'Sr. SMS <noreply@soia.app.br>',
               to: [email],
               subject: 'Seus dados de acesso — Ouvidoria Smart',
               html,

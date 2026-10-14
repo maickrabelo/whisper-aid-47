@@ -54,7 +54,14 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
         body: { company_id: company.id, send_email: sendEmail },
       });
 
-      if (error) throw error;
+      if (error) {
+        let msg = error.message;
+        try {
+          const body = await (error as any).context?.json?.();
+          if (body?.error) msg = body.error === 'Unauthorized' ? 'Sua sessão expirou. Saia e entre de novo no sistema.' : body.error;
+        } catch { /* ignore */ }
+        throw new Error(msg);
+      }
       if (!data?.success) throw new Error(data?.error || 'Erro ao resetar senha');
 
       setResult({

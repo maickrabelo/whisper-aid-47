@@ -46,7 +46,7 @@ export async function sendCollaboratorInvite(opts: {
   acceptUrl: string;
 }): Promise<{ ok: boolean; error?: string }> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY_1") ?? Deno.env.get("RESEND_API_KEY");
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? Deno.env.get("RESEND_API_KEY_1");
   if (!LOVABLE_API_KEY || !RESEND_API_KEY) return { ok: false, error: "Email keys missing" };
 
   try {

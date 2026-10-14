@@ -193,6 +193,7 @@ const SSTDashboard = () => {
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
   const { allowed: hasLtcatBeta } = useFeatureAccess(LTCAT_BETA);
+  const { allowed: hasPcmsoBeta } = useFeatureAccess('PCMSO_BETA');
   const { allowed: aepAllowed } = useAEPBetaAccess();
   const { isSmartOnly } = useSmartOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
@@ -255,8 +256,18 @@ const SSTDashboard = () => {
         path: '/aep',
       }];
     }
+    if (hasPcmsoBeta) {
+      result = [...result, {
+        id: 'tool-pcmso',
+        icon: Activity,
+        title: 'PCMSO (BETA)',
+        description: 'Programa de Controle Médico de Saúde Ocupacional (NR-7)',
+        highlights: ['BETA', 'NR-7'],
+        path: '/pcmso',
+      }];
+    }
     return result;
-  }, [companies, smartOuvidoriaIds, isSmartOnly, hasPgrShortcut, hasPGRAccess, hasLtcatBeta, aepAllowed]);
+  }, [companies, smartOuvidoriaIds, isSmartOnly, hasPgrShortcut, hasPGRAccess, hasLtcatBeta, hasPcmsoBeta, aepAllowed]);
 
   const toolCards = displayedTools.map((tool, idx) => (
     <Card

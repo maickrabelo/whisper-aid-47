@@ -6,9 +6,10 @@
 - [x] Nenhuma alteração de banco ou comportamento.
 
 ## Fase 1 — Acesso e estrutura
-- [ ] Conta sem permissão não acessa por interface nem por API.
-- [ ] Contas autorizadas veem apenas suas empresas (teste com 2 empresas/perfis).
-- [ ] Flag desligada impede novas operações.
+- [x] Conta sem permissão não acessa por interface nem por API.
+- [x] Contas autorizadas veem apenas suas empresas (teste com 2 empresas/perfis).
+- [x] Flag desligada impede novas operações.
+Evidência: `tests/phase1_access.sql` — 21/21 PASS em 14/10/2026 (transação desfeita).
 
 ## Fase 2 — Cadastros e migração
 - [ ] Duas execuções do backfill não duplicam registros.

@@ -151,6 +151,13 @@ serve(async (req) => {
       const { data: existingList } = await supabaseAdmin.auth.admin.listUsers();
       const existing = existingList?.users?.find((u: any) => u.email?.toLowerCase() === companyEmail);
 
+      if (existing && (await isPrivileged(existing.id))) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'O e-mail desta empresa já é usado como login de gestora SST ou colaborador. Edite a empresa e informe outro e-mail antes de gerar o acesso.' }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+
       if (existing) {
         userId = existing.id;
         email = existing.email!;

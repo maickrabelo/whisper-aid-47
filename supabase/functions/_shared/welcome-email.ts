@@ -97,7 +97,7 @@ export async function sendWelcomeEmail(
   if (!recipient) return { ok: false, error: "missing recipient" };
 
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY_1") ?? Deno.env.get("RESEND_API_KEY");
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? Deno.env.get("RESEND_API_KEY_1");
   if (!LOVABLE_API_KEY || !RESEND_API_KEY) {
     const msg = "Email keys missing";
     await logAttempt(supabase, recipient, "skipped", msg, context);

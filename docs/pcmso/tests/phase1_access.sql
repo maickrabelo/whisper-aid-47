@@ -97,5 +97,6 @@ SELECT pg_temp.as_user('33333333-0000-0000-0000-000000000003');
 INSERT INTO t_results VALUES ('Médico revogado', false, public.pcmso_can('aaaaaaaa-0000-0000-0000-00000000000a','clinical.read'));
 RESET role;
 
-SELECT test, expected, got, (expected = got) AS pass FROM t_results;
+-- Resultado é devolvido como erro proposital, garantindo que nada fique gravado.
+DO $$ BEGIN RAISE EXCEPTION 'PCMSO_TEST_RESULTS %', (SELECT string_agg(test || '=' || CASE WHEN expected = got THEN 'PASS' ELSE 'FAIL' END, ' | ') FROM t_results); END $$;
 ROLLBACK;

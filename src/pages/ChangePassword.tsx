@@ -1,3 +1,4 @@
+import { translatePasswordError } from '@/lib/errorUtils';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -108,7 +109,7 @@ const ChangePassword: React.FC = () => {
       console.error('Error changing password:', error);
       toast({
         title: 'Erro ao atualizar senha',
-        description: error.message || 'Tente novamente.',
+        description: translatePasswordError(error.message),
         variant: 'destructive',
       });
     } finally {

@@ -1,3 +1,4 @@
+import { translatePasswordError } from '@/lib/errorUtils';
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -119,7 +120,7 @@ const ResetPassword = () => {
     } catch (error: any) {
       toast({
         title: "Erro ao redefinir senha",
-        description: error.message,
+        description: translatePasswordError(error.message),
         variant: "destructive",
       });
     } finally {

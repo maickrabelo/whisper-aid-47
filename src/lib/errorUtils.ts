@@ -85,3 +85,11 @@ export function createSafeErrorResponse(error: any, statusCode: number = 500): R
     }
   );
 }
+
+export const translatePasswordError = (msg?: string): string => {
+  const m = msg || '';
+  if (/weak|easy to guess|pwned/i.test(m)) return 'Essa senha é muito comum. Escolha outra senha, misturando letras, números e símbolos.';
+  if (/should be different|same password/i.test(m)) return 'A nova senha precisa ser diferente da senha atual.';
+  if (/at least|characters/i.test(m)) return 'A senha precisa ter pelo menos 8 caracteres.';
+  return m || 'Tente novamente.';
+};

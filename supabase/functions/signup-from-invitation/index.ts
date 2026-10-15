@@ -105,7 +105,16 @@ Deno.serve(async (req) => {
         user_metadata: { full_name: fullName },
       });
       if (createErr) {
-        return new Response(JSON.stringify({ error: createErr.message }), {
+        console.error("createUser failed", (createErr as any)?.code, createErr.message);
+        const code = (createErr as any)?.code ?? "";
+        const raw = createErr.message || "";
+        let msg = raw;
+        if (code === "weak_password" || /weak|pwned|easy to guess/i.test(raw)) {
+          msg = "Essa senha é muito comum e já apareceu em vazamentos na internet. Escolha outra senha, misturando letras, números e símbolos (ex.: Marcelo#2026Sms).";
+        } else if (/already (been )?registered|already exists/i.test(raw)) {
+          msg = "Já existe uma conta com este e-mail. Clique em \"Já tenho conta\" para entrar.";
+        }
+        return new Response(JSON.stringify({ error: msg, code }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

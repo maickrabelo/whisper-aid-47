@@ -10,6 +10,20 @@ import { useToast } from "@/hooks/use-toast";
 
 type Status = "loading" | "needs_account" | "wrong_email" | "success" | "error";
 
+// Lê a mensagem real enviada pela função (o padrão é só "non-2xx status code").
+async function readFunctionError(error: any): Promise<string> {
+  try {
+    const ctx = error?.context;
+    if (ctx && typeof ctx.json === "function") {
+      const body = await ctx.json();
+      if (body?.error) return String(body.error);
+    }
+  } catch {
+    /* ignore */
+  }
+  return error?.message || "Erro inesperado.";
+}
+
 const AcceptInvitation = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
@@ -94,7 +108,7 @@ const AcceptInvitation = () => {
       const { data, error } = await supabase.functions.invoke("signup-from-invitation", {
         body: { action: "signup", token, full_name: fullName, password },
       });
-      if (error) throw error;
+      if (error) throw new Error(await readFunctionError(error));
       if ((data as any)?.error) throw new Error((data as any).error);
 
       // Sign in

@@ -235,7 +235,8 @@ const BetaOuvidoriaDashboard = () => {
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e: any) {
-      toast({ title: "Erro ao baixar", description: e.message, variant: "destructive" });
+      const msg = e?.message && e.message !== "{}" ? e.message : "Você não tem permissão para abrir este anexo ou ele não está mais disponível.";
+      toast({ title: "Erro ao baixar", description: msg, variant: "destructive" });
     }
   };
 

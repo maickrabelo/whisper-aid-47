@@ -115,11 +115,7 @@ const BetaOuvidoriaTrack = () => {
           </Card>
         )}
 
-        <div className="text-center">
-          <Link to="/" className="text-sm text-primary hover:underline">Voltar ao início</Link>
-        </div>
       </main>
-      <Footer />
     </div>
   );
 };

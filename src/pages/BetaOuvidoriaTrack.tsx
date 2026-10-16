@@ -1,8 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -52,7 +49,6 @@ const BetaOuvidoriaTrack = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
       <main className="flex-1 max-w-3xl mx-auto w-full p-4 md:p-8 space-y-6">
         <Card>
           <CardHeader>
@@ -118,11 +114,7 @@ const BetaOuvidoriaTrack = () => {
           </Card>
         )}
 
-        <div className="text-center">
-          <Link to="/" className="text-sm text-primary hover:underline">Voltar ao início</Link>
-        </div>
       </main>
-      <Footer />
     </div>
   );
 };

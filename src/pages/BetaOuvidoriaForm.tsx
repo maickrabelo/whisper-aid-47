@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -114,24 +112,31 @@ const BetaOuvidoriaForm = () => {
   }
   if (!company) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center p-6">
-          <Card className="max-w-md">
-            <CardHeader>
-              <CardTitle>Canal indisponível</CardTitle>
-              <CardDescription>Este canal beta não está disponível para a empresa informada.</CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-        <Footer />
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Canal indisponível</CardTitle>
+            <CardDescription>Este canal beta não está disponível para a empresa informada.</CardDescription>
+          </CardHeader>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
+      <header className="border-b">
+        <div className="max-w-3xl mx-auto w-full px-4 py-3 flex items-center gap-3">
+          {company.logo_url ? (
+            <img src={company.logo_url} alt={`Logo ${company.name}`} className="h-9 w-9 object-contain rounded-md" />
+          ) : (
+            <div className="h-9 w-9 rounded-md bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+              {company.name.substring(0, 2).toUpperCase()}
+            </div>
+          )}
+          <span className="font-semibold text-sm md:text-base">{company.name}</span>
+        </div>
+      </header>
       <main className="flex-1 max-w-3xl mx-auto w-full p-4 md:p-8 space-y-6">
         <Card>
           <CardHeader>
@@ -273,7 +278,6 @@ const BetaOuvidoriaForm = () => {
           </Button>
         </div>
       </main>
-      <Footer />
 
       <Dialog open={!!protocol} onOpenChange={(o) => { if (!o) window.location.href = "/"; }}>
         <DialogContent>

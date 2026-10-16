@@ -278,7 +278,6 @@ const BetaOuvidoriaForm = () => {
           </Button>
         </div>
       </main>
-      <Footer />
 
       <Dialog open={!!protocol} onOpenChange={(o) => { if (!o) window.location.href = "/"; }}>
         <DialogContent>

@@ -1,6 +1,6 @@
-# PCMSO — Arquitetura (Fase 0)
+# PCMSO — Arquitetura (Fase 0 e fundação da Fase 1)
 
-Status: proposta. Nenhuma estrutura `pcmso_*` ou rota `/pcmso*` existe ainda. Fonte: especificação "Objetivo e forma de uso" (anexada em 14/10/2026).
+Status: fundação implementada com feature flag desligada por padrão, rotas protegidas e autorização por empresa e ação. As fases clínicas permanecem planejadas e não são ativadas em produção. Fonte: especificação "Objetivo e forma de uso" (anexada em 14/10/2026).
 
 ## Princípios
 - Módulo dentro do app atual (React + Vite + Lovable Cloud). Sem app separado.
@@ -11,6 +11,7 @@ Status: proposta. Nenhuma estrutura `pcmso_*` ou rota `/pcmso*` existe ainda. Fo
 - Aprovar, publicar, revisar e emitir = operações transacionais no backend (RPC security definer).
 - Versão aprovada referencia snapshot + hash da origem; mudanças posteriores geram `pcmso_change_requests`.
 - Flag `PCMSO_BETA` desligada por padrão (mesmo padrão do `LTCAT_BETA`: `feature_access` + RPC `has_feature_access` + `FeatureGuard`). Habilitação comercial ≠ autorização clínica.
+- A autorização específica usa `pcmso_has_permission(p_company_id, p_action)`, com a empresa e a ação validadas no backend. A listagem de empresas acessíveis continua centralizada em `pcmso_accessible_companies()`.
 - Enum `app_role` preservado; papel médico = atribuição por empresa (`pcmso_professional_assignments`).
 
 ## Pontos de integração (código existente)
@@ -27,8 +28,8 @@ Status: proposta. Nenhuma estrutura `pcmso_*` ou rota `/pcmso*` existe ainda. Fo
 | Psicossocial/Clima/Burnout/Ouvidoria | tabelas `hseit_*`, `copsoq_*`, `burnout_*`, `climate_surveys`, `reports` | apenas agregados com limiar (sugestão 5) | 8 |
 | Financeiro | assinaturas Asaas/Hotmart | não usado para exames | — |
 
-## Rotas propostas
-`/pcmso`, `/pcmso/empresa/:companyId`, `/pcmso/programa/:programId`, `/pcmso/empresa/:companyId/trabalhadores`, `/pcmso/vinculo/:employmentId`, `/pcmso/empresa/:companyId/exames`, `/pcmso/atendimento/:encounterId`, `/pcmso/empresa/:companyId/relatorios`. Rotas só organizam navegação; autorização efetiva no banco.
+## Rotas
+As rotas iniciais implementadas são `/pcmso` e `/pcmso/empresa/:companyId`. A primeira exige a feature flag `PCMSO_BETA`; a segunda exige autorização específica para a empresa antes de montar a tela. As rotas futuras são `/pcmso/programa/:programId`, `/pcmso/empresa/:companyId/trabalhadores`, `/pcmso/vinculo/:employmentId`, `/pcmso/empresa/:companyId/exames`, `/pcmso/atendimento/:encounterId` e `/pcmso/empresa/:companyId/relatorios`. Rotas só organizam navegação; autorização efetiva permanece no banco.
 
 ## Editor do programa
 Abas: Identificação; Fontes e riscos; Grupos e funções; Protocolos; Ações e cronograma; Revisão médica; Documento; Histórico. Ausência de informação aparece como pendência.

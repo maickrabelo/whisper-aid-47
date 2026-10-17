@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check, Sparkles, Repeat, Briefcase, Building2 } from "lucide-react";
+import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check, Sparkles, Repeat, Briefcase, Building2, Stethoscope } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useWhiteLabel, BrandColorTheme } from '@/contexts/WhiteLabelContext';
 import { useSmsPlan } from '@/hooks/useSmsPlan';
 import { useCompanyHasSST } from '@/hooks/useCompanyHasSST';
+import { usePcmsoCompanies } from '@/hooks/usePcmsoAccess';
 import CompanySwitcher from '@/components/CompanySwitcher';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
@@ -45,6 +46,7 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
   const canSeeFinanceiro = role === 'sst' || (role === 'company' && !companyHasSST);
   const { brandLogo, isWhiteLabel, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
   const { isSmsPlan } = useSmsPlan();
+  const { companies: pcmsoCompanies } = usePcmsoCompanies();
   const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');
   const { resetTour: resetCompanyTour } = useOnboarding('company-dashboard');
   const isLoggedIn = !!user;
@@ -251,6 +253,14 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
                     {role === 'sst' && (
                       <DropdownMenuItem asChild>
                         <Link to="/sst-dashboard">Dashboard SST</Link>
+                      </DropdownMenuItem>
+                    )}
+                    {pcmsoCompanies.length > 0 && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/pcmso" className="flex items-center gap-2">
+                          <Stethoscope className="h-4 w-4" />
+                          PCMSO Beta
+                        </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem asChild>

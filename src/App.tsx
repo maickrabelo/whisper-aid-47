@@ -93,6 +93,7 @@ const AEPHub = React.lazy(() => import("./pages/AEPHub"));
 const NRFinesCalculator = React.lazy(() => import("./pages/NRFinesCalculator"));
 const PCMSOHub = React.lazy(() => import("./pages/PCMSOHub"));
 const PCMSOCompany = React.lazy(() => import("./pages/PCMSOCompany"));
+const PcmsoCompanyGuard = React.lazy(() => import("./components/pcmso/PcmsoCompanyGuard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -215,7 +216,7 @@ const App = () => (
                 <Route path="/ouvidoria-beta/:companyId" element={<BetaOuvidoriaForm />} />
                 <Route path="/calculadora-multas" element={<NRFinesCalculator />} />
                 <Route path="/pcmso" element={<FeatureGuard featureKey="PCMSO_BETA"><PCMSOHub /></FeatureGuard>} />
-                <Route path="/pcmso/empresa/:companyId" element={<PCMSOCompany />} />
+                <Route path="/pcmso/empresa/:companyId" element={<PcmsoCompanyGuard><PCMSOCompany /></PcmsoCompanyGuard>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

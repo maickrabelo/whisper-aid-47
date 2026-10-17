@@ -64,6 +64,7 @@ const PCMSOProgram = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const view = usePcmsoCan(program?.company_id, 'program.view');
   const prepare = usePcmsoCan(program?.company_id, 'program.prepare');
   const approve = usePcmsoCan(program?.company_id, 'program.approve');
 
@@ -147,7 +148,7 @@ const PCMSOProgram = () => {
     await updateProgram({ status: 'aprovado' });
   };
 
-  if (loading || (program && (prepare.loading || approve.loading))) {
+  if (loading || (program && (view.loading || prepare.loading || approve.loading))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label="Carregando programa" />
@@ -155,7 +156,7 @@ const PCMSOProgram = () => {
     );
   }
 
-  if (!program || !program.company_id || (!prepare.allowed && !approve.allowed)) {
+  if (!program || !program.company_id || !view.allowed) {
     return <NotFound />;
   }
 

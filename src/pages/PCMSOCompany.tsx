@@ -80,8 +80,20 @@ const PCMSOCompany = () => {
           <div className="space-y-2">
             {programs.map((p) => (
               <Card key={p.id}><CardContent className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> {p.title}</div>
-                <Badge variant="outline">{STATUS_LABEL[p.status] ?? p.status}</Badge>
+                <button
+                  type="button"
+                  className="flex min-w-0 items-center gap-2 text-left hover:text-primary"
+                  onClick={() => navigate(`/pcmso/programa/${p.id}`)}
+                >
+                  <FileText className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="truncate">{p.title}</span>
+                </button>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{STATUS_LABEL[p.status] ?? p.status}</Badge>
+                  <Button size="sm" variant="ghost" onClick={() => navigate(`/pcmso/programa/${p.id}`)}>
+                    Abrir
+                  </Button>
+                </div>
               </CardContent></Card>
             ))}
           </div>

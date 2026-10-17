@@ -14,15 +14,24 @@ export interface PcmsoCompany {
 export function usePcmsoCompanies() {
   const [companies, setCompanies] = useState<PcmsoCompany[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
-      const { data, error } = await (supabase as any).rpc('pcmso_accessible_companies');
+      setLoading(true);
+      setError(null);
+
+      const { data, error: rpcError } = await (supabase as any).rpc('pcmso_accessible_companies');
       if (cancelled) return;
 
-      setCompanies(error ? [] : (data as PcmsoCompany[]) ?? []);
+      if (rpcError) {
+        setCompanies([]);
+        setError('Não foi possível carregar as empresas liberadas para o PCMSO.');
+      } else {
+        setCompanies((data as PcmsoCompany[]) ?? []);
+      }
       setLoading(false);
     })();
 
@@ -31,7 +40,7 @@ export function usePcmsoCompanies() {
     };
   }, []);
 
-  return { companies, loading };
+  return { companies, loading, error };
 }
 
 /**
@@ -46,9 +55,9 @@ export function usePcmsoCan(companyId: string | undefined, permission: string) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setAllowed(false);
 
     if (!companyId) {
-      setAllowed(false);
       setLoading(false);
       return;
     }

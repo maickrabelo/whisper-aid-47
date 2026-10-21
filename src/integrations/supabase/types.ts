@@ -3170,6 +3170,7 @@ export type Database = {
           crm_uf: string | null
           granted_by: string | null
           id: string
+          professional_name: string | null
           revoked_at: string | null
           updated_at: string
           user_id: string
@@ -3184,6 +3185,7 @@ export type Database = {
           crm_uf?: string | null
           granted_by?: string | null
           id?: string
+          professional_name?: string | null
           revoked_at?: string | null
           updated_at?: string
           user_id: string
@@ -3198,6 +3200,7 @@ export type Database = {
           crm_uf?: string | null
           granted_by?: string | null
           id?: string
+          professional_name?: string | null
           revoked_at?: string | null
           updated_at?: string
           user_id?: string
@@ -5826,6 +5829,21 @@ export type Database = {
       pcmso_has_permission: {
         Args: { p_action: string; p_company_id: string }
         Returns: boolean
+      }
+      pcmso_register_professional: {
+        Args: {
+          _company_id: string
+          _crm: string
+          _crm_uf: string
+          _email: string
+          _name: string
+          _role: string
+        }
+        Returns: string
+      }
+      pcmso_revoke_professional: {
+        Args: { _assignment_id: string }
+        Returns: undefined
       }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }

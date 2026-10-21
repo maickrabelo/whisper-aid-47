@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePcmsoCan } from '@/hooks/usePcmsoAccess';
 import { toast } from 'sonner';
 import NotFound from './NotFound';
+import { PcmsoProfessionalsCard } from '@/components/pcmso/PcmsoProfessionalsCard';
 
 interface Program {
   id: string;
@@ -151,6 +152,8 @@ const PCMSOCompany = () => {
             </CardContent>
           </Card>
         )}
+
+        {companyId && <PcmsoProfessionalsCard companyId={companyId} canManage={prepare.allowed} />}
 
         {programs.length === 0 ? (
           <Card>

@@ -33,3 +33,8 @@ Atualizado: 14/10/2026
 - Funções: `pcmso_can(company, permissão)`, `pcmso_accessible_companies()`, `pcmso_has_clinical_assignment`.
 - Admin gerencia atribuições, mas não ganha acesso clínico; SST prepara, não aprova.
 - Rotas: `/pcmso` (FeatureGuard) e `/pcmso/empresa/:companyId` (404 sem `program.view`). Atalho no painel SST só com flag liberada.
+
+## Correção pós-GitHub (21/10/2026)
+- `usePcmsoCan` voltou a usar `pcmso_can` (a `pcmso_permissions` ficou vazia e bloqueava todos).
+- Policies de `pcmso_programs`/`pcmso_audit_events` passaram a usar `pcmso_can` (inclui Gestora SST e médico; respeita a flag). Sem DELETE.
+- `pcmso_permissions` e `pcmso_has_permission` marcadas DEPRECATED.

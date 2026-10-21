@@ -63,9 +63,9 @@ export function usePcmsoCan(companyId: string | undefined, permission: string) {
     }
 
     (async () => {
-      const { data, error } = await (supabase as any).rpc('pcmso_has_permission', {
-        p_company_id: companyId,
-        p_action: permission,
+      const { data, error } = await (supabase as any).rpc('pcmso_can', {
+        _company_id: companyId,
+        _permission: permission,
       });
 
       if (cancelled) return;

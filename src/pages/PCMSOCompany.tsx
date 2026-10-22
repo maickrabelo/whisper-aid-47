@@ -10,6 +10,7 @@ import { usePcmsoCan } from '@/hooks/usePcmsoAccess';
 import { toast } from 'sonner';
 import NotFound from './NotFound';
 import { PcmsoProfessionalsCard } from '@/components/pcmso/PcmsoProfessionalsCard';
+import { PcmsoWorkersCard } from '@/components/pcmso/PcmsoWorkersCard';
 
 interface Program {
   id: string;
@@ -154,6 +155,7 @@ const PCMSOCompany = () => {
         )}
 
         {companyId && <PcmsoProfessionalsCard companyId={companyId} canManage={prepare.allowed} />}
+        {companyId && <PcmsoWorkersCard companyId={companyId} canManage={prepare.allowed} />}
 
         {programs.length === 0 ? (
           <Card>

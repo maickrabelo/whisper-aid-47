@@ -3157,6 +3157,55 @@ export type Database = {
           },
         ]
       }
+      pcmso_inventory_reviews: {
+        Row: {
+          company_id: string
+          id: string
+          notes: string
+          reviewed_at: string
+          reviewed_by: string | null
+          snapshot_id: string
+        }
+        Insert: {
+          company_id: string
+          id?: string
+          notes?: string
+          reviewed_at?: string
+          reviewed_by?: string | null
+          snapshot_id: string
+        }
+        Update: {
+          company_id?: string
+          id?: string
+          notes?: string
+          reviewed_at?: string
+          reviewed_by?: string | null
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_inventory_reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_inventory_reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_inventory_reviews_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: true
+            referencedRelation: "pcmso_source_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pcmso_permissions: {
         Row: {
           action: string

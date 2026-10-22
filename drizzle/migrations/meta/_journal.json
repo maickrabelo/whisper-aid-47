@@ -50,6 +50,13 @@
       "when": 1792707327932,
       "tag": "0006_pcmso_phase3_source_inventory",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792707486901,
+      "tag": "0007_pcmso_inventory_manual_review",
+      "breakpoints": true
     }
   ]
 }

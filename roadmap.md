@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] PCMSO etapa 3: inventário rastreável do PGR/AEP, cópia protegida e pendências de alteração.
-- [ ] Validar permissões, repetição da importação e fluxo na conta piloto.
+- [x] PCMSO etapa 3: inventário rastreável do PGR/AEP, cópia protegida e pendências de alteração.
+- [x] Validar permissões, repetição da importação e fluxo na conta piloto.
 
 - [x] Listar setores avaliados em tópicos nos PDFs, sem cortes.
 - [x] Padronizar nomes de setores e endereços sem caixa alta.

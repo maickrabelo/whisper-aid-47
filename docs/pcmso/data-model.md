@@ -2,6 +2,8 @@
 
 Status: proposto. Nomes a confirmar contra o schema real antes de cada migração. Todas as migrações são **aditivas** (nenhum DROP/RENAME na 1ª release). Não criar tabelas antes da fase que as usa.
 
+Implementação da Fase 3: `pcmso_source_snapshots` (único programa+PGR, conteúdo JSONB integral e hash); `pcmso_change_requests` (pendência por programa+PGR); `pcmso_inventory_reviews` (observações por cópia). Referências à origem não têm cascata: conteúdo aprovado sobrevive à exclusão da fonte. Versões documentais adicionais permanecem para a fase de documentos.
+
 ## Convenções
 UUID; `timestamptz` para eventos; `date` para datas civis; `company_id` em toda entidade por empresa; `created_by`/`updated_by`. CPF nunca em URL, nome de arquivo ou log. Integridade entre empresas por FK composta `(company_id, id)` ou trigger de validação. Sem cascata sobre histórico ocupacional/médico.
 

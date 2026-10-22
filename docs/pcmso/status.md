@@ -7,7 +7,7 @@ Atualizado: 14/10/2026
 | 0 | Diagnóstico e plano | — | Concluída |
 | 1 | Acesso e estrutura | A | Concluída (flag desligada em produção) |
 | 2 | Cadastros e migração | A | Concluída (22/10/2026) |
-| 3 | Programa e inventário | A | Pendente |
+| 3 | Programa e inventário | A | Implementada; validação médica do piloto pendente |
 | 4 | Protocolos e revisão médica | A | Pendente |
 | 5 | Documento e ações | A | Pendente |
 | 6 | Solicitações e vencimentos | B | Pendente |
@@ -44,3 +44,11 @@ Atualizado: 14/10/2026
 - RPC `pcmso_import_pgr_workers(company, dry_run)`: prévia antes de gravar, idempotente, une só por CPF, rejeita CPF inválido.
 - RPC `pcmso_worker_event`: fecha o vínculo atual e abre novo, sem apagar histórico.
 - Tela: quadro "Trabalhadores" na página da empresa (CPF mascarado).
+
+## Fase 3 — inventário (22/10/2026)
+- Cópia integral do PGR, GHEs e AEPs da mesma empresa em `pcmso_source_snapshots`, com hash e identificação das origens; vínculos por UUID, nunca por nome.
+- Importação explícita e idempotente; fatores AEP já ligados a riscos do PGR não são duplicados na lista.
+- Mudanças nas fontes geram `pcmso_change_requests`; aprovação e arquivamento impedem edição da cópia pela API.
+- Revisão manual com observações auditadas em `pcmso_inventory_reviews`, sem modificar a fonte.
+- Testes transacionais: 13/13 PASS; dados fictícios desfeitos. Importação exercitada no programa piloto.
+- Fases 4 e 5 continuam pendentes; assinatura, protocolos e PDF não foram implementados nesta etapa.

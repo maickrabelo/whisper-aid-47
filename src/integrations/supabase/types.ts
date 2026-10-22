@@ -3105,6 +3105,107 @@ export type Database = {
           },
         ]
       }
+      pcmso_change_requests: {
+        Row: {
+          company_id: string
+          current_hash: string
+          detected_at: string
+          id: string
+          pgr_document_id: string
+          program_id: string
+          resolved_at: string | null
+        }
+        Insert: {
+          company_id: string
+          current_hash: string
+          detected_at?: string
+          id?: string
+          pgr_document_id: string
+          program_id: string
+          resolved_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          current_hash?: string
+          detected_at?: string
+          id?: string
+          pgr_document_id?: string
+          program_id?: string
+          resolved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_change_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_change_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_change_requests_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_inventory_reviews: {
+        Row: {
+          company_id: string
+          id: string
+          notes: string
+          reviewed_at: string
+          reviewed_by: string | null
+          snapshot_id: string
+        }
+        Insert: {
+          company_id: string
+          id?: string
+          notes?: string
+          reviewed_at?: string
+          reviewed_by?: string | null
+          snapshot_id: string
+        }
+        Update: {
+          company_id?: string
+          id?: string
+          notes?: string
+          reviewed_at?: string
+          reviewed_by?: string | null
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_inventory_reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_inventory_reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_inventory_reviews_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: true
+            referencedRelation: "pcmso_source_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pcmso_permissions: {
         Row: {
           action: string
@@ -3310,6 +3411,61 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_source_snapshots: {
+        Row: {
+          captured_at: string
+          company_id: string
+          content: Json
+          created_by: string | null
+          id: string
+          pgr_document_id: string
+          program_id: string
+          source_hash: string
+        }
+        Insert: {
+          captured_at?: string
+          company_id: string
+          content: Json
+          created_by?: string | null
+          id?: string
+          pgr_document_id: string
+          program_id: string
+          source_hash: string
+        }
+        Update: {
+          captured_at?: string
+          company_id?: string
+          content?: Json
+          created_by?: string | null
+          id?: string
+          pgr_document_id?: string
+          program_id?: string
+          source_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_source_snapshots_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_source_snapshots_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_source_snapshots_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_programs"
             referencedColumns: ["id"]
           },
         ]
@@ -5977,6 +6133,10 @@ export type Database = {
         Args: { p_action: string; p_company_id: string }
         Returns: boolean
       }
+      pcmso_import_inventory: {
+        Args: { _pgr_id: string; _program_id: string }
+        Returns: Json
+      }
       pcmso_import_pgr_workers: {
         Args: { _company_id: string; _dry_run?: boolean }
         Returns: Json
@@ -5996,6 +6156,7 @@ export type Database = {
         Args: { _assignment_id: string }
         Returns: undefined
       }
+      pcmso_source_payload: { Args: { _pgr_id: string }; Returns: Json }
       pcmso_worker_event: {
         Args: {
           _date: string

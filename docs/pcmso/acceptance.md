@@ -12,9 +12,10 @@
 Evidência: `tests/phase1_access.sql` — 21/21 PASS em 14/10/2026 (transação desfeita).
 
 ## Fase 2 — Cadastros e migração
-- [ ] Duas execuções do backfill não duplicam registros.
-- [ ] Mudança de função e readmissão mantêm histórico.
-- [ ] Referências cruzadas entre empresas recusadas pelo banco.
+- [x] Duas execuções do backfill não duplicam registros.
+- [x] Mudança de função e readmissão mantêm histórico.
+- [x] Referências cruzadas entre empresas recusadas pelo banco.
+Evidência: `tests/phase2_workers.sql` — 12/12 PASS em 22/10/2026 (transação desfeita).
 
 ## Fase 3 — Programa e inventário
 - [ ] Editar o PGR gera pendência e não altera conteúdo aprovado.

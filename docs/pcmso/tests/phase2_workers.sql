@@ -38,7 +38,6 @@ CREATE OR REPLACE FUNCTION pg_temp.as_user(_uid text) RETURNS void LANGUAGE sql 
   SELECT set_config('request.jwt.claims', json_build_object('sub', _uid, 'role', 'authenticated')::text, true),
          set_config('role', 'authenticated', true);
 $$;
-$$;
 UPDATE public.feature_flags SET enabled = true WHERE feature_key = 'PCMSO_BETA';
 
 -- Dados do PGR da empresa A: 2 trabalhadores válidos, 1 CPF repetido, 1 CPF inválido

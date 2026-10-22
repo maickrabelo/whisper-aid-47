@@ -6,7 +6,7 @@ Atualizado: 14/10/2026
 |---|---|---|---|
 | 0 | Diagnóstico e plano | — | Concluída |
 | 1 | Acesso e estrutura | A | Concluída (flag desligada em produção) |
-| 2 | Cadastros e migração | A | Pendente |
+| 2 | Cadastros e migração | A | Concluída (22/10/2026) |
 | 3 | Programa e inventário | A | Pendente |
 | 4 | Protocolos e revisão médica | A | Pendente |
 | 5 | Documento e ações | A | Pendente |
@@ -38,3 +38,9 @@ Atualizado: 14/10/2026
 - `usePcmsoCan` voltou a usar `pcmso_can` (a `pcmso_permissions` ficou vazia e bloqueava todos).
 - Policies de `pcmso_programs`/`pcmso_audit_events` passaram a usar `pcmso_can` (inclui Gestora SST e médico; respeita a flag). Sem DELETE.
 - `pcmso_permissions` e `pcmso_has_permission` marcadas DEPRECATED.
+
+## Fase 2 — entregue (22/10/2026)
+- Tabelas `pcmso_workers` (único por empresa+CPF), `pcmso_worker_history` (admissão, mudança de função, desligamento, readmissão), `pcmso_worker_import_map`.
+- RPC `pcmso_import_pgr_workers(company, dry_run)`: prévia antes de gravar, idempotente, une só por CPF, rejeita CPF inválido.
+- RPC `pcmso_worker_event`: fecha o vínculo atual e abre novo, sem apagar histórico.
+- Tela: quadro "Trabalhadores" na página da empresa (CPF mascarado).

@@ -18,9 +18,10 @@ Evidência: `tests/phase1_access.sql` — 21/21 PASS em 14/10/2026 (transação 
 Evidência: `tests/phase2_workers.sql` — 12/12 PASS em 22/10/2026 (transação desfeita).
 
 ## Fase 3 — Programa e inventário
-- [ ] Editar o PGR gera pendência e não altera conteúdo aprovado.
-- [ ] Importação repetida mantém os mesmos vínculos.
-- [ ] Empresa errada bloqueada no backend.
+- [x] Editar o PGR gera pendência e não altera conteúdo aprovado.
+- [x] Importação repetida mantém os mesmos vínculos.
+- [x] Empresa errada bloqueada no backend.
+Evidência: `tests/phase3_inventory.sql` — 13/13 PASS em 22/10/2026 (transação desfeita); importação validada na conta piloto.
 
 ## Fase 4 — Protocolos e revisão médica
 - [ ] SST prepara mas não aprova sem atribuição.

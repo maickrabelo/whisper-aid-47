@@ -36,6 +36,13 @@
       "when": 1792620722396,
       "tag": "0004_pcmso_professionals_registered_by_sst",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792705413164,
+      "tag": "0005_pcmso_phase2_workers",
+      "breakpoints": true
     }
   ]
 }

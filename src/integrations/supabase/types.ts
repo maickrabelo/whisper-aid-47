@@ -3314,6 +3314,153 @@ export type Database = {
           },
         ]
       }
+      pcmso_worker_history: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          end_date: string | null
+          event_type: string
+          ghe_id: string | null
+          id: string
+          role: string | null
+          sector: string | null
+          source: string
+          start_date: string | null
+          worker_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          event_type: string
+          ghe_id?: string | null
+          id?: string
+          role?: string | null
+          sector?: string | null
+          source?: string
+          start_date?: string | null
+          worker_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          event_type?: string
+          ghe_id?: string | null
+          id?: string
+          role?: string | null
+          sector?: string | null
+          source?: string
+          start_date?: string | null
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_worker_history_ghe_id_fkey"
+            columns: ["ghe_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_ghe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_worker_history_worker_fk"
+            columns: ["worker_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_workers"
+            referencedColumns: ["id", "company_id"]
+          },
+        ]
+      }
+      pcmso_worker_import_map: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          source_id: string
+          source_table: string
+          status: string
+          worker_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          source_id: string
+          source_table?: string
+          status: string
+          worker_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          source_id?: string
+          source_table?: string
+          status?: string
+          worker_id?: string | null
+        }
+        Relationships: []
+      }
+      pcmso_workers: {
+        Row: {
+          birth_date: string | null
+          company_id: string
+          cpf: string
+          created_at: string
+          created_by: string | null
+          full_name: string
+          id: string
+          registration_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          birth_date?: string | null
+          company_id: string
+          cpf: string
+          created_at?: string
+          created_by?: string | null
+          full_name: string
+          id?: string
+          registration_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string | null
+          company_id?: string
+          cpf?: string
+          created_at?: string
+          created_by?: string | null
+          full_name?: string
+          id?: string
+          registration_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_workers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_workers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pgr_action_checklist_items: {
         Row: {
           action_item_id: string
@@ -5830,6 +5977,10 @@ export type Database = {
         Args: { p_action: string; p_company_id: string }
         Returns: boolean
       }
+      pcmso_import_pgr_workers: {
+        Args: { _company_id: string; _dry_run?: boolean }
+        Returns: Json
+      }
       pcmso_register_professional: {
         Args: {
           _company_id: string
@@ -5844,6 +5995,17 @@ export type Database = {
       pcmso_revoke_professional: {
         Args: { _assignment_id: string }
         Returns: undefined
+      }
+      pcmso_worker_event: {
+        Args: {
+          _date: string
+          _event: string
+          _ghe_id?: string
+          _role?: string
+          _sector?: string
+          _worker_id: string
+        }
+        Returns: string
       }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }

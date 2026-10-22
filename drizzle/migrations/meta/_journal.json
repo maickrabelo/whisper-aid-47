@@ -43,6 +43,13 @@
       "when": 1792705413164,
       "tag": "0005_pcmso_phase2_workers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792707327932,
+      "tag": "0006_pcmso_phase3_source_inventory",
+      "breakpoints": true
     }
   ]
 }

@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePcmsoCan } from '@/hooks/usePcmsoAccess';
 import { toast } from 'sonner';
 import NotFound from './NotFound';
+import { PcmsoInventory } from '@/components/pcmso/PcmsoInventory';
 
 interface Program {
   id: string;
@@ -218,6 +219,8 @@ const PCMSOProgram = () => {
             </div>
           </CardContent>
         </Card>
+
+        <PcmsoInventory programId={program.id} companyId={program.company_id} canPrepare={prepare.allowed} locked={isApproved || program.status === 'arquivado'} />
 
         <Card>
           <CardHeader>

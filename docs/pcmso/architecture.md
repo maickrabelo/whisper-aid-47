@@ -11,7 +11,7 @@ Status: fundação implementada com feature flag desligada por padrão, rotas pr
 - Aprovar, publicar, revisar e emitir = operações transacionais no backend (RPC security definer).
 - Versão aprovada referencia snapshot + hash da origem; mudanças posteriores geram `pcmso_change_requests`.
 - Flag `PCMSO_BETA` desligada por padrão (mesmo padrão do `LTCAT_BETA`: `feature_access` + RPC `has_feature_access` + `FeatureGuard`). Habilitação comercial ≠ autorização clínica.
-- A autorização específica usa `pcmso_has_permission(p_company_id, p_action)`, com a empresa e a ação validadas no backend. A listagem de empresas acessíveis continua centralizada em `pcmso_accessible_companies()`.
+- A autorização específica usa `pcmso_can(company_id, action)`, com a empresa e a ação validadas no backend; `pcmso_has_permission` está obsoleta. A listagem de empresas acessíveis continua centralizada em `pcmso_accessible_companies()`.
 - Enum `app_role` preservado; papel médico = atribuição por empresa (`pcmso_professional_assignments`).
 
 ## Pontos de integração (código existente)

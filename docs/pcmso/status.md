@@ -9,7 +9,7 @@ Atualizado: 23/10/2026
 | 2 | Cadastros e migração | A | Concluída (22/10/2026) |
 | 3 | Programa e inventário | A | Implementada; validação médica do piloto pendente |
 | 4 | Protocolos e revisão médica | A | Implementada; validação médica do piloto pendente |
-| 5 | Documento e ações | A | Pendente |
+| 5 | Documento e ações | A | PDF e ações implementados no piloto; assinatura/homologação pendentes |
 | 6 | Solicitações e vencimentos | B | Pendente |
 | 7 | Controles clínicos e ASO | B/C | Pendente |
 | 8 | Relatório analítico | C | Pendente |
@@ -62,3 +62,13 @@ Atualizado: 23/10/2026
 - 20/20 testes de acesso, revisão e integridade PASS, transação desfeita; privilégio de escrita do histórico foi explicitamente removido após teste inicial detectar concessão prévia.
 - Interface testada na conta piloto: cadastro periódico de 12 meses, histórico e desativação após recarregar; exame fictício permanece inativo e identificado como teste. Sem erros de execução e sem transbordamento horizontal na tela estreita.
 - Aprovação/revisão médica exercitada com usuários fictícios pelo backend, não com médico real pela interface. Homologação clínica e Fase 5 (PDF/ações) pendentes. Liberação segue restrita ao piloto.
+
+## Fase 5 — documento e ações (23/10/2026)
+- Vigência, objetivos, responsabilidades, fluxo de urgência e acompanhamento editáveis no rascunho, preservados na aprovação e copiados na próxima revisão.
+- Ações preventivas com responsável, prazo e situação; cronograma e quadro por situação, confirmação de conclusão/cancelamento ao editar e histórico append-only. Sem campos de trabalhador, resultado clínico ou diagnóstico. Não escreve no plano do PGR.
+- RPC autorizada `pcmso_document_payload` fornece minuta do rascunho ou conteúdo integral aprovado; exportação antiga não consulta cadastros atuais. Flag desativada e ausência de vínculo bloqueiam a exportação.
+- PDF A4 paginado: identificação, vigência, objetivos, fontes e GHEs, riscos/fatores AEP, protocolos, ações e responsável médico. Compartilha normalização de endereços/setores e proteção de texto.
+- Minuta marcada BETA/não aprovada; aprovado marcado assinatura pendente, com médico/CRM/data e hash. Aprovação não equivale a assinatura; não existe upload, verificação ou guarda de documento assinado nesta entrega.
+- 13/13 testes de integridade/acesso PASS com dados fictícios desfeitos. Teste do renderizador sem mutação PASS. Cadastro de ação, histórico, documento salvo e download exercitados pelo navegador no piloto, sem erros ou transbordamento horizontal. PDF com 12 GHEs e textos longos gerou 4 páginas.
+- Objetivo e ação fictícios identificados como teste permanecem no rascunho piloto. Não representam orientações médicas reais.
+- Bloqueios para aceite integral: assinatura documental e homologação pelo médico cadastrado pela gestora; fases clínicas e eSocial permanecem desligadas. Não declarar o módulo 100% funcional.

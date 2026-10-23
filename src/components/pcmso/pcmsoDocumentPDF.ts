@@ -48,12 +48,19 @@ export function createPcmsoPDF(payload: PcmsoDocumentPayload): jsPDF {
     for (const ghe of data.ghes ?? []) {
       line(`${formatPdfSector(ghe.name)} | Setor: ${formatPdfSector(ghe.sector) || 'Não informado'} | Função: ${formatPdfSector(ghe.role) || 'Não informada'}`, true);
       const risks = (data.risks ?? []).filter((risk: RecordData) => risk.ghe_id === ghe.id);
-      for (const risk of risks) line(`- ${risk.agent_name || 'Agente não informado'} (${risk.category || 'Categoria não informada'}). ${risk.source_module ? `Origem: ${risk.source_module}.` : ''} ${risk.exposure_description || ''}`);
+      for (const risk of risks) {
+        line(`- ${risk.agent_name || 'Agente não informado'} (${risk.category || 'Categoria não informada'}). ${risk.source ? `Origem: ${risk.source}.` : ''} ${risk.exposure_description || ''}`);
+        if (risk.existing_epc) line(`EPC: ${risk.existing_epc}`);
+        if (risk.existing_epi) line(`EPI: ${risk.existing_epi}`);
+      }
       if (!risks.length) line('Sem riscos registrados neste grupo; validar a origem.');
     }
+    for (const risk of data.risks ?? []) {
+      if (!(data.ghes ?? []).some((g: RecordData) => g.id === risk.ghe_id)) line(`GHE pendente - ${risk.agent_name || 'Agente não informado'}: ${risk.exposure_description || 'Exposição não informada'}`);
+    }
     for (const aep of data.aeps ?? []) {
-      line(`AEP: ${aep.assessment?.title || aep.assessment?.id || aep.id || 'Origem vinculada'}`, true);
-      for (const factor of aep.factors ?? []) line(`- ${factor.factor_name || factor.name || factor.fator_nome || factor.factor_id || 'Fator ergonômico registrado'}: ${factor.observations || factor.observacoes || 'Consultar evidência da avaliação de origem.'}`);
+      line(`AEP: ${formatPdfSector(aep.assessment?.setor_nome) || 'Setor não informado'} / ${formatPdfSector(aep.assessment?.funcao_nome) || 'Função não informada'}`, true);
+      for (const factor of aep.factors ?? []) line(`- ${factor.fator_nome || 'Fator ergonômico registrado'}: ${factor.evidencia_texto || 'Consultar evidência da avaliação de origem.'}`);
     }
   }
   section('4. Protocolos de exames');
@@ -78,6 +85,7 @@ export function createPcmsoPDF(payload: PcmsoDocumentPayload): jsPDF {
   section('6. Atendimento de urgência e acompanhamento');
   line(settings.emergency_flow || 'Fluxo de urgência pendente de definição.');
   line(settings.monitoring || 'Acompanhamento e avaliação do programa pendentes de definição.');
+  ensure(80);
   section('7. Responsável médico e validação documental');
   if (payload.physician) {
     line(payload.physician.name, true);
@@ -85,6 +93,7 @@ export function createPcmsoPDF(payload: PcmsoDocumentPayload): jsPDF {
   } else line('Médico responsável: pendente de aprovação pela atribuição da empresa.');
   line('Assinatura do médico responsável: __________________________________');
   line('A aprovação registrada no sistema não equivale a assinatura digital. Este documento não é ASO, prontuário ou comprovante de envio ao eSocial.', false, 9);
+  ensure(12);
   line(`Integridade da versão: ${payload.hash}`, false, 8);
   const count = pdf.getNumberOfPages();
   for (let page = 1; page <= count; page++) {

@@ -1,4 +1,4 @@
--- PCMSO Fase 4 — testes de acesso (rodam em transação e são desfeitos no final).
+-- PCMSO Fase 5 — testes documentais (rodam em transação e são desfeitos no final).
 -- Cenário: Empresa A e Empresa B; usuários: RH da A, SST da A (sem vínculo com B),
 -- médico responsável da A, admin, e usuário sem vínculo.
 BEGIN;

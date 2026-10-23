@@ -14,6 +14,7 @@ import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, 
 
 const LTCAT_UNLOCK_URL = "https://wa.me/5527998443852?text=Estou%20usando%20o%20Software%20Sr.SMS%20e%20quero%20desbloquear%20o%20m%C3%B3dulo%20LTCAT";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
+import PcmsoBlackCard from '@/components/sst/PcmsoBlackCard';
 import { usePGRModuleAccess } from "@/hooks/usePGRModuleAccess";
 import { useFeatureAccess, LTCAT_BETA } from "@/hooks/useFeatureAccess";
 import { useAEPBetaAccess } from "@/hooks/useAEPBetaAccess";
@@ -703,6 +704,7 @@ const SSTDashboard = () => {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {!isSmartOnly && <PcmsoBlackCard unlocked={hasPcmsoBeta} />}
               {toolCards}
             </div>
           </div>

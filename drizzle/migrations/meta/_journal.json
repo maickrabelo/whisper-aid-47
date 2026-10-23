@@ -57,6 +57,13 @@
       "when": 1792707486901,
       "tag": "0007_pcmso_inventory_manual_review",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792753690034,
+      "tag": "0008_pcmso_phase4_exam_protocols",
+      "breakpoints": true
     }
   ]
 }

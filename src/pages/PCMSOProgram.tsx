@@ -13,6 +13,8 @@ import { toast } from 'sonner';
 import NotFound from './NotFound';
 import { PcmsoInventory } from '@/components/pcmso/PcmsoInventory';
 import { PcmsoProtocols } from '@/components/pcmso/PcmsoProtocols';
+import { PcmsoActions } from '@/components/pcmso/PcmsoActions';
+import { PcmsoDocument } from '@/components/pcmso/PcmsoDocument';
 
 interface Program {
   id: string;
@@ -237,6 +239,9 @@ const PCMSOProgram = () => {
         <PcmsoInventory programId={program.id} companyId={program.company_id} canPrepare={prepare.allowed} locked={isApproved || program.status === 'arquivado'} />
 
         <PcmsoProtocols programId={program.id} companyId={program.company_id} editable={prepare.allowed && isDraft} onChange={() => void load()} />
+
+        <PcmsoActions programId={program.id} companyId={program.company_id} editable={prepare.allowed && isDraft} />
+        <PcmsoDocument programId={program.id} companyId={program.company_id} editable={prepare.allowed && isDraft} approved={isApproved} />
 
         <Card>
           <CardHeader>

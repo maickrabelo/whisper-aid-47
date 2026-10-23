@@ -3,3 +3,4 @@ DialogContent must ignore outside clicks and Escape by default; this prevents ac
 - PCMSO module decisions live in docs/pcmso/ (architecture, data model, permissions, acceptance, status); read them before changing PCMSO code — the module is built phase by phase against those acceptance criteria.
 - PCMSO inventory uses company-validated immutable source snapshots rather than live joins; PGR/AEP edits create change requests without modifying approved content.
 - PCMSO exam protocols are manual, company-scoped draft records; physician approval freezes program, inventory and protocols into an immutable version so later revisions cannot rewrite approved evidence.
+- PCMSO document exports use the authorized snapshot payload RPC and the pure PDF renderer; document settings and non-clinical actions freeze with approval, and approval must never be labelled as a digital signature.

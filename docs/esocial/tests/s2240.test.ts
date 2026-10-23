@@ -1,0 +1,24 @@
+import { test, expect } from 'bun:test';
+import { buildS2240Files, seedDeclaration, validateS2240, type S2240Group, type S2240Risk, type S2240Settings } from '../../../src/lib/esocial/s2240';
+import { validCnpj, validCpf } from '../../../src/lib/esocial/common';
+import { prepareXmlDownload } from '../../../src/lib/esocial/download';
+import JSZip from 'jszip';
+export function fixture() {
+  const cnpj = '11222333000181';
+  const groups: S2240Group[] = [{ id:'g1',name:'GHE Fictício',sector:'Operação & Teste',activities_description:'Atividades fictícias de teste',pgr_ghe_workers:[{ id:'w1',full_name:'Trabalhador fictício',cpf:'52998224725',registration_number:'FICTICIO-1',admission_date:'2026-01-01' }] }];
+  const risks: S2240Risk[] = [{ id:'r1',ghe_id:'g1',category:'fisico',agent_name:'Ruído',esocial_agent_code:'02.01.001',measurement_value:0,exposure_limit:null,epi_ca:null }];
+  const declarations = { r1:{ ...seedDeclaration(risks[0] as S2240Risk),assessment:'1',unit:'4',technique:'Dosimetria',epc:'1',epi:'1' } };
+  const settings: S2240Settings = { environment:'2',conditionDate:'2026-10-23',obligationDate:'2026-01-01',establishment:cnpj,local:'1',cpf:'11144477735',council:'4',councilName:'',councilNumber:'123456',uf:'SP',reviewed:true };
+  return { cnpj,groups,risks,declarations,settings };
+}
+const now = new Date('2026-10-23T13:23:00Z');
+test('unsigned S2240 keeps zero measurement and quantitative code 1', () => { const f=fixture();const files=buildS2240Files(f.cnpj,f.groups,f.risks,f.declarations,f.settings,now);expect(files[0]?.xml).toContain('<tpAval>1</tpAval><intConc>0</intConc>');expect(files[0]?.xml).toContain('<epcEpi>');expect(files[0]?.xml).not.toContain('<Signature'); });
+test('missing workers blocks export rather than creating placeholder CPF', () => { const f=fixture();f.groups[0]?.pgr_ghe_workers.splice(0);expect(()=>buildS2240Files(f.cnpj,f.groups,f.risks,f.declarations,f.settings,now)).toThrow(); });
+test('absence cannot coexist with another harmful agent', () => { const f=fixture();f.risks.push({...f.risks[0] as S2240Risk,id:'r2'});const d={...f.declarations,r2:{...f.declarations.r1,code:'09.01.001'}};expect(validateS2240(f.cnpj,f.groups,f.risks,d,f.settings,now).some(x=>x.includes('coexistir'))).toBe(true); });
+test('used EPI requires all six explicit declarations', () => { const f=fixture();f.declarations.r1.epi='2';f.declarations.r1.epiEffective='S';f.declarations.r1.documents='12345';expect(validateS2240(f.cnpj,f.groups,f.risks,f.declarations,f.settings,now).some(x=>x.includes('seis'))).toBe(true); });
+test('unknown Table24 code blocks export', () => { const f=fixture();f.declarations.r1.code='99.99.999';expect(()=>buildS2240Files(f.cnpj,f.groups,f.risks,f.declarations,f.settings,now)).toThrow(); });
+test('unclassified physical risk is not silently omitted', () => { const f=fixture();f.risks[0]={...f.risks[0] as S2240Risk,esocial_agent_code:null};f.declarations.r1.code='';expect(()=>buildS2240Files(f.cnpj,f.groups,f.risks,f.declarations,f.settings,now)).toThrow(); });
+test('multiple workers receive unique event IDs and individually parseable ZIP entries',async()=>{const f=fixture();f.groups[0]?.pgr_ghe_workers.push({id:'w2',full_name:'Fictício 2',cpf:'11144477735',registration_number:'FICTICIO-2',admission_date:'2026-01-01'});const files=buildS2240Files(f.cnpj,f.groups,f.risks,f.declarations,f.settings,now);expect(files[0]?.name).not.toBe(files[1]?.name);const output=await prepareXmlDownload(files,'S2240');const zip=await JSZip.loadAsync(await output.blob.arrayBuffer());const xmlNames=Object.keys(zip.files).filter(n=>n.endsWith('.xml'));expect(xmlNames.length).toBe(2);for(const name of xmlNames){const xml=await zip.file(name)?.async('string');expect(xml?.match(/<\?xml/g)?.length).toBe(1);expect(xml?.match(/<eSocial /g)?.length).toBe(1);} });
+test('duplicate worker contract across GHEs blocks conflicting events',()=>{const f=fixture();f.groups.push({...f.groups[0] as S2240Group,id:'g2'});expect(validateS2240(f.cnpj,f.groups,f.risks,f.declarations,f.settings,now).some(x=>x.includes('repetido'))).toBe(true);});
+test('production environment must be explicit and technically reviewed',()=>{const f=fixture();f.settings.environment='1';f.settings.reviewed=false;expect(()=>buildS2240Files(f.cnpj,f.groups,f.risks,f.declarations,f.settings,now)).toThrow();f.settings.reviewed=true;expect(buildS2240Files(f.cnpj,f.groups,f.risks,f.declarations,f.settings,now)[0]?.xml).toContain('<tpAmb>1</tpAmb>');});
+test('invalid identifiers fail checksum validation',()=>{expect(validCnpj('11222333000180')).toBe(false);expect(validCpf('52998224726')).toBe(false);expect(validCnpj('12ABC34501DE35')).toBe(true);});

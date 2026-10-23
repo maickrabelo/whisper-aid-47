@@ -13,11 +13,13 @@ Atualizado: 23/10/2026
 | 6 | Solicitações e vencimentos | B | Implementada em simulação isolada; operação real aguarda aceite da Release A |
 | 7 | Controles clínicos e ASO | B/C | Fluxo simulado implementado/testado; operação clínica real desligada |
 | 8 | Relatório analítico | C | Relatório manual estruturado e PDF/revisões testados em simulação; homologação clínica pendente |
-| 9 | eSocial S-2220 (export) | D | Preparação XML sem assinatura implementada; não transmissível nem homologada |
+| 9 | eSocial S-2220 (export) | D | Download explícito de preparação simulada sem assinatura; ambiente 2, sem transmissão ou homologação |
 | 10 | Integrações complementares | D | Pendente |
 | 11 | Homologação e piloto | — | Pendente |
 
 ## Dúvidas abertas
+Exportação externa (23/10/2026): S-2240 do PGR prepara XML individual/ZIP com validações e declarações técnicas explícitas; download e histórico verificados no piloto. S-2220 continua simulado e autorizado somente ao médico do piloto. Nenhum evento foi transmitido ou aceito. Compatibilidade com fornecedor externo e homologação aguardam transmissor escolhido, dados reais autorizados e certificado/autorizações. Evidências e limites: `esocial/README.md`.
+
 1. Conferir migrações do repositório contra o banco real antes da Fase 1.
 2. Qualidade dos dados de `pgr_ghe_workers` (CPF, matrícula, duplicidades) — diagnóstico agregado na Fase 2.
 3. Cada gestora cadastra seu médico por empresa; validação clínica com médico real ainda pendente. Conta piloto: teste.sst@srsms.app.

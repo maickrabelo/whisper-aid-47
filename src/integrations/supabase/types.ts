@@ -3150,6 +3150,135 @@ export type Database = {
           },
         ]
       }
+      pcmso_annual_reports: {
+        Row: {
+          actor_id: string
+          company_id: string
+          content: Json
+          content_hash: string
+          created_at: string
+          id: string
+          revision: number
+          simulation: boolean
+          year: number
+        }
+        Insert: {
+          actor_id: string
+          company_id: string
+          content: Json
+          content_hash: string
+          created_at?: string
+          id?: string
+          revision: number
+          simulation?: boolean
+          year: number
+        }
+        Update: {
+          actor_id?: string
+          company_id?: string
+          content?: Json
+          content_hash?: string
+          created_at?: string
+          id?: string
+          revision?: number
+          simulation?: boolean
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_annual_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_annual_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_asos: {
+        Row: {
+          actor_id: string
+          clinical_entry_id: string
+          company_id: string
+          content: Json
+          content_hash: string
+          created_at: string
+          id: string
+          issued_on: string
+          order_id: string
+          previous_aso_id: string | null
+          simulation: boolean
+        }
+        Insert: {
+          actor_id: string
+          clinical_entry_id: string
+          company_id: string
+          content: Json
+          content_hash: string
+          created_at?: string
+          id?: string
+          issued_on: string
+          order_id: string
+          previous_aso_id?: string | null
+          simulation?: boolean
+        }
+        Update: {
+          actor_id?: string
+          clinical_entry_id?: string
+          company_id?: string
+          content?: Json
+          content_hash?: string
+          created_at?: string
+          id?: string
+          issued_on?: string
+          order_id?: string
+          previous_aso_id?: string | null
+          simulation?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_asos_clinical_entry_id_fkey"
+            columns: ["clinical_entry_id"]
+            isOneToOne: true
+            referencedRelation: "pcmso_clinical_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_asos_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_asos_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_asos_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_exam_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_asos_previous_aso_id_fkey"
+            columns: ["previous_aso_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_asos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pcmso_audit_events: {
         Row: {
           action: string
@@ -3267,6 +3396,70 @@ export type Database = {
           },
         ]
       }
+      pcmso_clinical_entries: {
+        Row: {
+          actor_id: string
+          company_id: string
+          created_at: string
+          exam_date: string
+          id: string
+          notes: string
+          order_id: string
+          physician: Json
+          procedures: Json
+          revision: number
+          simulation: boolean
+        }
+        Insert: {
+          actor_id: string
+          company_id: string
+          created_at?: string
+          exam_date: string
+          id?: string
+          notes: string
+          order_id: string
+          physician: Json
+          procedures: Json
+          revision: number
+          simulation?: boolean
+        }
+        Update: {
+          actor_id?: string
+          company_id?: string
+          created_at?: string
+          exam_date?: string
+          id?: string
+          notes?: string
+          order_id?: string
+          physician?: Json
+          procedures?: Json
+          revision?: number
+          simulation?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_clinical_entries_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_clinical_entries_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_clinical_entries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_exam_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pcmso_document_settings: {
         Row: {
           company_id: string
@@ -3321,6 +3514,70 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: true
             referencedRelation: "pcmso_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_esocial_preparations: {
+        Row: {
+          actor_id: string
+          aso_id: string
+          company_id: string
+          content_hash: string
+          created_at: string
+          event_id: string
+          id: string
+          payload: Json
+          schema_version: string
+          simulation: boolean
+          status: string
+        }
+        Insert: {
+          actor_id: string
+          aso_id: string
+          company_id: string
+          content_hash: string
+          created_at?: string
+          event_id: string
+          id?: string
+          payload: Json
+          schema_version?: string
+          simulation?: boolean
+          status?: string
+        }
+        Update: {
+          actor_id?: string
+          aso_id?: string
+          company_id?: string
+          content_hash?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          payload?: Json
+          schema_version?: string
+          simulation?: boolean
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_esocial_preparations_aso_id_fkey"
+            columns: ["aso_id"]
+            isOneToOne: true
+            referencedRelation: "pcmso_asos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_esocial_preparations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_esocial_preparations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
             referencedColumns: ["id"]
           },
         ]
@@ -3551,6 +3808,61 @@ export type Database = {
             columns: ["snapshot_id"]
             isOneToOne: true
             referencedRelation: "pcmso_source_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_manual_signature_attestations: {
+        Row: {
+          actor_id: string
+          aso_id: string
+          company_id: string
+          created_at: string
+          id: string
+          reference: string
+          signed_on: string
+          simulation: boolean
+        }
+        Insert: {
+          actor_id: string
+          aso_id: string
+          company_id: string
+          created_at?: string
+          id?: string
+          reference: string
+          signed_on: string
+          simulation?: boolean
+        }
+        Update: {
+          actor_id?: string
+          aso_id?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          reference?: string
+          signed_on?: string
+          simulation?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_manual_signature_attestations_aso_id_fkey"
+            columns: ["aso_id"]
+            isOneToOne: true
+            referencedRelation: "pcmso_asos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_manual_signature_attestations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_manual_signature_attestations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
             referencedColumns: ["id"]
           },
         ]
@@ -6725,6 +7037,37 @@ export type Database = {
         Args: { _company_id: string; _dry_run?: boolean }
         Returns: Json
       }
+      pcmso_pilot_annual_report: {
+        Args: { _company_id: string; _year: number }
+        Returns: string
+      }
+      pcmso_pilot_aso_payload: { Args: { _aso_id: string }; Returns: Json }
+      pcmso_pilot_attest_manual_signature: {
+        Args: { _aso_id: string; _reference: string; _signed_on: string }
+        Returns: string
+      }
+      pcmso_pilot_can: {
+        Args: { _clinical?: boolean; _company_id: string }
+        Returns: boolean
+      }
+      pcmso_pilot_clinical_read: {
+        Args: { _company_id: string }
+        Returns: Json
+      }
+      pcmso_pilot_issue_aso: {
+        Args: { _entry_id: string; _fitness: string; _issued_on: string }
+        Returns: string
+      }
+      pcmso_pilot_prepare_s2220: { Args: { _aso_id: string }; Returns: Json }
+      pcmso_pilot_record_encounter: {
+        Args: {
+          _exam_date: string
+          _notes: string
+          _order_id: string
+          _procedures: Json
+        }
+        Returns: string
+      }
       pcmso_register_professional: {
         Args: {
           _company_id: string
@@ -6761,6 +7104,7 @@ export type Database = {
         }
         Returns: string
       }
+      pcmso_valid_cpf: { Args: { _cpf: string }; Returns: boolean }
       pcmso_worker_event: {
         Args: {
           _date: string

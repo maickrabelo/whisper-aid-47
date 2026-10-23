@@ -1,6 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createPcmsoPDF, type PcmsoDocumentPayload } from './pcmsoDocumentPDF';
+import { createPcmsoPDF, type PcmsoDocumentPayload } from '../../../src/components/pcmso/pcmsoDocumentPDF';
 
 describe('PCMSO frozen document content', () => {
   test('renderer never changes the approved evidence passed to it', () => {

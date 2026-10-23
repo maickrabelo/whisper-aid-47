@@ -85,6 +85,7 @@ export function createPcmsoPDF(payload: PcmsoDocumentPayload): jsPDF {
   section('6. Atendimento de urgência e acompanhamento');
   line(settings.emergency_flow || 'Fluxo de urgência pendente de definição.');
   line(settings.monitoring || 'Acompanhamento e avaliação do programa pendentes de definição.');
+  ensure(80);
   section('7. Responsável médico e validação documental');
   if (payload.physician) {
     line(payload.physician.name, true);

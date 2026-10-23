@@ -6393,6 +6393,7 @@ export type Database = {
         Args: { _company_id: string; _permission: string }
         Returns: boolean
       }
+      pcmso_create_revision: { Args: { _program_id: string }; Returns: string }
       pcmso_has_clinical_assignment: {
         Args: { _company_id: string; _role?: string; _user_id: string }
         Returns: boolean

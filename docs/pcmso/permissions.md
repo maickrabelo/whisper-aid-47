@@ -24,3 +24,4 @@ Autorização = recurso habilitado (`PCMSO_BETA`) **+** vínculo com a empresa *
 - Nunca usar service_role no cliente.
 - LGPD: dados de saúde sensíveis; definir finalidade e base legal (não usar consentimento genérico); retenção, backup/restauração testados; cancelamento de assinatura não apaga histórico.
 - Flag desligada: bloqueia novas operações; dados preservados.
+- Convocações: `pcmso_exam_can` exige `program.view` + `PCMSO_EXAMS_BETA` individual/empresa; RH vinculado, gestora e médico atribuído podem operar somente simulações. Admin não tem acesso automático. Leitura com RLS; escrita exclusivamente pelas RPCs, histórico sem privilégios de escrita. Resultado/aptidão/ASO não existem nesta etapa.

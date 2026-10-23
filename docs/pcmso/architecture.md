@@ -40,3 +40,6 @@ Abas: Identificação; Fontes e riscos; Grupos e funções; Protocolos; Ações 
 - C (7–8): operação clínica, relatório analítico.
 - D (9–10): S-2220 export; integrações opcionais.
 Fora da 1ª entrega: IA diagnóstica, aptidão automática, transmissão eSocial, faturamento de exames, CAT automática.
+
+## Fase 6 — preparação isolada
+Convocações ocupacionais na página da empresa, separadas do programa documental. A autorização `pcmso_exam_can` exige `program.view` e liberação individual `PCMSO_EXAMS_BETA` para a empresa. Somente simulações são aceitas pelo banco enquanto a Release A aguarda assinatura/homologação; não há envio externo nem registro de resultado clínico. Pedidos usam protocolo manual ativo, chave idempotente e cópia imutável do trabalhador/vínculo e protocolo. Comparecimento é exclusivamente andamento administrativo, não conclusão médica ou aptidão.

@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] PCMSO etapa 5: cronograma e quadro de ações não clínicas, com histórico e isolamento.
+- [ ] PCMSO etapa 5: PDF de minuta e versão aprovada imutável, sem simular assinatura digital.
+- [ ] Validar documentos e ações no piloto e atualizar os critérios de aceite.
+
 - [x] PCMSO etapa 4: protocolos de exames por grupo/risco e revisão exclusiva do médico responsável.
 - [x] Preservar versões aprovadas e testar isolamento, bloqueios e cadastro/histórico no piloto.
 - [x] Atualizar documentação e critérios de aceite da etapa 4.

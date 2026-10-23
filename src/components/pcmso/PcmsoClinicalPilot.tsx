@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, FileCheck, Plus, Stethoscope } from 'lucide-react';
 import { toast } from 'sonner';
-import { procedureName, buildS2220, type S2220Preparation } from '@/lib/pcmso/s2220';
+import { procedureName } from '@/lib/pcmso/s2220';
+import { PcmsoS2220Export } from './PcmsoS2220Export';
 import { createPcmsoAsoPDF } from './pcmsoAsoPDF';
 import { PcmsoSignedEvidence } from './PcmsoSignedEvidence';
 import { PcmsoAnalyticalReport } from './PcmsoAnalyticalReport';
@@ -60,7 +61,7 @@ export function PcmsoClinicalPilot({ companyId }: { companyId: string }) {
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void act(async () => { const p = await rpc('pcmso_pilot_aso_payload', { _aso_id: a.id }); createPcmsoAsoPDF(p).save(`ASO_SIMULADO_${a.id}.pdf`); })}><Download className="mr-1 h-4 w-4" /> ASO</Button>
             {!a.signed_on && <Button size="sm" variant="outline" onClick={() => { setSignature(a); setSignedOn(today()); setReference(''); }}><FileCheck className="mr-1 h-4 w-4" /> Assinatura manual</Button>}
             <PcmsoSignedEvidence asoId={a.id} />
-            <Button size="sm" variant="outline" disabled={busy} onClick={() => void act(async () => { const p: S2220Preparation = await rpc('pcmso_pilot_prepare_s2220', { _aso_id: a.id }); saveFile(buildS2220(p), `S2220_PREPARACAO_NAO_TRANSMITIDA_${p.event_id}.xml`, 'application/xml'); })}><Download className="mr-1 h-4 w-4" /> Preparação S-2220</Button>
+            <PcmsoS2220Export key={a.id} asoId={a.id} signed={Boolean(a.signed_on)} />
           </>}</div>
         </div>; })}
       </CardContent>

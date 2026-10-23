@@ -32,6 +32,7 @@ Evidência: `tests/phase4_protocols.sql` — 20/20 PASS em 23/10/2026, executado
 ## Fase 5 — Documento e ações (fim da Release A)
 - [x] Versão anterior gera o mesmo conteúdo após mudanças na empresa.
 - [ ] Minuta e assinado distintos.
+Guarda privada de PDF manual vinculada somente ao programa aprovado implementada; recusada para rascunho. Upload/download do ASO exercitado no piloto. Fluxo de assinatura do programa aprovado ainda não exercitado pela interface, pois não há programa homologado nem médico real: não marcar aceite integral.
 - [x] Funciona sem prontuário ou eSocial; quadro de ações sem diagnóstico.
 Evidência: `tests/phase5_documents.sql` — 13/13 PASS em 23/10/2026 (transação desfeita); teste do renderizador aprovado sem mutação PASS. Cadastro de ação, histórico, persistência do documento e download BETA exercitados na conta piloto; PDF longo de 4 páginas inspecionado. Minuta BETA e versão aprovada são distintas, mas assinatura digital e registro de documento assinado ainda não implementados: não considerar a Fase 5 homologada integralmente.
 
@@ -43,12 +44,12 @@ Evidência: `tests/phase6_pilot.py` — fluxo autenticado no piloto (criação, 
 ## Fase 7 — Controles clínicos e ASO
 - [x] RH/admin sem atribuição não obtêm resultados via API/arquivo (piloto simulado).
 - [x] Médico revogado perde acesso; nenhum botão define aptidão sozinho (piloto simulado).
-Evidência: `phase789_access.py` e `phase789_clinical.py`, testes transacionais de revogação desfeitos. Atendimento/ASO/declaração persistidos via UI; PDF inspecionado. Sem homologação clínica real, sem prontuário completo/anexos ou guarda de assinatura manual.
+Evidência: `phase789_access.py`, `phase789_clinical.py`, `phase789_completion.py`; atendimento/ASO/declaração persistidos, guarda/download de PDF com mesmos bytes, bloqueio de escrita/leitura direta e overwrite/delete de arquivo. Atribuição fictícia revogada ao final e download/leitura negados. Sem homologação clínica real ou prontuário integral.
 
 ## Fase 8 — Relatório analítico
-- [ ] Reconciliação com totais conhecidos; ausência ≠ zero.
-- [ ] Correção gera revisão; incompleto não aparece como completo.
-Resumo anual simulado parcial implementado/testado: abaixo de 5, todos os totais ocultos; indicadores ausentes nulos; sempre incompleto acima do limiar. Falta relatório NR-7 integral e reconciliação de indicadores clínicos.
+- [x] Reconciliação com totais conhecidos; ausência ≠ zero (contagens declaradas simuladas).
+- [x] Correção gera revisão; incompleto não aparece como completo (simulação).
+`analyticalReport.test.ts`: limiar 4/5, indicador raro, null, taxa/denominador e imutabilidade. `phase789_completion.py`: 10 clínicos=5 admissionais+5 periódicos, 10 complementares/5 alterações=50% no PDF, zero declarado; retirar CAT cria revisão 2 incompleta sem reescrever revisão 1. Relatório manual inclui setor/função, população, tipos, complementares/alterações, casos/CAT, análise comparativa, fontes, medidas e discussão empresa/CIPA. Homologação NR-7 por médico real e integração clínica automática continuam pendentes.
 
 ## Fase 9 — S-2220
 - [ ] XSD/regras rejeitam incompletos; arquivo válido verificável.

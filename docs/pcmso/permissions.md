@@ -20,10 +20,12 @@ Autorização = recurso habilitado (`PCMSO_BETA`) **+** vínculo com a empresa *
 - RLS com negação por padrão; GRANT explícito por tabela.
 - Sem views amplas com colunas clínicas; leitura clínica via RPC estreita que registra em `pcmso_audit_events`.
 - Caches/queries indexados por empresa+usuário; limpos ao trocar contexto/sair.
-- Bucket privado próprio, caminhos com UUID, URL assinada curta pós-autorização; validação de tipo/tamanho. Não reutilizar o portal SST.
+- Bucket privado próprio, caminhos com UUID, download autenticado após reautorização; validação de tipo/tamanho. Não reutilizar o portal SST. Sem URLs públicas ou persistidas.
 - Nunca usar service_role no cliente.
 - LGPD: dados de saúde sensíveis; definir finalidade e base legal (não usar consentimento genérico); retenção, backup/restauração testados; cancelamento de assinatura não apaga histórico.
 - Flag desligada: bloqueia novas operações; dados preservados.
 - Convocações: `pcmso_exam_can` exige `program.view` + `PCMSO_EXAMS_BETA` individual/empresa; RH vinculado, gestora e médico atribuído podem operar somente simulações. Admin não tem acesso automático. Leitura com RLS; escrita exclusivamente pelas RPCs, histórico sem privilégios de escrita. Resultado/aptidão/ASO não existem nesta etapa.
 - Fases 7–9 simuladas: `pcmso_pilot_can` exige empresa piloto fixa, `pcmso_exam_can` e `PCMSO_CLINICAL_PILOT`; operações clínicas/ASO/eSocial exigem atribuição ativa. Emissão e assinatura manual declarada exclusivas do médico emitente; relatório preparado somente por responsável. Não há permissão clínica derivada de papel SST/admin.
 - Tabelas clínicas/ASO/assinatura/eSocial não concedem privilégios a anon/authenticated; todas as leituras sensíveis são RPCs auditadas. Resumos anuais SELECT com RLS, sem escrita direta. Nenhuma informação clínica ou ASO simulado disponibilizado ao RH. Flag desligada e revogação bloqueiam imediatamente novas chamadas; arquivos já baixados não podem ser revogados.
+- Guarda de PDF: médico emitente reserva ASO, responsável reserva programa aprovado; reserva expira em 30 minutos, upload autenticado somente pelo autor. RPC confirma tipo/tamanho contra Storage. Evidências/recibos sem acesso direto, substituição ou exclusão; leitura/download somente médico ativo do piloto, com nova auditoria e hash verificado. Revogação bloqueia acesso futuro. Assinatura não é automaticamente verificada.
+- Relatório analítico manual: salvar/ler/revisar apenas responsável ativo; tabelas sem privilégios diretos. População declarada, sem inferir diagnóstico de ASO. PDF suprime relatório integral inclusive narrativa quando qualquer grupo ou indicador positivo for menor que 5, evitando reconstrução por subtração; zero declarado não é ausência, null permanece não informado.

@@ -4,7 +4,7 @@ import { Activity, Lock, ArrowRight, MessageCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-const WHATSAPP_URL = 'https://wa.me/5527998443852?text=Estou%20usando%20o%20Software%20Sr.SMS%20e%20quero%20liberar%20o%20m%C3%B3dulo%20PCMSO%20(Oferta%20Black)';
+const WHATSAPP_URL = 'https://wa.me/5527998443852?text=Estou%20usando%20o%20Software%20Sr.SMS%20e%20quero%20liberar%20o%20m%C3%B3dulo%20PCMSO%20e%20ASOS%20(Oferta%20Black)';
 
 export default function PcmsoBlackCard({ unlocked }: { unlocked: boolean }) {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export default function PcmsoBlackCard({ unlocked }: { unlocked: boolean }) {
             <Lock className="h-6 w-6 text-[hsl(142_100%_50%)]" />
           )}
         </div>
-        <h3 className="mb-1 text-lg font-bold">PCMSO</h3>
+        <h3 className="mb-1 text-lg font-bold">PCMSO e ASOS</h3>
         <p className="mb-1 text-sm font-extrabold uppercase tracking-wide text-[hsl(142_100%_50%)] [text-shadow:0_0_8px_hsl(142_100%_50%/0.8)]">
           Seja Platinum
         </p>
@@ -50,18 +50,18 @@ export default function PcmsoBlackCard({ unlocked }: { unlocked: boolean }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>🔒 MÓDULO PCMSO BLOQUEADO</DialogTitle>
+            <DialogTitle>🔒 MÓDULO PCMSO E ASOS BLOQUEADO</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm">
             <p className="font-bold">🔥 APROVEITE A OFERTA BLACK FRIDAY SR. SMS!</p>
             <p className="font-semibold">Libere todos os recursos do software, amplie seus serviços e tenha mais possibilidades de faturamento com seus clientes!</p>
             <div className="rounded-lg border p-3">
               <p className="font-bold">PLANO PREMIUM COMPLETO</p>
-              <p className="font-bold">PGR + AEP + PCMSO + LTCAT</p>
+              <p className="font-bold">PGR + AEP + PCMSO e ASOS + LTCAT</p>
               <p>Até 20 empresas ou 2.000 vidas.</p>
               <p className="mt-1 font-bold">💰 R$ 197,90/mês</p>
             </div>
-            <p>Para liberar o <strong>PCMSO E LTCAT</strong>, deixando o seu software com todos os módulos disponíveis, é necessário fazer a migração para o plano que inclui esses módulos.</p>
+            <p>Para liberar o <strong>PCMSO e ASOS e o LTCAT</strong>, deixando o seu software com todos os módulos disponíveis, é necessário fazer a migração para o plano que inclui esses módulos.</p>
             <p className="font-semibold">O processo é simples:</p>
             <ol className="list-decimal space-y-2 pl-5">
               <li><strong>Acesse sua conta da Hotmart</strong> pelo link:{' '}
@@ -71,11 +71,11 @@ export default function PcmsoBlackCard({ unlocked }: { unlocked: boolean }) {
               <li>Localize o <strong>Sr. SMS - Software PGR</strong>.</li>
               <li>Clique nos <strong>3 pontos</strong> ao lado da sua assinatura.</li>
               <li>Selecione a opção <strong>“Gestão de Pagamentos”</strong>.</li>
-              <li>Vá em detalhes do Plano, clique em trocar de plano e escolha: <strong>PREMIUM: PGR + AEP + PCMSO + LTCAT até 2 mil vidas ou 20 empresas!</strong></li>
+              <li>Vá em detalhes do Plano, clique em trocar de plano e escolha: <strong>PREMIUM: PGR + AEP + PCMSO e ASOS + LTCAT até 2 mil vidas ou 20 empresas!</strong></li>
             </ol>
             <p>💰 <strong>Você pagará somente a diferença proporcional neste mês.</strong></p>
             <p>A partir do próximo mês, a cobrança passará a ser de <strong>R$ 197,90/mês</strong>.</p>
-            <p>Após concluir a troca, os <strong>módulos PCMSO E LTCAT serão liberados no seu software</strong>.</p>
+            <p>Após concluir a troca, os <strong>módulos PCMSO e ASOS e LTCAT serão liberados no seu software</strong>.</p>
             <p className="font-semibold">Precisa de ajuda?</p>
             <p>Se tiver qualquer dificuldade para realizar a troca, podemos enviar o <strong>convite de troca de plano diretamente pelo WhatsApp</strong>. Nossa equipe poderá orientar você no processo.</p>
             <Button asChild className="w-full">

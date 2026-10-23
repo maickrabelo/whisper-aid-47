@@ -10,7 +10,7 @@ Atualizado: 23/10/2026
 | 3 | Programa e inventário | A | Implementada; validação médica do piloto pendente |
 | 4 | Protocolos e revisão médica | A | Implementada; validação médica do piloto pendente |
 | 5 | Documento e ações | A | PDF e ações implementados no piloto; assinatura/homologação pendentes |
-| 6 | Solicitações e vencimentos | B | Pendente |
+| 6 | Solicitações e vencimentos | B | Implementada em simulação isolada; operação real aguarda aceite da Release A |
 | 7 | Controles clínicos e ASO | B/C | Pendente |
 | 8 | Relatório analítico | C | Pendente |
 | 9 | eSocial S-2220 (export) | D | Pendente |
@@ -72,3 +72,11 @@ Atualizado: 23/10/2026
 - 13/13 testes de integridade/acesso PASS com dados fictícios desfeitos. Teste do renderizador sem mutação PASS. Cadastro de ação, histórico, documento salvo e download exercitados pelo navegador no piloto, sem erros ou transbordamento horizontal. PDF com 12 GHEs e textos longos gerou 4 páginas.
 - Objetivo e ação fictícios identificados como teste permanecem no rascunho piloto. Não representam orientações médicas reais.
 - Bloqueios para aceite integral: assinatura documental e homologação pelo médico cadastrado pela gestora; fases clínicas e eSocial permanecem desligadas. Não declarar o módulo 100% funcional.
+
+## Fase 6 — simulação (23/10/2026)
+- Solicitações manuais, prazo/vencimento, agendamento/local, comparecimento administrativo, cancelamento com motivo e histórico preservado.
+- Flag independente `PCMSO_EXAMS_BETA`, com acesso apenas para a empresa Demo Maick da conta piloto. Banco exige `simulation=true`; nenhum e-mail/WhatsApp, resultado, aptidão, ASO ou pedido clínico real.
+- RPCs idempotentes por chave, empresa e conteúdo; valida trabalhador/protocolo/GHE. Cópia ocupacional/protocolo preservada após mudança de função; protocolos inativos e pedidos encerrados bloqueados.
+- Privilégios herdados de escrita foram detectados e explicitamente revogados nas duas tabelas; RLS não autoriza escrita direta. Histórico não pode ser forjado/apagado pela API.
+- Testes persistidos: `tests/phase6_pilot.py` (UI criar/agendar/recarregar/cancelar/histórico + API isolada) e `tests/exam_deadline.test.ts`. Validados na sessão autorizada do piloto, sem erros de execução ou transbordamento em 390px. Dados fictícios identificados permanecem como simulação, protocolos fictícios inativos ao final.
+- Etapa não homologada para operação real; assinatura documental e validação médica da Release A continuam pendentes. Prontuário/ASO/relatório analítico/eSocial ainda não implementados.

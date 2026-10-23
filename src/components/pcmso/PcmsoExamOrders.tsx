@@ -61,7 +61,7 @@ export function PcmsoExamOrders({ companyId }: { companyId: string }) {
   const visible = rows.filter(row => (filter === 'todos' || examDeadline(row.due_date, row.status, today) === filter) && snapshotText(row.worker_snapshot, 'name').toLowerCase().includes(search.toLowerCase()));
   const edit = (row: Order | null) => {
     setEditing(row);
-    setForm({ worker: row?.worker_id ?? '', protocol: row?.protocol_id ?? '', due: row?.due_date ?? '', status: row?.status === 'agendado' ? 'agendado' : 'agendado', scheduled: row?.scheduled_date ?? '', location: row?.location ?? '', reason: '', key: crypto.randomUUID() });
+    setForm({ worker: row?.worker_id ?? '', protocol: row?.protocol_id ?? '', due: row?.due_date ?? '', status: 'agendado', scheduled: row?.scheduled_date ?? '', location: row?.location ?? '', reason: '', key: crypto.randomUUID() });
     setOpen(true);
   };
   const save = async () => {

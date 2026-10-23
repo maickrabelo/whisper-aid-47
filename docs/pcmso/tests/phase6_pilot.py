@@ -102,6 +102,12 @@ async def main():
           if(!inactive.error)throw Error('Inactive protocol allowed');return true;
         }''', [COMPANY, fixture['worker'], fixture['protocol']])
         assert terminal
+        await page.evaluate('''async ([company,worker])=>{
+          const {supabase:s}=await import('/src/integrations/supabase/client.ts');
+          const r=await s.from('pcmso_exam_orders').select('id').eq('company_id',company).eq('worker_id',worker).in('status',['solicitado','agendado']);
+          if(r.error)throw Error(r.error.message);
+          for(const o of r.data){const c=await s.rpc('pcmso_update_exam_order',{_order_id:o.id,_status:'cancelado',_scheduled_date:null,_location:'Local fictício — sem envio externo',_reason:'Encerramento de simulações anteriores'});if(c.error)throw Error(c.error.message);}
+        }''', [COMPANY, fixture['worker']])
         await page.set_viewport_size({'width':390,'height':844})
         await page.reload()
         await page.get_by_role('button',name='Nova solicitação',exact=True).wait_for()

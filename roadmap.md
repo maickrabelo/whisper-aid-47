@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Implementar validação e transmissão eSocial: aguarda escolha do serviço transmissor, certificado/autorizações por empresa e homologação com dados reais autorizados.
+
 - [x] Concluir guarda privada dos PDFs assinados manualmente (ASO/programa), histórico e download autorizado.
 - [x] Concluir relatório analítico anual estruturado, revisão médica, comparação declarada e PDF, com supressão de grupos pequenos.
 - [x] Verificar isolamento, assinatura e relatório pelo fluxo autenticado; preservar bloqueio de uso real/eSocial.
@@ -9,7 +11,7 @@
 - [x] Fase 9: preparação S-2220 para download, validação estrutural e nenhuma transmissão.
 - [x] Verificar fases 7–9 por testes de isolamento e fluxo autenticado, documentar limites.
 - [ ] Operação clínica real e homologação do relatório/assinaturas: aguardam médico real e política de retenção/base legal.
-- [ ] Evento eSocial transmissível: aguarda definição de assinatura digital XML e homologação; transmissão não autorizada.
+- [ ] Evento eSocial transmissível: solicitado em 23/10/2026; aguarda certificado/autorizações, serviço de transmissão e homologação; dados simulados não podem ser enviados em produção.
 
 - [x] PCMSO etapa 6: solicitações manuais, vencimentos e histórico sem envio externo, isolados por empresa em simulação.
 - [x] Validar repetição, cancelamento e bloqueios; manter operação real desligada até aceite médico da Release A.

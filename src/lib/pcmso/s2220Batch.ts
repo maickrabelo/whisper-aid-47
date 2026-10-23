@@ -1,6 +1,11 @@
 import { buildS2220, validateS2220, type S2220Preparation } from './s2220';
 import type { ExportFile } from '../esocial/download';
 
+export function originalS2220Asos<T extends { id: string; previous_aso_id?: string | null }>(asos: T[]): T[] {
+  const superseded = new Set(asos.map(a => a.previous_aso_id).filter(Boolean));
+  return asos.filter(a => !a.previous_aso_id && !superseded.has(a.id));
+}
+
 /** Validate the entire selection before releasing any unsigned files. */
 export function buildS2220Files(preparations: S2220Preparation[]): ExportFile[] {
   if (!preparations.length) throw new Error('Selecione ao menos um ASO.');

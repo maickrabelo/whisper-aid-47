@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { buildS2220, validateS2220, type S2220Preparation } from '../../../src/lib/pcmso/s2220';
-import { buildS2220Files } from '../../../src/lib/pcmso/s2220Batch';
+import { buildS2220Files, originalS2220Asos } from '../../../src/lib/pcmso/s2220Batch';
 import { prepareXmlDownload } from '../../../src/lib/esocial/download';
 import JSZip from 'jszip';
 const fixture = (): S2220Preparation => ({ event_id: 'ID1123456780000202610231200000000001', hash: 'test', schema_version: 'S-1.3 NT06/2026', status: 'preparado_nao_transmitido', payload: { simulation:true, environment:2, signature_pending:true, employer_registration: '12345678', worker: { cpf: '52998224725', registration_number: 'FICTICIO-1' }, protocol: { exam_type: 'periodico' }, issued_on: '2026-10-23', fitness: 'apto', physician: { name: 'Médico fictício', crm: '000', crm_uf: 'SP' }, procedures: [{ code: '0295', name: 'Avaliação clínica ocupacional', date: '2026-10-23' }], transmitted: false } });
@@ -18,3 +18,4 @@ test('S2220 batch never releases valid subset when another event is invalid', ()
 test('S2220 batch rejects mixed employers', () => { const a=fixture(), b=fixture(); b.payload.employer_registration='11222333'; expect(()=>buildS2220Files([a,b])).toThrow('mesmo empregador'); });
 test('S2220 batch rejects repeated events', () => { expect(()=>buildS2220Files([fixture(),fixture()])).toThrow('repetido'); });
 test('S2220 batch requires a nonempty selection', () => { expect(()=>buildS2220Files([])).toThrow(); });
+test('original export excludes both superseded ASOs and corrections', () => { expect(originalS2220Asos([{id:'old',previous_aso_id:null},{id:'new',previous_aso_id:'old'},{id:'original',previous_aso_id:null}]).map(a=>a.id)).toEqual(['original']); });

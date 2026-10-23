@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Download, FileCheck, Plus, Stethoscope } from 'lucide-react';
 import { toast } from 'sonner';
 import { procedureName } from '@/lib/pcmso/s2220';
+import { originalS2220Asos } from '@/lib/pcmso/s2220Batch';
 import { PcmsoS2220Export } from './PcmsoS2220Export';
 import { createPcmsoAsoPDF } from './pcmsoAsoPDF';
 import { PcmsoSignedEvidence } from './PcmsoSignedEvidence';
@@ -54,7 +55,7 @@ export function PcmsoClinicalPilot({ companyId }: { companyId: string }) {
     {access.clinical && <Card>
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3"><CardTitle className="flex items-center gap-2 text-base"><Stethoscope className="h-4 w-4" /> Atendimentos e ASO <Badge variant="outline">Simulação</Badge></CardTitle><Button size="sm" onClick={() => { setForm(empty()); setProcedures([]); setOpen(true); }}><Plus className="mr-1 h-4 w-4" /> Novo atendimento</Button></CardHeader>
       <CardContent className="space-y-3">
-        {asos.length > 0 && <PcmsoS2220Export key={companyId} candidates={asos.filter(a => !a.previous_aso_id && !asos.some(next => next.previous_aso_id === a.id)).map(a => ({ id:a.id, signed:Boolean(a.signed_on), date:a.issued_on ?? a.content?.issued_on ?? '', label:orders.find(o => o.id === entries.find(e => e.id === a.clinical_entry_id)?.order_id)?.worker_snapshot?.name ?? `ASO ${a.id.slice(0,8)}` }))} />}
+        {asos.length > 0 && <PcmsoS2220Export key={companyId} candidates={originalS2220Asos(asos as (Row & { id:string })[]).map(a => ({ id:a.id, signed:Boolean(a.signed_on), date:a.issued_on ?? a.content?.issued_on ?? '', label:orders.find(o => o.id === entries.find(e => e.id === a.clinical_entry_id)?.order_id)?.worker_snapshot?.name ?? `ASO ${a.id.slice(0,8)}` }))} />}
         {!entries.length && <p className="text-sm text-muted-foreground">Nenhum atendimento simulado registrado.</p>}
         {entries.map(e => { const a = asos.find(a => a.clinical_entry_id === e.id); const o = orders.find(o => o.id === e.order_id); return <div key={e.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-3">
           <div className="min-w-0"><p className="break-words font-medium">{o?.worker_snapshot?.name ?? 'Atendimento'} — revisão {e.revision}</p><p className="text-sm text-muted-foreground">{e.exam_date} · {a ? a.signed_on ? 'Assinatura manual declarada (simulada)' : 'ASO com assinatura pendente' : 'ASO não emitido'}</p></div>
@@ -62,7 +63,7 @@ export function PcmsoClinicalPilot({ companyId }: { companyId: string }) {
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void act(async () => { const p = await rpc('pcmso_pilot_aso_payload', { _aso_id: a.id }); createPcmsoAsoPDF(p).save(`ASO_SIMULADO_${a.id}.pdf`); })}><Download className="mr-1 h-4 w-4" /> ASO</Button>
             {!a.signed_on && <Button size="sm" variant="outline" onClick={() => { setSignature(a); setSignedOn(today()); setReference(''); }}><FileCheck className="mr-1 h-4 w-4" /> Assinatura manual</Button>}
             <PcmsoSignedEvidence asoId={a.id} />
-            <PcmsoS2220Export key={a.id} asoId={a.id} signed={Boolean(a.signed_on)} />
+            {originalS2220Asos(asos as (Row & { id:string })[]).some(original => original.id === a.id) ? <PcmsoS2220Export key={a.id} asoId={a.id} signed={Boolean(a.signed_on)} /> : <span className="text-xs text-muted-foreground">S-2220 de retificação não disponível</span>}
           </>}</div>
         </div>; })}
       </CardContent>

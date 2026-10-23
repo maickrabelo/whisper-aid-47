@@ -3361,6 +3361,151 @@ export type Database = {
           },
         ]
       }
+      pcmso_exam_order_history: {
+        Row: {
+          actor_id: string
+          company_id: string
+          content: Json
+          id: string
+          order_id: string
+          reason: string
+          recorded_at: string
+        }
+        Insert: {
+          actor_id: string
+          company_id: string
+          content: Json
+          id?: string
+          order_id: string
+          reason: string
+          recorded_at?: string
+        }
+        Update: {
+          actor_id?: string
+          company_id?: string
+          content?: Json
+          id?: string
+          order_id?: string
+          reason?: string
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_exam_order_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_exam_order_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_exam_order_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_exam_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_exam_orders: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string
+          due_date: string
+          id: string
+          location: string
+          program_id: string
+          protocol_id: string
+          protocol_snapshot: Json
+          request_key: string
+          scheduled_date: string | null
+          simulation: boolean
+          status: string
+          updated_at: string
+          worker_id: string
+          worker_snapshot: Json
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by: string
+          due_date: string
+          id?: string
+          location?: string
+          program_id: string
+          protocol_id: string
+          protocol_snapshot: Json
+          request_key: string
+          scheduled_date?: string | null
+          simulation?: boolean
+          status?: string
+          updated_at?: string
+          worker_id: string
+          worker_snapshot: Json
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          due_date?: string
+          id?: string
+          location?: string
+          program_id?: string
+          protocol_id?: string
+          protocol_snapshot?: Json
+          request_key?: string
+          scheduled_date?: string | null
+          simulation?: boolean
+          status?: string
+          updated_at?: string
+          worker_id?: string
+          worker_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_exam_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_exam_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_exam_orders_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_exam_orders_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_protocols"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_exam_orders_worker_id_company_id_fkey"
+            columns: ["worker_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_workers"
+            referencedColumns: ["id", "company_id"]
+          },
+        ]
+      }
       pcmso_inventory_reviews: {
         Row: {
           company_id: string
@@ -6563,6 +6708,7 @@ export type Database = {
       }
       pcmso_create_revision: { Args: { _program_id: string }; Returns: string }
       pcmso_document_payload: { Args: { _program_id: string }; Returns: Json }
+      pcmso_exam_can: { Args: { _company_id: string }; Returns: boolean }
       pcmso_has_clinical_assignment: {
         Args: { _company_id: string; _role?: string; _user_id: string }
         Returns: boolean
@@ -6590,11 +6736,31 @@ export type Database = {
         }
         Returns: string
       }
+      pcmso_request_exam: {
+        Args: {
+          _company_id: string
+          _due_date: string
+          _protocol_id: string
+          _request_key: string
+          _worker_id: string
+        }
+        Returns: string
+      }
       pcmso_revoke_professional: {
         Args: { _assignment_id: string }
         Returns: undefined
       }
       pcmso_source_payload: { Args: { _pgr_id: string }; Returns: Json }
+      pcmso_update_exam_order: {
+        Args: {
+          _location: string
+          _order_id: string
+          _reason: string
+          _scheduled_date: string
+          _status: string
+        }
+        Returns: string
+      }
       pcmso_worker_event: {
         Args: {
           _date: string

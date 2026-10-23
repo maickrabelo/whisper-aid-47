@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Concluir guarda privada dos PDFs assinados manualmente (ASO/programa), histórico e download autorizado.
+- [ ] Concluir relatório analítico anual estruturado, revisão médica, comparação e PDF, com supressão de grupos pequenos.
+- [ ] Verificar isolamento, assinatura e relatório pelo fluxo autenticado; preservar bloqueio de uso real/eSocial.
+
 - [x] Fase 7: registro clínico e ASO simulados, autorização médica, snapshots e declaração de assinatura manual.
 - [x] Fase 8: resumo anual revisável parcial, dados faltantes explícitos, empresa abaixo de 5 ocultada.
 - [x] Fase 9: preparação S-2220 para download, validação estrutural e nenhuma transmissão.

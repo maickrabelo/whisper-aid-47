@@ -127,6 +127,13 @@
       "when": 1792776984815,
       "tag": "0017_pcmso_release_aso_production",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792777245895,
+      "tag": "0018_pcmso_s2220_real_asos",
+      "breakpoints": true
     }
   ]
 }

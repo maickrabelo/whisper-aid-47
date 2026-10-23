@@ -15,10 +15,11 @@ export function buildS2220Files(preparations: S2220Preparation[]): ExportFile[] 
   preparations.forEach((p, index) => {
     const issues = validateS2220(p);
     if (p?.payload?.employer_registration !== employer) issues.push('O lote deve pertencer ao mesmo empregador.');
+    if (p?.payload?.environment !== preparations[0]?.payload?.environment) issues.push('Não misture ASOs reais e simulados no mesmo lote.');
     if (ids.has(p?.event_id)) issues.push('Evento repetido no lote.');
     ids.add(p?.event_id);
     errors.push(...issues.map(issue => `ASO ${index + 1}: ${issue}`));
   });
   if (errors.length) throw new Error(errors.join('\n'));
-  return preparations.map(p => ({ name: `S2220_SIMULADO_${p.event_id}.xml`, xml: buildS2220(p) }));
+  return preparations.map(p => ({ name: `${p.payload.environment === 1 ? 'S2220' : 'S2220_SIMULADO'}_${p.event_id}.xml`, xml: buildS2220(p) }));
 }

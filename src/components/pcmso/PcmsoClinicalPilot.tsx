@@ -45,7 +45,7 @@ export function PcmsoClinicalPilot({ companyId }: { companyId: string }) {
         if (o.error) throw o.error;
         setEntries(data.entries); setAsos(data.asos); setOrders(o.data ?? []);
       }
-    } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível carregar o piloto.'); }
+    } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível carregar os atendimentos.'); }
   };
   useEffect(() => { setAccess({ pilot: false, clinical: false, responsible: false }); void load(); }, [companyId]);
   const act = async (fn: () => Promise<void>) => { setBusy(true); try { await fn(); await load(); } catch (e) { toast.error(e instanceof Error ? e.message : 'Operação não concluída.'); } finally { setBusy(false); } };

@@ -36,8 +36,9 @@ Evidência: `tests/phase4_protocols.sql` — 20/20 PASS em 23/10/2026, executado
 Evidência: `tests/phase5_documents.sql` — 13/13 PASS em 23/10/2026 (transação desfeita); teste do renderizador aprovado sem mutação PASS. Cadastro de ação, histórico, persistência do documento e download BETA exercitados na conta piloto; PDF longo de 4 páginas inspecionado. Minuta BETA e versão aprovada são distintas, mas assinatura digital e registro de documento assinado ainda não implementados: não considerar a Fase 5 homologada integralmente.
 
 ## Fase 6 — Solicitações e vencimentos
-- [ ] Retry não duplica pedidos; cancelamentos no histórico.
-- [ ] Mudança de função preserva acompanhamento; sem envio real de e-mail/WhatsApp em dev.
+- [x] Retry não duplica pedidos; cancelamentos no histórico (simulação).
+- [x] Mudança de função preserva acompanhamento; sem envio real de e-mail/WhatsApp em dev.
+Evidência: `tests/phase6_pilot.py` — fluxo autenticado no piloto (criação, agendamento, leitura após recarregar, cancelamento, histórico), repetição/conflito, isolamento por empresa, API direta bloqueada, histórico protegido, mudança de função, prazo/motivo obrigatórios, protocolo inativo, pedido encerrado, interface/API sem sessão e tela 390px. `tests/exam_deadline.test.ts` — 2/2 PASS; teste anterior do PDF também PASS. Operação exclusivamente simulada com flag separada; aceite médico/assinatura da Release A continuam pendentes e impedem liberação real.
 
 ## Fase 7 — Controles clínicos e ASO
 - [ ] RH/admin sem atribuição não obtêm resultados via API/arquivo.

@@ -131,7 +131,7 @@ export const PcmsoWorkersCard = ({ companyId, canManage }: { companyId: string; 
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-2">
         <CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4 text-primary" /> Trabalhadores ({workers.length})</CardTitle>
         {canManage && (
           <div className="flex gap-2">

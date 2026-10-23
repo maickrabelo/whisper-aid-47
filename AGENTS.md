@@ -4,3 +4,4 @@ DialogContent must ignore outside clicks and Escape by default; this prevents ac
 - PCMSO inventory uses company-validated immutable source snapshots rather than live joins; PGR/AEP edits create change requests without modifying approved content.
 - PCMSO exam protocols are manual, company-scoped draft records; physician approval freezes program, inventory and protocols into an immutable version so later revisions cannot rewrite approved evidence.
 - PCMSO document exports use the authorized snapshot payload RPC and the pure PDF renderer; document settings and non-clinical actions freeze with approval, and approval must never be labelled as a digital signature.
+- PCMSO exam orders use company-authorized RPCs and append-only history with immutable occupational snapshots; the separate exam flag exposes simulation only until Release A acceptance, preventing clinical or external delivery operations.

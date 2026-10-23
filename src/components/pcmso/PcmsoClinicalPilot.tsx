@@ -12,6 +12,8 @@ import { Download, FileCheck, Plus, Stethoscope } from 'lucide-react';
 import { toast } from 'sonner';
 import { procedureName, buildS2220, type S2220Preparation } from '@/lib/pcmso/s2220';
 import { createPcmsoAsoPDF } from './pcmsoAsoPDF';
+import { PcmsoSignedEvidence } from './PcmsoSignedEvidence';
+import { PcmsoAnalyticalReport } from './PcmsoAnalyticalReport';
 
 type Row = Record<string, any>;
 const today = () => new Date().toLocaleDateString('en-CA');
@@ -57,6 +59,7 @@ export function PcmsoClinicalPilot({ companyId }: { companyId: string }) {
           <div className="flex flex-wrap gap-2">{!a ? <Button size="sm" variant="outline" onClick={() => { setIssue(e); setFitness(''); setIssueDate(today()); }}>Emitir ASO simulado</Button> : <>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void act(async () => { const p = await rpc('pcmso_pilot_aso_payload', { _aso_id: a.id }); createPcmsoAsoPDF(p).save(`ASO_SIMULADO_${a.id}.pdf`); })}><Download className="mr-1 h-4 w-4" /> ASO</Button>
             {!a.signed_on && <Button size="sm" variant="outline" onClick={() => { setSignature(a); setSignedOn(today()); setReference(''); }}><FileCheck className="mr-1 h-4 w-4" /> Assinatura manual</Button>}
+            <PcmsoSignedEvidence asoId={a.id} />
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void act(async () => { const p: S2220Preparation = await rpc('pcmso_pilot_prepare_s2220', { _aso_id: a.id }); saveFile(buildS2220(p), `S2220_PREPARACAO_NAO_TRANSMITIDA_${p.event_id}.xml`, 'application/xml'); })}><Download className="mr-1 h-4 w-4" /> Preparação S-2220</Button>
           </>}</div>
         </div>; })}
@@ -66,6 +69,7 @@ export function PcmsoClinicalPilot({ companyId }: { companyId: string }) {
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3"><CardTitle className="text-base">Relatório anual <Badge variant="outline">Simulação</Badge></CardTitle>{access.responsible && <div className="flex items-center gap-2"><Input className="w-24" aria-label="Ano do relatório" type="number" value={year} onChange={e => setYear(e.target.value)} /><Button size="sm" disabled={busy} onClick={() => void act(async () => { await rpc('pcmso_pilot_annual_report', { _company_id: companyId, _year: Number(year) }); toast.success('Revisão do relatório registrada.'); })}>Preparar relatório</Button></div>}</CardHeader>
       <CardContent className="space-y-3">{!reports.length && <p className="text-sm text-muted-foreground">Nenhum relatório preparado pelo médico responsável.</p>}{reports.map(r => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-3"><div><p className="font-medium">{r.year} — revisão {r.revision}</p><p className="text-sm text-muted-foreground">{r.content.status === 'suprimido' ? 'Grupo abaixo de 5 pessoas: totais ocultos.' : `Incompleto · solicitações ${r.content.totals?.requests} · com ASO ${r.content.totals?.with_aso} · sem ASO ${r.content.totals?.without_aso}`}</p><p className="text-xs text-muted-foreground">Indicadores clínicos não coletados.</p></div><Button size="sm" variant="outline" onClick={() => saveFile(JSON.stringify({ year: r.year, revision: r.revision, content: r.content, hash: r.content_hash }, null, 2), `PCMSO_RELATORIO_SIMULADO_${r.year}_R${r.revision}.json`, 'application/json')}><Download className="mr-1 h-4 w-4" /> Relatório</Button></div>)}</CardContent>
     </Card>}
+    {access.responsible && <PcmsoAnalyticalReport companyId={companyId} />}
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>Atendimento simulado</DialogTitle></DialogHeader><div className="space-y-3">
       <Label>Convocação com comparecimento</Label><Select value={form.order} onValueChange={order => setForm({ ...form, order })}><SelectTrigger aria-label="Convocação do atendimento"><SelectValue placeholder="Selecionar trabalhador" /></SelectTrigger><SelectContent>{orders.map(o => <SelectItem key={o.id} value={o.id}>{o.worker_snapshot?.name ?? o.id} — {o.scheduled_date}</SelectItem>)}</SelectContent></Select>
       <Label htmlFor="clinical-date">Data do atendimento</Label><Input id="clinical-date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />

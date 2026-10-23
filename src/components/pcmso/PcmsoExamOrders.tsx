@@ -80,7 +80,7 @@ export function PcmsoExamOrders({ companyId }: { companyId: string }) {
     setHistory(result.data ?? []);
   };
   return <section className="space-y-4 border-t pt-6">
-    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-lg font-semibold"><CalendarClock className="h-5 w-5 text-primary" /> Convocações de exames <Badge variant="outline">Simulação</Badge></h2><Button onClick={() => edit(null)}><Plus className="mr-2 h-4 w-4" /> Nova solicitação</Button></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-lg font-semibold"><CalendarClock className="h-5 w-5 text-primary" /> Convocações de exames</h2><Button onClick={() => edit(null)}><Plus className="mr-2 h-4 w-4" /> Nova solicitação</Button></div>
     <div className="flex flex-col gap-3 sm:flex-row"><Input aria-label="Buscar convocação por trabalhador" placeholder="Buscar trabalhador" value={search} onChange={e => setSearch(e.target.value)} /><Select value={filter} onValueChange={setFilter}><SelectTrigger className="sm:w-48" aria-label="Filtrar vencimentos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todos">Todos os prazos</SelectItem>{Object.entries(deadlines).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div>
     {error ? <div role="alert" className="text-destructive">{error}<Button variant="ghost" onClick={() => void load()}>Tentar novamente</Button></div> : visible.length === 0 ? <p className="py-4 text-sm text-muted-foreground">Nenhuma convocação encontrada.</p> : visible.map(row => {
       const deadline = examDeadline(row.due_date, row.status, today);

@@ -1,6 +1,7 @@
 # Roadmap
 
-- [ ] Implementar validação e transmissão S-2220 e S-2240: usuário confirmou que não possui serviço transmissor nem certificado/autorizações; aguarda contratação/configuração e homologação com dados reais autorizados.
+- [ ] Preparar exportações S-2240 e S-2220 para importação em transmissor externo: validar dados, arquivos individuais e download seguro; sem transmissão pelo app.
+- [ ] Homologar importação com o sistema externo escolhido: aguarda identificação do transmissor, certificado/autorizações e dados reais autorizados; S-2220 continua simulado até aceite médico.
 
 - [x] Concluir guarda privada dos PDFs assinados manualmente (ASO/programa), histórico e download autorizado.
 - [x] Concluir relatório analítico anual estruturado, revisão médica, comparação declarada e PDF, com supressão de grupos pequenos.
@@ -11,7 +12,7 @@
 - [x] Fase 9: preparação S-2220 para download, validação estrutural e nenhuma transmissão.
 - [x] Verificar fases 7–9 por testes de isolamento e fluxo autenticado, documentar limites.
 - [ ] Operação clínica real e homologação do relatório/assinaturas: aguardam médico real e política de retenção/base legal.
-- [ ] Evento eSocial transmissível: solicitado em 23/10/2026; aguarda certificado/autorizações, serviço de transmissão e homologação; dados simulados não podem ser enviados em produção.
+- [ ] Evento eSocial aceito pelo transmissor externo: aguarda certificado/autorizações e homologação; dados simulados não podem ser enviados em produção.
 
 - [x] PCMSO etapa 6: solicitações manuais, vencimentos e histórico sem envio externo, isolados por empresa em simulação.
 - [x] Validar repetição, cancelamento e bloqueios; manter operação real desligada até aceite médico da Release A.

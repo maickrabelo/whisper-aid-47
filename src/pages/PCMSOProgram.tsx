@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, FileText, History, Loader2, Send } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, FileText, History, Loader2, Send, GitBranch } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,15 @@ import { usePcmsoCan } from '@/hooks/usePcmsoAccess';
 import { toast } from 'sonner';
 import NotFound from './NotFound';
 import { PcmsoInventory } from '@/components/pcmso/PcmsoInventory';
+import { PcmsoProtocols } from '@/components/pcmso/PcmsoProtocols';
 
 interface Program {
   id: string;
   company_id: string;
   title: string;
   status: string;
+  revision_number: number;
+  previous_program_id: string | null;
   created_by: string | null;
   updated_by: string | null;
   created_at: string;
@@ -78,7 +81,7 @@ const PCMSOProgram = () => {
     setLoading(true);
     const { data, error } = await (supabase as any)
       .from('pcmso_programs')
-      .select('id,company_id,title,status,created_by,updated_by,created_at,updated_at')
+      .select('id,company_id,title,status,revision_number,previous_program_id,created_by,updated_by,created_at,updated_at')
       .eq('id', programId)
       .maybeSingle();
 
@@ -97,7 +100,7 @@ const PCMSOProgram = () => {
       (supabase as any)
         .from('pcmso_audit_events')
         .select('id,action,entity,entity_id,result,justification,created_at,actor_id')
-        .eq('entity_id', currentProgram.id)
+        .eq('company_id', currentProgram.company_id)
         .order('created_at', { ascending: false }),
     ]);
 
@@ -122,11 +125,11 @@ const PCMSOProgram = () => {
     const { error } = await (supabase as any)
       .from('pcmso_programs')
       .update(updates)
-      .eq('id', program.id);
+      .eq('id', program.id).select('id').single();
     setSaving(false);
 
     if (error) {
-      toast.error('Não foi possível salvar o programa.');
+      toast.error(error.message || 'Não foi possível salvar o programa.');
       return;
     }
 
@@ -135,7 +138,7 @@ const PCMSOProgram = () => {
   };
 
   const saveTitle = async () => {
-    if (!title.trim() || !prepare.allowed || program?.status === 'aprovado') return;
+    if (!title.trim() || !prepare.allowed || program?.status !== 'rascunho') return;
     await updateProgram({ title: title.trim() });
   };
 
@@ -147,6 +150,15 @@ const PCMSOProgram = () => {
   const approveProgram = async () => {
     if (!approve.allowed || program?.status !== 'em_revisao') return;
     await updateProgram({ status: 'aprovado' });
+  };
+
+  const createRevision = async () => {
+    if (!program || !prepare.allowed || program.status !== 'aprovado') return;
+    setSaving(true);
+    const result = await supabase.rpc('pcmso_create_revision', { _program_id: program.id });
+    setSaving(false);
+    if (result.error) { toast.error(result.error.message); return; }
+    navigate(`/pcmso/programa/${result.data}`);
   };
 
   if (loading || (program && (view.loading || prepare.loading || approve.loading))) {
@@ -162,6 +174,7 @@ const PCMSOProgram = () => {
   }
 
   const isApproved = program.status === 'aprovado';
+  const isDraft = program.status === 'rascunho';
 
   return (
     <div className="min-h-screen bg-background">
@@ -176,6 +189,7 @@ const PCMSOProgram = () => {
               <FileText className="h-4 w-4 text-primary" />
               <span>PCMSO</span>
               {companyName && <span>· {companyName}</span>}
+              <span>· v{program.revision_number}</span>
             </div>
             <h1 className="text-2xl font-bold text-foreground">Editor do programa</h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -199,10 +213,10 @@ const PCMSOProgram = () => {
                   id="program-title"
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  disabled={!prepare.allowed || isApproved || saving}
+                  disabled={!prepare.allowed || !isDraft || saving}
                   maxLength={200}
                 />
-                {prepare.allowed && !isApproved && (
+                {prepare.allowed && isDraft && (
                   <Button onClick={saveTitle} disabled={saving || !title.trim() || title.trim() === program.title}>
                     Salvar título
                   </Button>
@@ -221,6 +235,8 @@ const PCMSOProgram = () => {
         </Card>
 
         <PcmsoInventory programId={program.id} companyId={program.company_id} canPrepare={prepare.allowed} locked={isApproved || program.status === 'arquivado'} />
+
+        <PcmsoProtocols programId={program.id} companyId={program.company_id} editable={prepare.allowed && isDraft} onChange={() => void load()} />
 
         <Card>
           <CardHeader>
@@ -241,6 +257,8 @@ const PCMSOProgram = () => {
                   <CheckCircle2 className="mr-2 h-4 w-4" /> Aprovar programa
                 </Button>
               )}
+              {prepare.allowed && program.status === 'em_revisao' && <Button variant="outline" disabled={saving} onClick={() => void updateProgram({ status: 'rascunho' })}>Devolver para ajustes</Button>}
+              {prepare.allowed && isApproved && <Button variant="outline" disabled={saving} onClick={() => void createRevision()}><GitBranch className="mr-2 h-4 w-4" /> Criar nova revisão</Button>}
               {isApproved && (
                 <div className="flex items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary">
                   <CheckCircle2 className="h-4 w-4" /> Programa aprovado e protegido contra edição.

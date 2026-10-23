@@ -14,6 +14,7 @@ import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, 
 
 const LTCAT_UNLOCK_URL = "https://wa.me/5527998443852?text=Estou%20usando%20o%20Software%20Sr.SMS%20e%20quero%20desbloquear%20o%20m%C3%B3dulo%20LTCAT";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
+import PcmsoBlackCard from '@/components/sst/PcmsoBlackCard';
 import { usePGRModuleAccess } from "@/hooks/usePGRModuleAccess";
 import { useFeatureAccess, LTCAT_BETA } from "@/hooks/useFeatureAccess";
 import { useAEPBetaAccess } from "@/hooks/useAEPBetaAccess";
@@ -254,16 +255,6 @@ const SSTDashboard = () => {
         description: 'Avaliação Ergonômica Preliminar (NR-17)',
         highlights: ['Avaliações', 'Importação', 'PGR'],
         path: '/aep',
-      }];
-    }
-    if (hasPcmsoBeta) {
-      result = [...result, {
-        id: 'tool-pcmso',
-        icon: Activity,
-        title: 'PCMSO (BETA)',
-        description: 'Programa de Controle Médico de Saúde Ocupacional (NR-7)',
-        highlights: ['BETA', 'NR-7'],
-        path: '/pcmso',
       }];
     }
     return result;
@@ -703,6 +694,7 @@ const SSTDashboard = () => {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {!isSmartOnly && <PcmsoBlackCard unlocked={hasPcmsoBeta} />}
               {toolCards}
             </div>
           </div>

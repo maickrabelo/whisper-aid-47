@@ -30,9 +30,10 @@ Evidência: `tests/phase3_inventory.sql` — 13/13 PASS em 22/10/2026 (transaç�
 Evidência: `tests/phase4_protocols.sql` — 20/20 PASS em 23/10/2026, executados pelo canal privilegiado de testes e desfeitos por exceção final. Cadastro, leitura após atualização, histórico e desativação exercitados pela interface na conta piloto, sem erros de execução; validação clínica por médico real ainda pendente.
 
 ## Fase 5 — Documento e ações (fim da Release A)
-- [ ] Versão anterior gera o mesmo conteúdo após mudanças na empresa.
+- [x] Versão anterior gera o mesmo conteúdo após mudanças na empresa.
 - [ ] Minuta e assinado distintos.
-- [ ] Funciona sem prontuário ou eSocial; Kanban sem diagnóstico.
+- [x] Funciona sem prontuário ou eSocial; quadro de ações sem diagnóstico.
+Evidência: `tests/phase5_documents.sql` — 13/13 PASS em 23/10/2026 (transação desfeita); teste do renderizador aprovado sem mutação PASS. Cadastro de ação, histórico, persistência do documento e download BETA exercitados na conta piloto; PDF longo de 4 páginas inspecionado. Minuta BETA e versão aprovada são distintas, mas assinatura digital e registro de documento assinado ainda não implementados: não considerar a Fase 5 homologada integralmente.
 
 ## Fase 6 — Solicitações e vencimentos
 - [ ] Retry não duplica pedidos; cancelamentos no histórico.

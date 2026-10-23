@@ -11,9 +11,9 @@ Atualizado: 23/10/2026
 | 4 | Protocolos e revisão médica | A | Implementada; validação médica do piloto pendente |
 | 5 | Documento e ações | A | PDF e ações implementados no piloto; assinatura/homologação pendentes |
 | 6 | Solicitações e vencimentos | B | Implementada em simulação isolada; operação real aguarda aceite da Release A |
-| 7 | Controles clínicos e ASO | B/C | Pendente |
-| 8 | Relatório analítico | C | Pendente |
-| 9 | eSocial S-2220 (export) | D | Pendente |
+| 7 | Controles clínicos e ASO | B/C | Fluxo simulado implementado/testado; operação clínica real desligada |
+| 8 | Relatório analítico | C | Resumo anual simulado parcial; indicadores clínicos/NR-7 completos pendentes |
+| 9 | eSocial S-2220 (export) | D | Preparação XML sem assinatura implementada; não transmissível nem homologada |
 | 10 | Integrações complementares | D | Pendente |
 | 11 | Homologação e piloto | — | Pendente |
 
@@ -21,7 +21,7 @@ Atualizado: 23/10/2026
 1. Conferir migrações do repositório contra o banco real antes da Fase 1.
 2. Qualidade dos dados de `pgr_ghe_workers` (CPF, matrícula, duplicidades) — diagnóstico agregado na Fase 2.
 3. Cada gestora cadastra seu médico por empresa; validação clínica com médico real ainda pendente. Conta piloto: teste.sst@srsms.app.
-4. Fluxo de assinatura do ASO (Release C) e provedor eSocial (Release D).
+4. Assinatura manual externa confirmada; guarda/verificação do documento assinado e assinatura XML eSocial não implementadas. Nenhuma transmissão autorizada.
 5. Planos comerciais que incluirão o PCMSO.
 6. Limiar de anonimato confirmado: grupos com menos de 5 pessoas ocultos.
 7. Política de retenção e base legal (com responsável de privacidade).
@@ -80,3 +80,13 @@ Atualizado: 23/10/2026
 - Privilégios herdados de escrita foram detectados e explicitamente revogados nas duas tabelas; RLS não autoriza escrita direta. Histórico não pode ser forjado/apagado pela API.
 - Testes persistidos: `tests/phase6_pilot.py` (UI criar/agendar/recarregar/cancelar/histórico + API isolada) e `tests/exam_deadline.test.ts`. Validados na sessão autorizada do piloto, sem erros de execução ou transbordamento em 390px. Dados fictícios identificados permanecem como simulação, protocolos fictícios inativos ao final.
 - Etapa não homologada para operação real; assinatura documental e validação médica da Release A continuam pendentes. Prontuário/ASO/relatório analítico/eSocial ainda não implementados.
+
+## Fases 7–9 — piloto autorizado (23/10/2026)
+- Autorização do usuário: construir em simulação somente no piloto; assinatura manual; sem médico real para homologar; eSocial apenas preparação/download, nunca transmissão.
+- Flag adicional `PCMSO_CLINICAL_PILOT` com acesso individual e empresa fixada no backend. A gestora não recebeu atribuição médica permanente. A atribuição fictícia temporária usada em teste foi revogada.
+- Registros clínicos append-only, por atendimento/revisão; leitura RPC auditada exclusiva do médico ativo. Nenhum SELECT direto para authenticated/anon nas tabelas clínicas, ASOs, declarações e preparações eSocial. ASO não inclui notas clínicas; snapshot de empresa, trabalhador, procedimentos, protocolo, médico e versão do programa preservado. Correções geram nova revisão, aptidão sempre escolhida manualmente pelo médico do atendimento.
+- ASO PDF marcado SIMULAÇÃO/SEM VALIDADE OCUPACIONAL; programa não aprovado explícito. Declaração de assinatura manual simulada append-only: não verifica, guarda nem prova assinatura real. Nenhum prontuário ou arquivo clínico entregue ao RH.
+- Resumos anuais imutáveis e revisáveis por médico responsável. Sem filtros por GHE/sexo/doença, sem resultados clínicos ou subtotais sobrepostos. Menos de 5 trabalhadores distintos: todos os totais nulos. Acima do limiar: apenas solicitações/com ASO/sem ASO, sempre incompleto; doenças/CAT/indicadores ausentes permanecem nulos, não zero. Não substitui relatório analítico integral da NR-7.
+- S-2220: preparo do `evtMonit`, Tabela 27 oficial, validação de dados obrigatórios, ambiente 2, histórico apenas `preparado_nao_transmitido`. CNPJ do piloto está ausente: download pelo fluxo real é corretamente bloqueado. Teste fictício de XML valida o corpo contra XSD oficial de 01/07/2026; documento inteiro rejeitado por ausência de XMLDSig, sem fabricar assinatura. Assinatura manual de ASO não assina XML.
+- Evidências: `phase789_access.py`, `phase789_clinical.py` (UI autenticada: atendimento, aptidão manual, ASO PDF, declaração e resumo persistidos após reload; CNPJ faltante bloqueado); teste transacional com médico fictício/revogação desfeito; `s2220.test.ts`, `s2220_xsd.py` (7 testes JS totais PASS); build OK, zero erros de execução. Fixtures permanentes são exclusivamente simuladas.
+- Limites: Fase 7 clínica real, relatório analítico completo (Fase 8), assinatura XML/aceite S-2220 (Fase 9), anexos/guarda de assinatura, integrações (10) e homologação (11) continuam pendentes/desligados. Não declarar módulo 100% funcional.

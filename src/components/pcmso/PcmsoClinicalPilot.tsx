@@ -54,6 +54,7 @@ export function PcmsoClinicalPilot({ companyId }: { companyId: string }) {
     {access.clinical && <Card>
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3"><CardTitle className="flex items-center gap-2 text-base"><Stethoscope className="h-4 w-4" /> Atendimentos e ASO <Badge variant="outline">Simulação</Badge></CardTitle><Button size="sm" onClick={() => { setForm(empty()); setProcedures([]); setOpen(true); }}><Plus className="mr-1 h-4 w-4" /> Novo atendimento</Button></CardHeader>
       <CardContent className="space-y-3">
+        {asos.length > 0 && <PcmsoS2220Export candidates={asos.map(a => ({ id:a.id, signed:Boolean(a.signed_on), date:a.issued_on ?? a.content?.issued_on ?? '', label:orders.find(o => o.id === entries.find(e => e.id === a.clinical_entry_id)?.order_id)?.worker_snapshot?.name ?? `ASO ${a.id.slice(0,8)}` }))} />}
         {!entries.length && <p className="text-sm text-muted-foreground">Nenhum atendimento simulado registrado.</p>}
         {entries.map(e => { const a = asos.find(a => a.clinical_entry_id === e.id); const o = orders.find(o => o.id === e.order_id); return <div key={e.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-3">
           <div className="min-w-0"><p className="break-words font-medium">{o?.worker_snapshot?.name ?? 'Atendimento'} — revisão {e.revision}</p><p className="text-sm text-muted-foreground">{e.exam_date} · {a ? a.signed_on ? 'Assinatura manual declarada (simulada)' : 'ASO com assinatura pendente' : 'ASO não emitido'}</p></div>

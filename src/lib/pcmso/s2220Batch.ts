@@ -20,5 +20,5 @@ export function buildS2220Files(preparations: S2220Preparation[]): ExportFile[] 
     errors.push(...issues.map(issue => `ASO ${index + 1}: ${issue}`));
   });
   if (errors.length) throw new Error(errors.join('\n'));
-  return preparations.map(p => ({ name: `S2220_SIMULADO_${p.event_id}.xml`, xml: buildS2220(p) }));
+  return preparations.map(p => ({ name: `${p.payload.environment === 1 ? 'S2220' : 'S2220_SIMULADO'}_${p.event_id}.xml`, xml: buildS2220(p) }));
 }

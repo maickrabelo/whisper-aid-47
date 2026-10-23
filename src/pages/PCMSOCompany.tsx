@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import NotFound from './NotFound';
 import { PcmsoProfessionalsCard } from '@/components/pcmso/PcmsoProfessionalsCard';
 import { PcmsoWorkersCard } from '@/components/pcmso/PcmsoWorkersCard';
+import { PcmsoExamOrders } from '@/components/pcmso/PcmsoExamOrders';
 
 interface Program {
   id: string;
@@ -156,6 +157,7 @@ const PCMSOCompany = () => {
 
         {companyId && <PcmsoProfessionalsCard companyId={companyId} canManage={prepare.allowed} />}
         {companyId && <PcmsoWorkersCard companyId={companyId} canManage={prepare.allowed} />}
+        {companyId && <PcmsoExamOrders companyId={companyId} />}
 
         {programs.length === 0 ? (
           <Card>

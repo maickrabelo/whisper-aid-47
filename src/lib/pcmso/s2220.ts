@@ -3,7 +3,8 @@ import procedures from './procedures.json';
 type Data = Record<string, any>;
 export interface S2220Preparation { event_id: string; payload: Data; hash: string; schema_version: string; status: string }
 const types: Record<string, string> = { admissional: '0', periodico: '1', retorno: '2', mudanca_risco: '3', demissional: '9' };
-const esc = (v: unknown) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]!));
+const entities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' };
+const esc = (v: unknown) => String(v ?? '').replace(/[&<>"']/g, c => entities[c] ?? c);
 export const procedureName = (code: string) => (procedures as Record<string, string>)[code];
 
 export function validateS2220(p: S2220Preparation): string[] {

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 import { createPcmsoPDF, type PcmsoDocumentPayload } from './pcmsoDocumentPDF';
+import { PcmsoSignedEvidence } from './PcmsoSignedEvidence';
 
 const blank = { valid_from: '', valid_to: '', objectives: '', responsibilities: '', emergency_flow: '', monitoring: '' };
 const fields = { objectives: 'Objetivos', responsibilities: 'Responsabilidades', emergency_flow: 'Fluxo de urgência', monitoring: 'Acompanhamento e avaliação' };
@@ -53,7 +54,7 @@ export function PcmsoDocument({ programId, companyId, editable, approved }: { pr
       <div className="grid gap-4 sm:grid-cols-2">{(['valid_from', 'valid_to'] as const).map(key => <div className="space-y-2" key={key}><Label htmlFor={`pcmso-${key}`}>{key === 'valid_from' ? 'Início da vigência' : 'Fim da vigência'}</Label><Input id={`pcmso-${key}`} type="date" disabled={!editable || busy} value={form[key]} onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))} /></div>)}</div>
       {Object.entries(fields).map(([key, label]) => <div className="space-y-2" key={key}><Label htmlFor={`pcmso-${key}`}>{label}</Label><Textarea id={`pcmso-${key}`} disabled={!editable || busy} maxLength={20000} value={form[key as keyof typeof fields]} onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))} /></div>)}
       {editable && <Button type="submit" disabled={busy}><Save className="mr-2 h-4 w-4" /> Salvar documento</Button>}
-      {approved && <p className="text-sm text-muted-foreground">Aprovação médica registrada; assinatura do documento pendente.</p>}
+      {approved && <><p className="text-sm text-muted-foreground">Aprovação médica registrada; a assinatura manual é documentada separadamente.</p><PcmsoSignedEvidence programId={programId} /></>}
     </form>}
   </section>;
 }

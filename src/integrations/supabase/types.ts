@@ -7104,6 +7104,7 @@ export type Database = {
         }
         Returns: string
       }
+      pcmso_valid_cpf: { Args: { _cpf: string }; Returns: boolean }
       pcmso_worker_event: {
         Args: {
           _date: string

@@ -12,7 +12,7 @@ Atualizado: 23/10/2026
 | 5 | Documento e ações | A | PDF e ações implementados no piloto; assinatura/homologação pendentes |
 | 6 | Solicitações e vencimentos | B | Implementada em simulação isolada; operação real aguarda aceite da Release A |
 | 7 | Controles clínicos e ASO | B/C | Fluxo simulado implementado/testado; operação clínica real desligada |
-| 8 | Relatório analítico | C | Resumo anual simulado parcial; indicadores clínicos/NR-7 completos pendentes |
+| 8 | Relatório analítico | C | Relatório manual estruturado e PDF/revisões testados em simulação; homologação clínica pendente |
 | 9 | eSocial S-2220 (export) | D | Preparação XML sem assinatura implementada; não transmissível nem homologada |
 | 10 | Integrações complementares | D | Pendente |
 | 11 | Homologação e piloto | — | Pendente |
@@ -21,7 +21,7 @@ Atualizado: 23/10/2026
 1. Conferir migrações do repositório contra o banco real antes da Fase 1.
 2. Qualidade dos dados de `pgr_ghe_workers` (CPF, matrícula, duplicidades) — diagnóstico agregado na Fase 2.
 3. Cada gestora cadastra seu médico por empresa; validação clínica com médico real ainda pendente. Conta piloto: teste.sst@srsms.app.
-4. Assinatura manual externa confirmada; guarda/verificação do documento assinado e assinatura XML eSocial não implementadas. Nenhuma transmissão autorizada.
+4. Assinatura manual externa confirmada; guarda privada de PDF implementada no piloto, autenticidade da assinatura não verificada. Assinatura XML eSocial não implementada; nenhuma transmissão autorizada.
 5. Planos comerciais que incluirão o PCMSO.
 6. Limiar de anonimato confirmado: grupos com menos de 5 pessoas ocultos.
 7. Política de retenção e base legal (com responsável de privacidade).
@@ -89,4 +89,11 @@ Atualizado: 23/10/2026
 - Resumos anuais imutáveis e revisáveis por médico responsável. Sem filtros por GHE/sexo/doença, sem resultados clínicos ou subtotais sobrepostos. Menos de 5 trabalhadores distintos: todos os totais nulos. Acima do limiar: apenas solicitações/com ASO/sem ASO, sempre incompleto; doenças/CAT/indicadores ausentes permanecem nulos, não zero. Não substitui relatório analítico integral da NR-7.
 - S-2220: preparo do `evtMonit`, Tabela 27 oficial, validação de dados obrigatórios, ambiente 2, histórico apenas `preparado_nao_transmitido`. CNPJ do piloto está ausente: download pelo fluxo real é corretamente bloqueado. Teste fictício de XML valida o corpo contra XSD oficial de 01/07/2026; documento inteiro rejeitado por ausência de XMLDSig, sem fabricar assinatura. Assinatura manual de ASO não assina XML.
 - Evidências: `phase789_access.py`, `phase789_clinical.py` (UI autenticada: atendimento, aptidão manual, ASO PDF, declaração e resumo persistidos após reload; CNPJ faltante bloqueado); teste transacional com médico fictício/revogação desfeito; `s2220.test.ts`, `s2220_xsd.py` (7 testes JS totais PASS); build OK, zero erros de execução. Fixtures permanentes são exclusivamente simuladas.
-- Limites: Fase 7 clínica real, relatório analítico completo (Fase 8), assinatura XML/aceite S-2220 (Fase 9), anexos/guarda de assinatura, integrações (10) e homologação (11) continuam pendentes/desligados. Não declarar módulo 100% funcional.
+- Limites atualizados no complemento abaixo; operação real, assinatura XML, integrações e homologação continuam pendentes/desligadas. Não declarar módulo 100% funcional.
+
+## Complemento de assinatura manual e relatório analítico (23/10/2026)
+- Guarda privada de PDF por ASO/programa aprovado: reserva/recibo imutáveis, limite 10 MB, upload sem substituição, SHA-256 declarado conferido no download, nome/caminho UUID sem CPF. Não verifica autenticidade da assinatura. Versões anteriores não reescritas; programa em rascunho recusado. Interface do programa aprovado não exercitada nesta etapa.
+- Relatório analítico manual estruturado: período anual, setor/função, população única, contagens por tipos de exame, complementares/resultados alterados, novos casos de doença ocupacional e CAT, percentuais com denominadores, fontes/limitações, análise comparativa declarada, medidas/acompanhamento e discussão com empresa/CIPA. Sem diagnóstico automático; ausência=null. Exames clínicos reconciliados com tipos declarados; contagens inconsistentes recusadas.
+- Salvar/ler apenas responsável; bruto clínico sem acesso direto. PDF suprime integralmente grupos, narrativa e totais se população ou qualquer indicador positivo <5. Sem filtros/export bruto para RH e sem proporções reconstrutivas em pequenos grupos. Status preenchido_simulado ou incompleto, nunca homologado/completo juridicamente.
+- Teste autenticado `tests/phase789_completion.py`: guarda/reload/download de PDF com bytes iguais; relatório revisão 1 com 10 clínicos, 10 complementares, 5 alterações (50%); CAT ausente cria revisão 2 incompleta; PDF inspecionado. API direta, overwrite/delete e acesso após revogação bloqueados. 13/13 testes unitários PASS, zero erros de execução, build OK. Atribuição fictícia de médico revogada após teste. Fixtures explicitamente simuladas preservadas para demonstração.
+- Pendências externas: médico real para homologar conteúdo e assinatura; responsável por política de retenção/base legal; eventual assinatura XML se evento transmissível vier a ser contratado/autorizado. Não há envio ao eSocial e não foi habilitado uso clínico real.

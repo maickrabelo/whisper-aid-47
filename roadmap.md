@@ -1,10 +1,14 @@
 # Roadmap
 
+- [x] Concluir guarda privada dos PDFs assinados manualmente (ASO/programa), histórico e download autorizado.
+- [x] Concluir relatório analítico anual estruturado, revisão médica, comparação declarada e PDF, com supressão de grupos pequenos.
+- [x] Verificar isolamento, assinatura e relatório pelo fluxo autenticado; preservar bloqueio de uso real/eSocial.
+
 - [x] Fase 7: registro clínico e ASO simulados, autorização médica, snapshots e declaração de assinatura manual.
 - [x] Fase 8: resumo anual revisável parcial, dados faltantes explícitos, empresa abaixo de 5 ocultada.
 - [x] Fase 9: preparação S-2220 para download, validação estrutural e nenhuma transmissão.
 - [x] Verificar fases 7–9 por testes de isolamento e fluxo autenticado, documentar limites.
-- [ ] Operação clínica real, relatório NR-7 completo e anexos/assinatura verificada: aguardam homologação médica e retenção/base legal.
+- [ ] Operação clínica real e homologação do relatório/assinaturas: aguardam médico real e política de retenção/base legal.
 - [ ] Evento eSocial transmissível: aguarda definição de assinatura digital XML e homologação; transmissão não autorizada.
 
 - [x] PCMSO etapa 6: solicitações manuais, vencimentos e histórico sem envio externo, isolados por empresa em simulação.

@@ -3150,6 +3150,57 @@ export type Database = {
           },
         ]
       }
+      pcmso_analytical_reports: {
+        Row: {
+          actor_id: string
+          company_id: string
+          content: Json
+          content_hash: string
+          created_at: string
+          id: string
+          revision: number
+          simulation: boolean
+          year: number
+        }
+        Insert: {
+          actor_id: string
+          company_id: string
+          content: Json
+          content_hash: string
+          created_at?: string
+          id?: string
+          revision: number
+          simulation?: boolean
+          year: number
+        }
+        Update: {
+          actor_id?: string
+          company_id?: string
+          content?: Json
+          content_hash?: string
+          created_at?: string
+          id?: string
+          revision?: number
+          simulation?: boolean
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_analytical_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_analytical_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pcmso_annual_reports: {
         Row: {
           actor_id: string
@@ -3578,6 +3629,109 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_evidence_receipts: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          upload_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          upload_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          upload_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_evidence_receipts_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: true
+            referencedRelation: "pcmso_evidence_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_evidence_uploads: {
+        Row: {
+          actor_id: string
+          aso_id: string | null
+          bytes: number
+          company_id: string
+          created_at: string
+          declared_sha256: string
+          filename: string
+          id: string
+          object_path: string
+          program_id: string | null
+          signed_on: string
+          simulation: boolean
+        }
+        Insert: {
+          actor_id: string
+          aso_id?: string | null
+          bytes: number
+          company_id: string
+          created_at?: string
+          declared_sha256: string
+          filename: string
+          id?: string
+          object_path: string
+          program_id?: string | null
+          signed_on: string
+          simulation?: boolean
+        }
+        Update: {
+          actor_id?: string
+          aso_id?: string | null
+          bytes?: number
+          company_id?: string
+          created_at?: string
+          declared_sha256?: string
+          filename?: string
+          id?: string
+          object_path?: string
+          program_id?: string | null
+          signed_on?: string
+          simulation?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_evidence_uploads_aso_id_fkey"
+            columns: ["aso_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_asos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_evidence_uploads_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_evidence_uploads_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_evidence_uploads_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_programs"
             referencedColumns: ["id"]
           },
         ]
@@ -7014,12 +7168,37 @@ export type Database = {
           company_name: string
         }[]
       }
+      pcmso_analytical_list: { Args: { _company_id: string }; Returns: Json }
+      pcmso_analytical_save: {
+        Args: { _company_id: string; _content: Json; _year: number }
+        Returns: string
+      }
       pcmso_can: {
         Args: { _company_id: string; _permission: string }
         Returns: boolean
       }
       pcmso_create_revision: { Args: { _program_id: string }; Returns: string }
       pcmso_document_payload: { Args: { _program_id: string }; Returns: Json }
+      pcmso_evidence_can: {
+        Args: { _path: string; _write?: boolean }
+        Returns: boolean
+      }
+      pcmso_evidence_finalize: { Args: { _upload_id: string }; Returns: string }
+      pcmso_evidence_list: {
+        Args: { _aso_id?: string; _program_id?: string }
+        Returns: Json
+      }
+      pcmso_evidence_reserve: {
+        Args: {
+          _aso_id: string
+          _bytes: number
+          _filename: string
+          _program_id: string
+          _sha256: string
+          _signed_on: string
+        }
+        Returns: Json
+      }
       pcmso_exam_can: { Args: { _company_id: string }; Returns: boolean }
       pcmso_has_clinical_assignment: {
         Args: { _company_id: string; _role?: string; _user_id: string }

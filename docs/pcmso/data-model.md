@@ -4,6 +4,8 @@ Status: proposto. Nomes a confirmar contra o schema real antes de cada migraçã
 
 Implementação da Fase 3: `pcmso_source_snapshots` (único programa+PGR, conteúdo JSONB integral e hash); `pcmso_change_requests` (pendência por programa+PGR); `pcmso_inventory_reviews` (observações por cópia). Referências à origem não têm cascata: conteúdo aprovado sobrevive à exclusão da fonte. Versões documentais adicionais permanecem para a fase de documentos.
 
+Implementação da Fase 4: `pcmso_exam_catalog` por empresa; `pcmso_protocols` com exame, tipo ocupacional, periodicidade, GHE/risco da cópia e justificativa manual; `pcmso_protocol_history` append-only. `pcmso_program_versions` captura empresa, inventário, revisões e protocolos na aprovação, com médico/CRM, hash e data. Aprovação não equivale a assinatura digital. `pcmso_programs.previous_program_id` e `revision_number` encadeiam revisões; `pcmso_create_revision` é idempotente, importa a fonte atual e copia protocolos ainda compatíveis, sem herdar aprovação nem revisão do inventário. Fontes removidas ou GHEs/riscos incompatíveis precisam de nova preparação manual.
+
 ## Convenções
 UUID; `timestamptz` para eventos; `date` para datas civis; `company_id` em toda entidade por empresa; `created_by`/`updated_by`. CPF nunca em URL, nome de arquivo ou log. Integridade entre empresas por FK composta `(company_id, id)` ou trigger de validação. Sem cascata sobre histórico ocupacional/médico.
 

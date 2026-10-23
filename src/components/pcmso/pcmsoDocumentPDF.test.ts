@@ -1,4 +1,5 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, test } from 'node:test';
+import assert from 'node:assert/strict';
 import { createPcmsoPDF, type PcmsoDocumentPayload } from './pcmsoDocumentPDF';
 
 describe('PCMSO frozen document content', () => {
@@ -9,8 +10,8 @@ describe('PCMSO frozen document content', () => {
     };
     const original = JSON.stringify(payload);
     const pdf = createPcmsoPDF(payload);
-    expect(JSON.stringify(payload)).toBe(original);
-    expect(pdf.output()).toContain('PCMSO original');
-    expect(pdf.output()).toContain('frozen-test-hash');
+    assert.equal(JSON.stringify(payload), original);
+    assert.ok(pdf.output().includes('PCMSO original'));
+    assert.ok(pdf.output().includes('frozen-test-hash'));
   });
 });

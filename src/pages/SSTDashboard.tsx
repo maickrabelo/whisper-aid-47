@@ -257,16 +257,6 @@ const SSTDashboard = () => {
         path: '/aep',
       }];
     }
-    if (hasPcmsoBeta) {
-      result = [...result, {
-        id: 'tool-pcmso',
-        icon: Activity,
-        title: 'PCMSO (BETA)',
-        description: 'Programa de Controle Médico de Saúde Ocupacional (NR-7)',
-        highlights: ['BETA', 'NR-7'],
-        path: '/pcmso',
-      }];
-    }
     return result;
   }, [companies, smartOuvidoriaIds, isSmartOnly, hasPgrShortcut, hasPGRAccess, hasLtcatBeta, hasPcmsoBeta, aepAllowed]);
 

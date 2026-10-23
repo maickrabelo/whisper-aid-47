@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] PCMSO etapa 6: solicitações manuais, vencimentos e histórico sem envio externo, isolados por empresa.
+- [ ] Validar repetição, cancelamento e bloqueios; manter operação real desligada até aceite médico da Release A.
+
 - [x] PCMSO etapa 5: cronograma e quadro de ações não clínicas, com histórico e isolamento.
 - [x] PCMSO etapa 5: PDF de minuta e versão aprovada imutável, sem simular assinatura digital.
 - [x] Validar documentos e ações no piloto e atualizar os critérios de aceite.

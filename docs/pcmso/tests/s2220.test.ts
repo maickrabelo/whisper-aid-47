@@ -1,5 +1,8 @@
 import { test, expect } from 'bun:test';
 import { buildS2220, validateS2220, type S2220Preparation } from '../../../src/lib/pcmso/s2220';
+import { buildS2220Files, originalS2220Asos } from '../../../src/lib/pcmso/s2220Batch';
+import { prepareXmlDownload } from '../../../src/lib/esocial/download';
+import JSZip from 'jszip';
 const fixture = (): S2220Preparation => ({ event_id: 'ID1123456780000202610231200000000001', hash: 'test', schema_version: 'S-1.3 NT06/2026', status: 'preparado_nao_transmitido', payload: { simulation:true, environment:2, signature_pending:true, employer_registration: '12345678', worker: { cpf: '52998224725', registration_number: 'FICTICIO-1' }, protocol: { exam_type: 'periodico' }, issued_on: '2026-10-23', fitness: 'apto', physician: { name: 'Médico fictício', crm: '000', crm_uf: 'SP' }, procedures: [{ code: '0295', name: 'Avaliação clínica ocupacional', date: '2026-10-23' }], transmitted: false } });
 test('simulated S-2220 cannot select production', () => { const p = fixture(); p.payload.environment = 1; expect(() => buildS2220(p)).toThrow(); });
 test('S-2220 rejects missing simulation provenance', () => { const p = fixture(); p.payload.simulation = false; expect(() => buildS2220(p)).toThrow(); });
@@ -10,3 +13,9 @@ test('S-2220 is preparation in environment 2 and never transmission', () => { co
 test('incomplete worker or manual fitness decision blocks export', () => { const p = fixture(); p.payload.worker.registration_number = ''; p.payload.fitness = ''; expect(() => buildS2220(p)).toThrow(); });
 test('unknown procedure code is rejected against official Table 27', () => { const p = fixture(); p.payload.procedures[0].code = '8888'; expect(() => buildS2220(p)).toThrow(); });
 test('ASO rendering never changes the immutable snapshot', async () => { const { createPcmsoAsoPDF } = await import('../../../src/components/pcmso/pcmsoAsoPDF'); const p = fixture(); const original = JSON.stringify(p); createPcmsoAsoPDF({ content: p.payload, hash: p.hash }); expect(JSON.stringify(p)).toBe(original); });
+test('S2220 batch emits two standalone unsigned events in ZIP', async () => { const a=fixture(), b=fixture(); b.event_id='ID1123456780000202610231200000000002'; const files=buildS2220Files([a,b]); const result=await prepareXmlDownload(files,'S2220_SIMULADO'); const zip=await JSZip.loadAsync(await result.blob.arrayBuffer()); expect(result.count).toBe(2); for(const file of files) { const content=await zip.file(file.name)?.async('string'); expect(content?.match(/<eSocial /g)?.length).toBe(1); expect(content).toContain('<tpAmb>2</tpAmb>'); expect(content).not.toContain('<Signature'); } });
+test('S2220 batch never releases valid subset when another event is invalid', () => { const a=fixture(), b=fixture(); b.event_id='ID1123456780000202610231200000000002'; b.payload.worker.cpf='52998224726'; expect(()=>buildS2220Files([a,b])).toThrow('ASO 2: CPF'); });
+test('S2220 batch rejects mixed employers', () => { const a=fixture(), b=fixture(); b.payload.employer_registration='11222333'; expect(()=>buildS2220Files([a,b])).toThrow('mesmo empregador'); });
+test('S2220 batch rejects repeated events', () => { expect(()=>buildS2220Files([fixture(),fixture()])).toThrow('repetido'); });
+test('S2220 batch requires a nonempty selection', () => { expect(()=>buildS2220Files([])).toThrow(); });
+test('original export excludes both superseded ASOs and corrections', () => { expect(originalS2220Asos([{id:'old',previous_aso_id:null},{id:'new',previous_aso_id:'old'},{id:'original',previous_aso_id:null}]).map(a=>a.id)).toEqual(['original']); });

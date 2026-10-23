@@ -71,6 +71,13 @@
       "when": 1792753725020,
       "tag": "0009_pcmso_create_program_revision",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792754114907,
+      "tag": "0010_pcmso_history_write_grants",
+      "breakpoints": true
     }
   ]
 }

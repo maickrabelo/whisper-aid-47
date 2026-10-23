@@ -1,6 +1,6 @@
 # PCMSO — Status
 
-Atualizado: 14/10/2026
+Atualizado: 23/10/2026
 
 | Fase | Descrição | Release | Status |
 |---|---|---|---|
@@ -8,7 +8,7 @@ Atualizado: 14/10/2026
 | 1 | Acesso e estrutura | A | Concluída (flag desligada em produção) |
 | 2 | Cadastros e migração | A | Concluída (22/10/2026) |
 | 3 | Programa e inventário | A | Implementada; validação médica do piloto pendente |
-| 4 | Protocolos e revisão médica | A | Pendente |
+| 4 | Protocolos e revisão médica | A | Implementada; validação médica do piloto pendente |
 | 5 | Documento e ações | A | Pendente |
 | 6 | Solicitações e vencimentos | B | Pendente |
 | 7 | Controles clínicos e ASO | B/C | Pendente |
@@ -20,10 +20,10 @@ Atualizado: 14/10/2026
 ## Dúvidas abertas
 1. Conferir migrações do repositório contra o banco real antes da Fase 1.
 2. Qualidade dos dados de `pgr_ghe_workers` (CPF, matrícula, duplicidades) — diagnóstico agregado na Fase 2.
-3. Médico responsável e empresa piloto.
+3. Cada gestora cadastra seu médico por empresa; validação clínica com médico real ainda pendente. Conta piloto: teste.sst@srsms.app.
 4. Fluxo de assinatura do ASO (Release C) e provedor eSocial (Release D).
 5. Planos comerciais que incluirão o PCMSO.
-6. Limiar de anonimato dos agregados (sugestão inicial: 5).
+6. Limiar de anonimato confirmado: grupos com menos de 5 pessoas ocultos.
 7. Política de retenção e base legal (com responsável de privacidade).
 
 ## Fase 1 — entregue
@@ -51,4 +51,14 @@ Atualizado: 14/10/2026
 - Mudanças nas fontes geram `pcmso_change_requests`; aprovação e arquivamento impedem edição da cópia pela API.
 - Revisão manual com observações auditadas em `pcmso_inventory_reviews`, sem modificar a fonte.
 - Testes transacionais: 13/13 PASS; dados fictícios desfeitos. Importação exercitada no programa piloto.
-- Fases 4 e 5 continuam pendentes; assinatura, protocolos e PDF não foram implementados nesta etapa.
+- Nesta etapa não foram implementados assinatura, protocolos ou PDF.
+
+## Fase 4 — protocolos (23/10/2026)
+- Catálogo de exames por empresa e protocolos manuais para admissão, periódico, retorno, mudança de riscos e demissão; periodicidade, grupo/função, risco da cópia, justificativa e observações.
+- SST prepara em rascunho; protocolos ficam bloqueados em revisão. Retorno a rascunho para ajustes; somente médico responsável com atribuição ativa e nome/CRM/UF completos aprova.
+- Aprovação exige fonte importada, revisão do inventário atual, protocolos ativos e nenhuma pendência de origem ou protocolo desatualizado. Não é assinatura digital, nem prescrição automática.
+- Captura imutável da empresa, fontes, revisão, protocolos e médico na aprovação; histórico append-only das alterações de protocolos.
+- Nova revisão idempotente preserva o aprovado, atualiza fontes disponíveis e copia protocolos ainda compatíveis; revisão do inventário precisa ser feita novamente.
+- 20/20 testes de acesso, revisão e integridade PASS, transação desfeita; privilégio de escrita do histórico foi explicitamente removido após teste inicial detectar concessão prévia.
+- Interface testada na conta piloto: cadastro periódico de 12 meses, histórico e desativação após recarregar; exame fictício permanece inativo e identificado como teste. Sem erros de execução e sem transbordamento horizontal na tela estreita.
+- Aprovação/revisão médica exercitada com usuários fictícios pelo backend, não com médico real pela interface. Homologação clínica e Fase 5 (PDF/ações) pendentes. Liberação segue restrita ao piloto.

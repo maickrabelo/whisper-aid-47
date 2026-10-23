@@ -257,6 +257,16 @@ const SSTDashboard = () => {
         path: '/aep',
       }];
     }
+    if (hasPcmsoBeta) {
+      result = [{
+        id: 'tool-pcmso',
+        icon: Activity,
+        title: 'PCMSO',
+        description: 'Programa de Controle Médico de Saúde Ocupacional (NR-7)',
+        highlights: ['NR-7', 'ASO', 'S-2220'],
+        path: '/pcmso',
+      }, ...result];
+    }
     return result;
   }, [companies, smartOuvidoriaIds, isSmartOnly, hasPgrShortcut, hasPGRAccess, hasLtcatBeta, hasPcmsoBeta, aepAllowed]);
 
@@ -694,7 +704,7 @@ const SSTDashboard = () => {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {!isSmartOnly && <PcmsoBlackCard unlocked={hasPcmsoBeta} />}
+              {!isSmartOnly && !hasPcmsoBeta && <PcmsoBlackCard unlocked={false} />}
               {toolCards}
             </div>
           </div>

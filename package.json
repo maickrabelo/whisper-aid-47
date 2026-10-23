@@ -67,8 +67,12 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
-    "xlsx": "^0.18.5",
+    "xlsx": "https://registry.npmjs.org/xlsx/-/xlsx-0.18.5.tgz",
     "zod": "^3.23.8"
+  },
+  "overrides": {
+    "codepage": "https://registry.npmjs.org/codepage/-/codepage-1.15.0.tgz",
+    "word": "https://registry.npmjs.org/word/-/word-0.3.0.tgz"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

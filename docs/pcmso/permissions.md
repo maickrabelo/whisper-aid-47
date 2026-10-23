@@ -17,6 +17,7 @@ Autorização = recurso habilitado (`PCMSO_BETA`) **+** vínculo com a empresa *
 `program.prepare`, `program.approve`, `exams.schedule`, `clinical.read`, `clinical.write`, `aso.issue`, `esocial.export`. Atribuições clínicas com validade e revogação imediata. Verificação por função `security definer` (ex.: `pcmso_can`) usada nas políticas.
 
 ## Regras
+- Exportação S-2220 individual/lote permanece exclusiva de médico ativo do piloto via RPC auditada por ASO; seleção/revisão na interface não substitui autorização. Nenhuma permissão de produção ou transmissão adicionada. Revisões/substituições não são exportadas como eventos originais.
 - RLS com negação por padrão; GRANT explícito por tabela.
 - Sem views amplas com colunas clínicas; leitura clínica via RPC estreita que registra em `pcmso_audit_events`.
 - Caches/queries indexados por empresa+usuário; limpos ao trocar contexto/sair.

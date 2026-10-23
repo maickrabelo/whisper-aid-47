@@ -18,6 +18,8 @@ Atualizado: 23/10/2026
 | 11 | Homologação e piloto | — | Pendente |
 
 ## Dúvidas abertas
+S-2220 ampliado (23/10/2026): seleção individual/lote, revisão explícita, resumo dos eventos, XML único ou ZIP preparado antes do download, sem liberação parcial em erro. Fluxo autenticado e revogação médica testados. Retificações/revisões excluídas desta exportação original. Permanece piloto simulado em ambiente 2, sem uso clínico real ou aceite externo.
+
 Exportação externa (23/10/2026): S-2240 do PGR prepara XML individual/ZIP com validações e declarações técnicas explícitas; download e histórico verificados no piloto. S-2220 continua simulado e autorizado somente ao médico do piloto. Nenhum evento foi transmitido ou aceito. Compatibilidade com fornecedor externo e homologação aguardam transmissor escolhido, dados reais autorizados e certificado/autorizações. Evidências e limites: `esocial/README.md`.
 
 1. Conferir migrações do repositório contra o banco real antes da Fase 1.

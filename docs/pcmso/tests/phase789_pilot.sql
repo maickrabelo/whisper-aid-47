@@ -25,7 +25,7 @@ BEGIN
   IF ex->>'status'<>'preparado_nao_transmitido' OR (ex->'payload'->>'transmitted')::boolean THEN RAISE EXCEPTION 'Transmission state'; END IF;
  END IF;
  rid:=public.pcmso_pilot_annual_report(c,extract(year from current_date)::int);
- IF NOT EXISTS(SELECT 1 FROM public.pcmso_annual_reports WHERE id=rid AND content->>'status'='suprimido' AND content->'totals'='null'::jsonb AND content->>'threshold'='5') THEN RAISE EXCEPTION 'Threshold 5 suppression'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM public.pcmso_annual_reports r WHERE r.id=rid AND r.content->>'status'='suprimido' AND r.content->'totals'='null'::jsonb AND r.content->>'threshold'='5') THEN RAISE EXCEPTION 'Threshold 5 suppression'; END IF;
  UPDATE public.pcmso_professional_assignments SET revoked_at=now() WHERE id=assignment;
  IF public.pcmso_pilot_can(c,true) THEN RAISE EXCEPTION 'Revoked physician still authorized'; END IF;
  BEGIN PERFORM public.pcmso_pilot_aso_payload(aid); RAISE EXCEPTION 'Revoked download accepted'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;

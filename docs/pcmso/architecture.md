@@ -43,3 +43,7 @@ Fora da 1ª entrega: IA diagnóstica, aptidão automática, transmissão eSocial
 
 ## Fase 6 — preparação isolada
 Convocações ocupacionais na página da empresa, separadas do programa documental. A autorização `pcmso_exam_can` exige `program.view` e liberação individual `PCMSO_EXAMS_BETA` para a empresa. Somente simulações são aceitas pelo banco enquanto a Release A aguarda assinatura/homologação; não há envio externo nem registro de resultado clínico. Pedidos usam protocolo manual ativo, chave idempotente e cópia imutável do trabalhador/vínculo e protocolo. Comparecimento é exclusivamente andamento administrativo, não conclusão médica ou aptidão.
+
+## Piloto simulado das fases 7–9
+Autorizado pelo usuário sem homologação médica. `pcmso_pilot_can` exige empresa piloto fixa, flag individual adicional e, para operações sensíveis, atribuição médica ativa. Fluxo médico separado na página da empresa; RPCs auditadas, sem tabelas clínicas acessíveis diretamente. ASO capturado no momento da emissão, correções append-only; programa sem aprovação é explicitamente permitido apenas na simulação. Assinatura manual declarada não é documento assinado verificado.
+Relatório anual expõe somente resumo incompleto sem grupos/filtros clínicos e suprime toda a empresa abaixo de 5 indivíduos, evitando reconstrução por subtotais. Preparação S-2220 sem XMLDSig e ambiente 2, sem serviço de transmissão. Os esquemas oficiais/versionamento e limitações estão em `esocial/README.md`.

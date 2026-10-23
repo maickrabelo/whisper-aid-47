@@ -41,16 +41,19 @@ Evidência: `tests/phase5_documents.sql` — 13/13 PASS em 23/10/2026 (transaç�
 Evidência: `tests/phase6_pilot.py` — fluxo autenticado no piloto (criação, agendamento, leitura após recarregar, cancelamento, histórico), repetição/conflito, isolamento por empresa, API direta bloqueada, histórico protegido, mudança de função, prazo/motivo obrigatórios, protocolo inativo, pedido encerrado, interface/API sem sessão e tela 390px. `tests/exam_deadline.test.ts` — 2/2 PASS; teste anterior do PDF também PASS. Operação exclusivamente simulada com flag separada; aceite médico/assinatura da Release A continuam pendentes e impedem liberação real.
 
 ## Fase 7 — Controles clínicos e ASO
-- [ ] RH/admin sem atribuição não obtêm resultados via API/arquivo.
-- [ ] Médico revogado perde acesso; nenhum botão define aptidão sozinho.
+- [x] RH/admin sem atribuição não obtêm resultados via API/arquivo (piloto simulado).
+- [x] Médico revogado perde acesso; nenhum botão define aptidão sozinho (piloto simulado).
+Evidência: `phase789_access.py` e `phase789_clinical.py`, testes transacionais de revogação desfeitos. Atendimento/ASO/declaração persistidos via UI; PDF inspecionado. Sem homologação clínica real, sem prontuário completo/anexos ou guarda de assinatura manual.
 
 ## Fase 8 — Relatório analítico
 - [ ] Reconciliação com totais conhecidos; ausência ≠ zero.
 - [ ] Correção gera revisão; incompleto não aparece como completo.
+Resumo anual simulado parcial implementado/testado: abaixo de 5, todos os totais ocultos; indicadores ausentes nulos; sempre incompleto acima do limiar. Falta relatório NR-7 integral e reconciliação de indicadores clínicos.
 
 ## Fase 9 — S-2220
 - [ ] XSD/regras rejeitam incompletos; arquivo válido verificável.
-- [ ] Download ≠ transmitido; nenhuma transmissão real na homologação.
+- [x] Download ≠ transmitido; nenhuma transmissão real na homologação.
+Preparação sem XMLDSig: corpo validado contra XSD oficial via `s2220_xsd.py`; documento completo corretamente rejeitado por falta de assinatura XML. `s2220.test.ts` rejeita campos incompletos/códigos fora da Tabela 27. CNPJ ausente no piloto bloqueado pela interface e RPC. Não considerar evento inteiro XSD-válido nem aceito pelo eSocial.
 
 ## Fase 10 — Integrações complementares
 - [ ] Anonimato preservado, filtros pequenos suprimidos, anexos clínicos ocultos ao RH.

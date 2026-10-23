@@ -3040,6 +3040,116 @@ export type Database = {
           },
         ]
       }
+      pcmso_action_history: {
+        Row: {
+          action_id: string
+          actor_id: string | null
+          company_id: string
+          content: Json
+          id: string
+          recorded_at: string
+        }
+        Insert: {
+          action_id: string
+          actor_id?: string | null
+          company_id: string
+          content: Json
+          id?: string
+          recorded_at?: string
+        }
+        Update: {
+          action_id?: string
+          actor_id?: string | null
+          company_id?: string
+          content?: Json
+          id?: string
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_action_history_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_action_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_action_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_actions: {
+        Row: {
+          company_id: string
+          created_at: string
+          due_date: string | null
+          id: string
+          notes: string
+          program_id: string
+          responsible: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string
+          program_id: string
+          responsible?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string
+          program_id?: string
+          responsible?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_actions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_actions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_actions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "pcmso_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pcmso_audit_events: {
         Row: {
           action: string
@@ -3152,6 +3262,64 @@ export type Database = {
             foreignKeyName: "pcmso_change_requests_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
+            referencedRelation: "pcmso_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pcmso_document_settings: {
+        Row: {
+          company_id: string
+          emergency_flow: string
+          monitoring: string
+          objectives: string
+          program_id: string
+          responsibilities: string
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          company_id: string
+          emergency_flow?: string
+          monitoring?: string
+          objectives?: string
+          program_id: string
+          responsibilities?: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          company_id?: string
+          emergency_flow?: string
+          monitoring?: string
+          objectives?: string
+          program_id?: string
+          responsibilities?: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcmso_document_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_document_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pcmso_document_settings_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: true
             referencedRelation: "pcmso_programs"
             referencedColumns: ["id"]
           },
@@ -6394,6 +6562,7 @@ export type Database = {
         Returns: boolean
       }
       pcmso_create_revision: { Args: { _program_id: string }; Returns: string }
+      pcmso_document_payload: { Args: { _program_id: string }; Returns: Json }
       pcmso_has_clinical_assignment: {
         Args: { _company_id: string; _role?: string; _user_id: string }
         Returns: boolean

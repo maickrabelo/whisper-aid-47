@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Preparar exportações S-2240 e S-2220 para importação em transmissor externo: validar dados, arquivos individuais e download seguro; sem transmissão pelo app.
+- [x] Preparar exportações S-2240 e S-2220 para importação em transmissor externo: validar dados, arquivos individuais e download seguro; sem transmissão pelo app. S-2220 permanece simulado em ambiente 2.
 - [ ] Homologar importação com o sistema externo escolhido: aguarda identificação do transmissor, certificado/autorizações e dados reais autorizados; S-2220 continua simulado até aceite médico.
 
 - [x] Concluir guarda privada dos PDFs assinados manualmente (ASO/programa), histórico e download autorizado.

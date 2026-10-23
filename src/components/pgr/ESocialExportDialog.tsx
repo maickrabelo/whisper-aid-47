@@ -139,7 +139,7 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] max-h-[90vh] overflow-x-hidden overflow-y-auto [&>*]:min-w-0">
         <DialogHeader>
           <DialogTitle>Exportar PGR</DialogTitle>
           <DialogDescription>Gere o relatório PGR NR-1 em PDF ou os XMLs do evento S-2240 do e-Social.</DialogDescription>
@@ -153,7 +153,7 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
           </AlertDescription>
         </Alert>
 
-        <Tabs defaultValue="export" className="mt-2">
+        <Tabs defaultValue="export" className="mt-2 min-w-0">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="export" className="gap-1 text-xs"><Download className="h-3 w-3" /> Exportar</TabsTrigger>
             <TabsTrigger value="signatures" className="gap-1 text-xs"><PenLine className="h-3 w-3" /> Assinaturas</TabsTrigger>
@@ -201,7 +201,7 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
         <TabsContent value="export" className="space-y-3 mt-4">
           <Button onClick={generatePDF} disabled={!!generating} variant="outline" className="w-full justify-start gap-3 h-auto py-3">
             {generating === 'pdf' ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileText className="h-5 w-5" />}
-            <div className="text-left">
+            <div className="min-w-0 whitespace-normal text-left">
               <div className="font-semibold">Relatório PGR (PDF)</div>
               <div className="text-xs text-muted-foreground">Documento completo NR-1 para apresentação e arquivamento</div>
             </div>

@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Implementar validação e transmissão eSocial: aguarda escolha do serviço transmissor, certificado/autorizações por empresa e homologação com dados reais autorizados.
+- [ ] Implementar validação e transmissão S-2220 e S-2240: usuário confirmou que não possui serviço transmissor nem certificado/autorizações; aguarda contratação/configuração e homologação com dados reais autorizados.
 
 - [x] Concluir guarda privada dos PDFs assinados manualmente (ASO/programa), histórico e download autorizado.
 - [x] Concluir relatório analítico anual estruturado, revisão médica, comparação declarada e PDF, com supressão de grupos pequenos.

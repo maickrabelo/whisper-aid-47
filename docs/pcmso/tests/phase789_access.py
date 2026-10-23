@@ -1,0 +1,12 @@
+import asyncio,json,os
+from pathlib import Path
+from playwright.async_api import async_playwright
+async def main():
+ with open(os.path.expanduser('~/.cache/lovable-auth/session.json')) as f: session=json.load(f)
+ async with async_playwright() as p:
+  b=await p.chromium.launch(headless=True); c=await b.new_context(viewport={'width':1280,'height':1800}); page=await c.new_page(); errors=[]; page.on('pageerror',lambda e:errors.append(str(e)))
+  await page.goto('http://localhost:8080'); await page.evaluate('([k,v])=>localStorage.setItem(k,v)',[session['storage_key'],json.dumps(session['session'])]); await page.goto('http://localhost:8080/pcmso/empresa/052c8fc4-b377-4f86-84a5-5c581a2896e5'); await page.wait_for_timeout(4000); print('Visible state:', (await page.locator('body').inner_text())[-2500:]); print(await page.evaluate('''async()=>{const {supabase:s}=await import('/src/integrations/supabase/client.ts');const r=await s.rpc('pcmso_pilot_can',{_company_id:'052c8fc4-b377-4f86-84a5-5c581a2896e5',_clinical:false});return {data:r.data,error:r.error?.message}}'''))
+  assert await page.get_by_role('button',name='Novo atendimento',exact=True).count()==0
+  result=await page.evaluate('''async()=>{const {supabase:s}=await import('/src/integrations/supabase/client.ts'); const company='052c8fc4-b377-4f86-84a5-5c581a2896e5'; let results=[]; for(const table of ['pcmso_clinical_entries','pcmso_asos','pcmso_esocial_preparations','pcmso_manual_signature_attestations']) { const r=await s.from(table).select('*'); if(!r.error)throw Error('Direct sensitive read allowed');results.push(table+': blocked'); } for(const [name,args] of [['pcmso_pilot_clinical_read',{_company_id:company}],['pcmso_pilot_record_encounter',{_order_id:crypto.randomUUID(),_exam_date:'2026-10-23',_notes:'Teste',_procedures:[]}],['pcmso_pilot_annual_report',{_company_id:company,_year:2026}],['pcmso_pilot_prepare_s2220',{_aso_id:crypto.randomUUID()}]]) {const r=await s.rpc(name,args);if(!r.error)throw Error('Nonphysician medical RPC allowed');results.push(name+': blocked');}const cross=await s.rpc('pcmso_pilot_can',{_company_id:'aaaaaaaa-0000-0000-0000-00000000000a',_clinical:false}); if(cross.data===true)throw Error('Company isolation failed');return results;}''')
+  await page.get_by_text('Relatório anual',exact=False).scroll_into_view_if_needed(); await page.screenshot(path='/tmp/browser/pcmso789/pilot.png'); assert not errors,errors;print('PASS: pilot has no automatic clinical access; '+', '.join(result));print('Runtime errors: 0');await b.close()
+asyncio.run(main())

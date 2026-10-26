@@ -146,7 +146,7 @@ const slugify = (s: string) =>
 // ─────────────────────────────────────────────────────────────
 
 export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF> {
-  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
   const state = { y: TOP_Y, page: 1, skipChrome: true };
   const isRural = input.pgr.document_type === 'pgtr';
   const shortName = isRural ? 'PGRTR' : 'PGR';
@@ -487,6 +487,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
     topY: 8,
     maxHeight: 24,
     maxWidth: 45,
+    maxImagePixels: 600,
   });
 
   setText(36, true, FOREST);

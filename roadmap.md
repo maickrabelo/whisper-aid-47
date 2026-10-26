@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Diagnosticar e corrigir a recusa por tamanho na geração/salvamento do PDF PGR de Jonas; validar o fluxo.
+- [x] Investigar o PDF PGR de Jonas: download autenticado confirmado, peso reduzido de 4,95 MB para 303 KB, mesmas 13 páginas e texto; aviso original não reproduzido.
 
 - [x] Ampliar S-2220 para preparação individual ou em lote, revisão dos dados e XML/ZIP para transmissor externo, preservando autorização médica e ambiente 2 no piloto.
 

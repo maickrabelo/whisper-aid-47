@@ -67,6 +67,7 @@ interface RenderLogosOptions {
   topY?: number;
   maxHeight?: number;
   maxWidth?: number;
+  maxImagePixels?: number;
 }
 
 /**
@@ -83,6 +84,7 @@ export async function renderReportLogos(
     topY = 8,
     maxHeight = 28,
     maxWidth = 45,
+    maxImagePixels,
   }: RenderLogosOptions,
 ): Promise<void> {
   const margin = 12;
@@ -96,11 +98,25 @@ export async function renderReportLogos(
       h = w / ratio;
     }
     const drawX = align === 'left' ? x : x - w;
+    let image: HTMLImageElement | HTMLCanvasElement = img;
+    if (maxImagePixels && Math.max(img.naturalWidth, img.naturalHeight) > maxImagePixels) {
+      const scale = maxImagePixels / Math.max(img.naturalWidth, img.naturalHeight);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = 'high';
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+        image = canvas;
+      }
+    }
     try {
-      pdf.addImage(img, 'PNG', drawX, topY, w, h);
+      pdf.addImage(image, 'PNG', drawX, topY, w, h);
     } catch (e) {
       try {
-        pdf.addImage(img, 'JPEG', drawX, topY, w, h);
+        pdf.addImage(image, 'JPEG', drawX, topY, w, h);
       } catch (err) {
         console.warn('PDF addImage failed:', err);
       }

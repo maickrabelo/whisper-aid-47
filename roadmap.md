@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Diagnosticar e corrigir a recusa por tamanho na geração/salvamento do PDF PGR de Jonas; validar o fluxo.
+
 - [x] Ampliar S-2220 para preparação individual ou em lote, revisão dos dados e XML/ZIP para transmissor externo, preservando autorização médica e ambiente 2 no piloto.
 
 - [x] Preparar exportações S-2240 e S-2220 para importação em transmissor externo: validar dados, arquivos individuais e download seguro; sem transmissão pelo app. S-2220 permanece simulado em ambiente 2.

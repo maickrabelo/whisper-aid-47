@@ -11,8 +11,7 @@ import {
   HEALTH_IMPACT_LABELS,
   calculateCategoryAverage,
   normalizeScore,
-  getRiskLevel,
-  RISK_LEVEL_LABELS
+  getHseitHealthLegend
 } from '@/data/hseitQuestions';
 import { ActionItem } from './HSEITActionPlanEditor';
 import { ScheduleItem, getMonthlyPlan } from './HSEITScheduleEditor';
@@ -290,14 +289,12 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     return impact === 'risk' ? [220, 53, 69] : impact === 'intermediate' ? [255, 152, 0] : [40, 167, 69];
   };
   const getSeverity = (avg: number): string => {
-    if (avg >= 3.67) return 'Baixa';
-    if (avg >= 2.33) return 'Moderada';
-    return 'Alta';
+    const impact = getHealthImpact(avg);
+    return impact === 'favorable' ? 'Baixa' : impact === 'intermediate' ? 'Moderada' : 'Alta';
   };
   const getProbability = (avg: number): string => {
-    if (avg >= 3.67) return 'Improvável';
-    if (avg >= 2.33) return 'Possível';
-    return 'Provável';
+    const impact = getHealthImpact(avg);
+    return impact === 'favorable' ? 'Improvável' : impact === 'intermediate' ? 'Possível' : 'Provável';
   };
   const getRiskClassification = (avg: number): string => {
     const impact = getHealthImpact(avg);
@@ -553,33 +550,34 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     y += 5;
 
     drawSubSection('4.3 Classificação de Risco');
+    drawText('A mesma classificação de três níveis é usada em todos os gráficos, tabelas, inventário e plano de ação deste relatório:');
+    y += 2;
+    const legend = getHseitHealthLegend();
     const riskThresholds = [
-      ['Muito Baixo', 'acima de 4,20', 'Condição muito favorável', [34, 197, 94]],
-      ['Baixo', '3,41 – 4,20', 'Condição favorável', [132, 204, 22]],
-      ['Moderado', '2,61 – 3,40', 'Atenção necessária', [234, 179, 8]],
-      ['Alto', '1,81 – 2,60', 'Intervenção necessária', [249, 115, 22]],
-      ['Muito Alto', '< 1,81', 'Ação imediata requerida', [239, 68, 68]],
-    ] as [string, string, string, number[]][];
+      [legend[0].range, 'Favorável — Severidade Baixa, Probabilidade Improvável — Risco Tolerável', [40, 167, 69]],
+      [legend[1].range, 'Intermediário — Severidade Moderada, Probabilidade Possível — Risco Moderado', [255, 152, 0]],
+      [legend[2].range, 'Risco — Severidade Alta, Probabilidade Provável — Risco Intolerável', [220, 53, 69]],
+    ] as [string, string, number[]][];
 
-    riskThresholds.forEach(([label, range, desc, color]) => {
+    riskThresholds.forEach(([range, desc, color]) => {
       checkPage(8);
       pdf.setFillColor(color[0], color[1], color[2]);
       pdf.circle(m + 6, y - 1, 3, 'F');
-      pdf.setFontSize(10);
+      pdf.setFontSize(9);
       pdf.setFont('helvetica', 'bold');
       setColor(0, 0, 0);
-      pdf.text(`${label} (${range})`, m + 12, y);
+      pdf.text(range, m + 12, y);
       pdf.setFont('helvetica', 'normal');
       setColor(80, 80, 80);
-      pdf.text(`— ${desc}`, m + 70, y);
+      pdf.text(desc, m + 45, y);
       y += 7;
     });
 
     y += 5;
     drawSubSection('4.4 Semáforo de Impacto na Saúde');
-    drawText('Verde — Favorável (abaixo de 2,33): Ambiente psicossocial saudável', 5);
-    drawText('Amarelo — Intermediário (2,33 a 3,66): Atenção e monitoramento necessários', 5);
-    drawText('Vermelho — Risco (3,67 ou mais): Intervenção urgente necessária', 5);
+    drawText(`${legend[0].label} (${legend[0].range}): Ambiente psicossocial saudável`, 5);
+    drawText(`${legend[1].label} (${legend[1].range}): Atenção e monitoramento necessários`, 5);
+    drawText(`${legend[2].label} (${legend[2].range}): Intervenção urgente necessária`, 5);
   }
 
   y += 5;

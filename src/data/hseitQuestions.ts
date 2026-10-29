@@ -161,10 +161,25 @@ export const HEALTH_IMPACT_COLORS: Record<HealthImpact, string> = {
   risk: '#ef4444'          // Vermelho
 };
 
+// Limites únicos do semáforo HSE-IT (escala normalizada: 5 = favorável)
+export const HSEIT_HEALTH_THRESHOLDS = { favorable: 3.67, intermediate: 2.33 } as const;
+
 export function getHealthImpact(score: number): HealthImpact {
-  if (score >= 3.67) return 'favorable';      // Verde
-  if (score >= 2.33) return 'intermediate';   // Laranja
-  return 'risk';                               // Vermelho
+  if (score >= HSEIT_HEALTH_THRESHOLDS.favorable) return 'favorable';      // Verde
+  if (score >= HSEIT_HEALTH_THRESHOLDS.intermediate) return 'intermediate'; // Amarelo/Laranja
+  return 'risk';                                                            // Vermelho
+}
+
+/** Texto da legenda do semáforo HSE-IT, derivado dos mesmos limites usados na classificação. */
+export function getHseitHealthLegend(): { label: string; range: string }[] {
+  const f = (n: number) => n.toFixed(2).replace('.', ',');
+  const fav = HSEIT_HEALTH_THRESHOLDS.favorable;
+  const mid = HSEIT_HEALTH_THRESHOLDS.intermediate;
+  return [
+    { label: 'Verde — Favorável', range: `${f(fav)} a 5,00` },
+    { label: 'Amarelo — Intermediário', range: `${f(mid)} a ${f(fav - 0.01)}` },
+    { label: 'Vermelho — Risco', range: `abaixo de ${f(mid)}` },
+  ];
 }
 
 // Calcular score normalizado para uma resposta

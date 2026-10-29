@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { getHealthImpact, getHseitHealthLegend, normalizeScore } from './hseitQuestions';
+import { getHealthImpact, getHseitHealthLegend, normalizeScore } from '../../../src/data/hseitQuestions';
 
 describe('HSE-IT semáforo', () => {
   test('questões negativas são invertidas', () => {

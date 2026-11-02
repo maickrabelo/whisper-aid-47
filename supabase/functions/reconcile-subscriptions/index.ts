@@ -78,10 +78,12 @@ Deno.serve(async (req) => {
     const { data: plansData } = await supabase
       .from('subscription_plans')
       .select('id, slug, name, price_monthly_cents')
-      .in('slug', [TRIAL_PLAN_SLUG, MONTHLY_PLAN_SLUG]);
+      .in('slug', [TRIAL_PLAN_SLUG, MONTHLY_PLAN_SLUG, PREMIUM_PLAN_SLUG]);
     const plans = (plansData ?? []) as PlanRow[];
+
     const trialPlan = plans.find((p) => p.slug === TRIAL_PLAN_SLUG);
     const monthlyPlan = plans.find((p) => p.slug === MONTHLY_PLAN_SLUG);
+    const premiumPlan = plans.find((p) => p.slug === PREMIUM_PLAN_SLUG) ?? null;
     if (!trialPlan || !monthlyPlan) {
       return new Response(JSON.stringify({ error: 'Planos base (teste-sms / sr-sms) não encontrados' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

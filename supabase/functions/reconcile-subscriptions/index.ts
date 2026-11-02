@@ -7,6 +7,9 @@ const corsHeaders = {
 
 const TRIAL_PLAN_SLUG = 'teste-sms';
 const MONTHLY_PLAN_SLUG = 'sr-sms';
+// Plano PREMIUM vendido pela Hotmart (plano 1414270 / oferta z9pit82o): R$ 197,90/mês.
+const PREMIUM_PLAN_SLUG = 'sr-sms-premium';
+const PREMIUM_AMOUNT_CENTS = 19790;
 const TRIAL_DAYS = 7;
 const MONTHLY_DAYS = 30;
 
@@ -75,10 +78,12 @@ Deno.serve(async (req) => {
     const { data: plansData } = await supabase
       .from('subscription_plans')
       .select('id, slug, name, price_monthly_cents')
-      .in('slug', [TRIAL_PLAN_SLUG, MONTHLY_PLAN_SLUG]);
+      .in('slug', [TRIAL_PLAN_SLUG, MONTHLY_PLAN_SLUG, PREMIUM_PLAN_SLUG]);
     const plans = (plansData ?? []) as PlanRow[];
+
     const trialPlan = plans.find((p) => p.slug === TRIAL_PLAN_SLUG);
     const monthlyPlan = plans.find((p) => p.slug === MONTHLY_PLAN_SLUG);
+    const premiumPlan = plans.find((p) => p.slug === PREMIUM_PLAN_SLUG) ?? null;
     if (!trialPlan || !monthlyPlan) {
       return new Response(JSON.stringify({ error: 'Planos base (teste-sms / sr-sms) não encontrados' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -223,6 +228,23 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Compra do PREMIUM (R$ 197,90): renova no plano Sr.SMS Premium, não no plano comum.
+      if (premiumPlan && Math.abs((row.amountCents ?? 0) - PREMIUM_AMOUNT_CENTS) <= 200) {
+        const end = addDays(paidAt, MONTHLY_DAYS);
+        const wasActive = currentSub?.status === 'active'
+          && (planNameById.get(currentSub.plan_id) === premiumPlan.name);
+        items.push({
+          ...base,
+          action: wasActive ? 'renewed' : 'activated',
+          new_plan: premiumPlan.name,
+          new_plan_id: premiumPlan.id,
+          new_status: 'active',
+          new_period_end: end,
+          reason: `Assinatura PREMIUM paga em ${new Date(paidAt).toLocaleDateString('pt-BR')} — vigente até ${new Date(end).toLocaleDateString('pt-BR')}`,
+        });
+        continue;
+      }
+
       items.push({
         ...base, action: 'divergent',
         reason: `Valor de compra não reconhecido (R$ ${((row.amountCents ?? 0) / 100).toFixed(2)})`,
@@ -285,7 +307,11 @@ Deno.serve(async (req) => {
 
       // 2) Insert reconciled subscription
       const planId = item.new_plan_id ?? (item.new_plan === trialPlan.name ? trialPlan.id : monthlyPlan.id);
-      const amount = planId === trialPlan.id ? 990 : (monthlyPlan.price_monthly_cents ?? 9790);
+      // Usa o preço do próprio plano (ex.: PREMIUM R$ 197,90); trial fixo em R$ 9,90.
+      const planPrice = plans.find((p) => p.id === planId)?.price_monthly_cents ?? null;
+      const amount = planId === trialPlan.id
+        ? 990
+        : ((planPrice && planPrice > 0) ? planPrice : (monthlyPlan.price_monthly_cents ?? 9790));
       await supabase.from('subscriptions').insert({
         owner_user_id: userId,
         owner_email: item.email,

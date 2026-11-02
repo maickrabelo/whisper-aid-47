@@ -7,6 +7,9 @@ const corsHeaders = {
 
 const TRIAL_PLAN_SLUG = 'teste-sms';
 const MONTHLY_PLAN_SLUG = 'sr-sms';
+// Plano PREMIUM vendido pela Hotmart (plano 1414270 / oferta z9pit82o): R$ 197,90/mês.
+const PREMIUM_PLAN_SLUG = 'sr-sms-premium';
+const PREMIUM_AMOUNT_CENTS = 19790;
 const TRIAL_DAYS = 7;
 const MONTHLY_DAYS = 30;
 

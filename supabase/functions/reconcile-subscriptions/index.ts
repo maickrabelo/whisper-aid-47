@@ -307,7 +307,11 @@ Deno.serve(async (req) => {
 
       // 2) Insert reconciled subscription
       const planId = item.new_plan_id ?? (item.new_plan === trialPlan.name ? trialPlan.id : monthlyPlan.id);
-      const amount = planId === trialPlan.id ? 990 : (monthlyPlan.price_monthly_cents ?? 9790);
+      // Usa o preço do próprio plano (ex.: PREMIUM R$ 197,90); trial fixo em R$ 9,90.
+      const planPrice = plans.find((p) => p.id === planId)?.price_monthly_cents ?? null;
+      const amount = planId === trialPlan.id
+        ? 990
+        : ((planPrice && planPrice > 0) ? planPrice : (monthlyPlan.price_monthly_cents ?? 9790));
       await supabase.from('subscriptions').insert({
         owner_user_id: userId,
         owner_email: item.email,

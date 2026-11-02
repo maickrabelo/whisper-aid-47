@@ -582,7 +582,10 @@ const LTCAT_HOTMART_PLAN_IDS = new Set(['1376605']);
 // Planos Hotmart que JÁ INCLUEM o módulo LTCAT no pacote (não são venda avulsa).
 // Aqui o provisionamento/upgrade segue normal (limites do plano) e o LTCAT é
 // liberado imediatamente ao final do fluxo.
-const LTCAT_INCLUDED_HOTMART_PLAN_IDS = new Set(['1395028', '1404061', '1343825', '1406226']);
+const LTCAT_INCLUDED_HOTMART_PLAN_IDS = new Set(['1395028', '1404061', '1343825', '1406226', '1414270']);
+
+// Planos Hotmart que incluem PCMSO + ASOs (ex.: 1414270 PREMIUM).
+const PCMSO_INCLUDED_HOTMART_PLAN_IDS = new Set(['1414270']);
 
 // Determina se a compra é anual. O payload Hotmart nem sempre traz
 // recurrency_period; quando falta, usa a data da próxima cobrança como
@@ -605,23 +608,24 @@ const TRIAL_HOTMART_PLAN_IDS = new Set(['1336498']);
 const TRIAL_PLAN_SLUG = 'teste-sms';
 const LTCAT_FEATURE_KEY = 'LTCAT_BETA';
 
-async function setLtcatAccess(supabase: any, userId: string, enabled: boolean, note: string) {
+async function setLtcatAccess(supabase: any, userId: string, enabled: boolean, note: string, featureKey: string = LTCAT_FEATURE_KEY) {
+  const LTCAT_FEATURE_KEY_LOCAL = featureKey;
   try {
     const { data: existing } = await supabase
       .from('feature_access')
       .select('id')
-      .eq('feature_key', LTCAT_FEATURE_KEY)
+      .eq('feature_key', LTCAT_FEATURE_KEY_LOCAL)
       .eq('user_id', userId);
 
     if (existing && existing.length > 0) {
       await supabase
         .from('feature_access')
         .update({ enabled, valid_to: null, note, updated_at: new Date().toISOString() })
-        .eq('feature_key', LTCAT_FEATURE_KEY)
+        .eq('feature_key', LTCAT_FEATURE_KEY_LOCAL)
         .eq('user_id', userId);
     } else if (enabled) {
       await supabase.from('feature_access').insert({
-        feature_key: LTCAT_FEATURE_KEY,
+        feature_key: LTCAT_FEATURE_KEY_LOCAL,
         user_id: userId,
         enabled: true,
         note,
@@ -954,6 +958,10 @@ Deno.serve(async (req) => {
             `LTCAT incluso no plano Hotmart ${planId ?? productId} (tx ${transactionId})`,
           );
         }
+        if (planId && PCMSO_INCLUDED_HOTMART_PLAN_IDS.has(planId) && (upgradeResult as any).user_id) {
+          await setLtcatAccess(supabase, (upgradeResult as any).user_id as string, true,
+            `PCMSO incluso no plano Hotmart ${planId} (tx ${transactionId})`, 'PCMSO_BETA');
+        }
         return await logAndRespond(200, {
           ...upgradeResult,
           merged_duplicate_sst_manager_ids: mergeInfo.mergedIds,
@@ -1156,6 +1164,10 @@ Deno.serve(async (req) => {
         );
       }
 
+      if (planId && PCMSO_INCLUDED_HOTMART_PLAN_IDS.has(planId) && userId) {
+        await setLtcatAccess(supabase, userId, true, `PCMSO incluso no plano Hotmart ${planId} (tx ${transactionId})`, 'PCMSO_BETA');
+      }
+
       return await logAndRespond(200, { ok: true, provisioned: true, userId, subscriptionId: subId, ltcat_granted: isLtcatPurchase || ltcatIncludedInPlan });
 
     }
@@ -1175,6 +1187,9 @@ Deno.serve(async (req) => {
             false,
             `Bloqueado por ${eventType} da compra LTCAT (tx ${transactionId ?? '-'})`,
           );
+          if (planId && PCMSO_INCLUDED_HOTMART_PLAN_IDS.has(planId)) {
+            await setLtcatAccess(supabase, ltcatUser.id, false, `Bloqueado por ${eventType} (tx ${transactionId ?? '-'})`, 'PCMSO_BETA');
+          }
         }
       }
 

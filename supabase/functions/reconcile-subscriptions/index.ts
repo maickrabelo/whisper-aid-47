@@ -228,6 +228,23 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Compra do PREMIUM (R$ 197,90): renova no plano Sr.SMS Premium, não no plano comum.
+      if (premiumPlan && Math.abs((row.amountCents ?? 0) - PREMIUM_AMOUNT_CENTS) <= 200) {
+        const end = addDays(paidAt, MONTHLY_DAYS);
+        const wasActive = currentSub?.status === 'active'
+          && (planNameById.get(currentSub.plan_id) === premiumPlan.name);
+        items.push({
+          ...base,
+          action: wasActive ? 'renewed' : 'activated',
+          new_plan: premiumPlan.name,
+          new_plan_id: premiumPlan.id,
+          new_status: 'active',
+          new_period_end: end,
+          reason: `Assinatura PREMIUM paga em ${new Date(paidAt).toLocaleDateString('pt-BR')} — vigente até ${new Date(end).toLocaleDateString('pt-BR')}`,
+        });
+        continue;
+      }
+
       items.push({
         ...base, action: 'divergent',
         reason: `Valor de compra não reconhecido (R$ ${((row.amountCents ?? 0) / 100).toFixed(2)})`,

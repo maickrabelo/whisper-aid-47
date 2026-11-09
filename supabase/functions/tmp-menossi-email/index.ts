@@ -6,7 +6,7 @@ Deno.serve(async () => {
   const pwd = "Menossi" + Math.floor(1000 + Math.random() * 9000) + "!";
   const { error } = await a.auth.admin.updateUserById(uid, { email: newEmail, email_confirm: true, password: pwd, user_metadata: { must_change_password: true } });
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-  await a.from("profiles").update({ email: newEmail }).eq("id", uid);
+  await a.from("profiles").update({ must_change_password: true }).eq("id", uid);
   const html = `<p>Olá,</p><p>O acesso da empresa <strong>Industria e Comércio de Produtos Agrícolas Menossi Ltda</strong> ao Sr.SMS foi atualizado.</p><p><strong>Link:</strong> https://srsms.com.br/auth<br/><strong>E-mail:</strong> ${newEmail}<br/><strong>Senha temporária:</strong> ${pwd}</p><p>No primeiro acesso será solicitada a criação de uma nova senha.</p><p>Equipe Sr.SMS</p>`;
   const res = [];
   for (const to of [newEmail, "simonebatista26@hotmail.com"]) {

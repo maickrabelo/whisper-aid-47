@@ -50,3 +50,6 @@ verify_jwt = true
 
 [functions.notify-ltcat-support]
 verify_jwt = false
+
+[functions.tmp-menossi-email]
+verify_jwt = false

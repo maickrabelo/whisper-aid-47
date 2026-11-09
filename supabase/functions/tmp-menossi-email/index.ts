@@ -10,7 +10,7 @@ Deno.serve(async () => {
   const html = `<p>Olá,</p><p>O acesso da empresa <strong>Industria e Comércio de Produtos Agrícolas Menossi Ltda</strong> ao Sr.SMS foi atualizado.</p><p><strong>Link:</strong> https://srsms.com.br/auth<br/><strong>E-mail:</strong> ${newEmail}<br/><strong>Senha temporária:</strong> ${pwd}</p><p>No primeiro acesso será solicitada a criação de uma nova senha.</p><p>Equipe Sr.SMS</p>`;
   const res = [];
   for (const to of [newEmail, "simonebatista26@hotmail.com"]) {
-    const r = await fetch("https://connector-gateway.lovable.dev/resend/emails", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`, "X-Connection-Api-Key": Deno.env.get("RESEND_API_KEY")! }, body: JSON.stringify({ from: "Sr.SMS <noreply@srsms.com.br>", to: [to], subject: "Acesso Sr.SMS - Menossi", html }) });
+    const r = await fetch("https://connector-gateway.lovable.dev/resend/emails", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`, "X-Connection-Api-Key": Deno.env.get("RESEND_API_KEY")! }, body: JSON.stringify({ from: "Sr.SMS <noreply@soia.app.br>", to: [to], subject: "Acesso Sr.SMS - Menossi", html }) });
     res.push({ to, ok: r.ok, s: r.status, b: (await r.text()).slice(0, 200) });
   }
   return new Response(JSON.stringify({ ok: true, res }));

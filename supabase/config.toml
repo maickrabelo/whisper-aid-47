@@ -50,3 +50,6 @@ verify_jwt = true
 
 [functions.notify-ltcat-support]
 verify_jwt = false
+
+[functions.notify-pcmso-review]
+verify_jwt = false

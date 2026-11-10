@@ -147,6 +147,10 @@ const PCMSOProgram = () => {
   const submitForReview = async () => {
     if (!prepare.allowed || program?.status !== 'rascunho') return;
     await updateProgram({ status: 'em_revisao' });
+    const { data, error } = await supabase.functions.invoke('notify-pcmso-review', { body: { program_id: program.id } });
+    if (error) toast.error('Enviado para revisão, mas o e-mail ao médico falhou.');
+    else if (data?.reason === 'no_physician') toast.warning('Nenhum médico responsável ativo cadastrado para receber o aviso.');
+    else if (data?.sent > 0) toast.success('Médico avisado por e-mail.');
   };
 
   const approveProgram = async () => {

@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? Deno.env.get("RESEND_API_KEY_1");
     if (!LOVABLE_API_KEY || !RESEND_API_KEY) return json({ error: "Email não configurado" }, 500);
 
-    const link = buildAppUrl(`/pcmso/${program.company_id}/programa/${program.id}`);
+    const link = buildAppUrl(`/pcmso/programa/${program.id}`);
     const login = buildAppUrl("/auth");
     let sent = 0; const errors: string[] = [];
     for (const d of active) {

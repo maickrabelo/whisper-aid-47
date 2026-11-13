@@ -750,7 +750,7 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
         // Divide por quebras de linha, ";" ou "•" para separar atividades por função
         const parts = raw
           .split(/\n+|(?:\s*[;•]\s*)|(?:\s*\.\s*(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ]))/)
-          .map(s => s.trim())
+          .map(s => s.replace(/^[\s\-–—•*·]+/, '').replace(/[\s;.,]+$/, '').trim())
           .filter(s => s.length > 2);
         if (parts.length > 1) {
           setText(TYPE.body, true, COLORS.text);
@@ -764,7 +764,12 @@ export async function generatePGRReportPDF(input: PGRReportInput): Promise<jsPDF
             s === s.toUpperCase() &&
             !/[.:;]$/.test(s);
           let buffer: string[] = [];
-          const flush = () => { if (buffer.length) { bullets(buffer); buffer = []; } };
+          const flush = () => {
+            if (buffer.length) {
+              bullets(buffer.map((b, i) => `${b}${i === buffer.length - 1 ? '.' : ';'}`));
+              buffer = [];
+            }
+          };
           for (const p of parts) {
             if (isFunctionHeader(p)) {
               flush();
